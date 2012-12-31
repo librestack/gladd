@@ -3,10 +3,39 @@
  * some code to handle incoming connections
  */
 
+#define _GNU_SOURCE
+
+#define BUFSIZE 8096
+
 #include "main.h"
+#include "mime.h"
+#include "http.h"
 #include "handler.h"
+
 #include <libxml/parser.h>
 #include <sys/sendfile.h>
+
+/* TODO: verify all these are still needed */
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <libxml/parser.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/file.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <syslog.h>
+#include <unistd.h>
+
+int sockme;
+
 
 /*
  * get sockaddr, IPv4 or IPv6:
@@ -27,8 +56,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
         /* FIXME: some very lazy memory allocation here */
         char *basefile;
-        char *r;
-        char *xml;
+        //char *r;
+        //char *xml;
         char basedir[BUFSIZE];
         char buf[BUFSIZE];
         char filename[BUFSIZE];
@@ -76,6 +105,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         free(basefile);
                 }
                 /* dynamic urls */
+                /*
                 else if (strncmp(resource, "/guess/", 7) == 0){
                         prepare_response(resource, &xml, 0);
                         if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1) {
@@ -86,6 +116,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         free(xml);
                         free(r);
                 }
+                */
                 else {
                         http_response(sock, 404);
                 }

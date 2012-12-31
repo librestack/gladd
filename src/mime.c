@@ -1,4 +1,5 @@
-#include "main.h"
+#include <stdlib.h>
+#include <string.h>
 #include "mime.h"
 
 void get_mime_type(char *mimetype, char *filename)

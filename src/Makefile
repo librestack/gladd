@@ -8,16 +8,16 @@ OBJECTFILES=handler.o http.o main.o mime.o
 gladd: main.c ${OBJECTFILES}
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} ${LIBS}
 
-handler.o: handler.c main.h
+handler.o: handler.c handler.h http.h main.h mime.h
 	${CC} ${CFLAGS} ${INCLUDES} -c handler.c ${LIBS}
 
-http.o: http.c http.h
+http.o: http.c http.h main.h
 	${CC} ${CFLAGS} ${INCLUDES} -c http.c
 
-main.o: main.c main.h
+main.o: main.c main.h handler.h
 	${CC} ${CFLAGS} ${INCLUDES} -c main.c
 
-mime.o: mime.c main.h
+mime.o: mime.c mime.h
 	${CC} ${CFLAGS} ${INCLUDES} -c mime.c
 
 .PHONY: clean

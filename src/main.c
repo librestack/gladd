@@ -1,8 +1,9 @@
 /*
- * Guessing Game Server
+ * gladd - an httpd
  */
 
 #include "main.h"
+#include "handler.h"
 
 static void sigchld_handler (int signo);
 static void sigterm_handler (int signo);

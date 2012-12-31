@@ -4,13 +4,20 @@
 #include "main.h"
 #include "http.h"
 
+struct http_status httpcode[] = {
+        { 200, "OK" },
+        { 404, "Not Found" },
+        { 405, "Method Not Allowed" }
+};
+
 void http_response(int sock, int code)
 {
         char *response;
         char *status;
+        char *mime = "text/html";
 
         status = get_status(code).status;
-        asprintf(&response, HTTP_RESPONSE, code, status, code, status);
+        asprintf(&response, HTTP_RESPONSE, code, status, mime, code, status);
         respond(sock, response);
         free(response);
 }
