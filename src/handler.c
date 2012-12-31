@@ -27,7 +27,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
         /* FIXME: some very lazy memory allocation here */
         char *basefile;
-        char *guess;
         char *r;
         char *xml;
         char basedir[BUFSIZE];
@@ -67,6 +66,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
         /* TODO: refactor to remove duplication */
         if (strncmp(method, "GET", 3) == 0) {
+                /* serve static files */
                 if (strncmp(resource, "/static/", 8) == 0) {
                         basefile = strndup(resource+8, sizeof(resource));
                         sprintf(basedir,
@@ -75,26 +75,23 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         send_file(sock, filename);
                         free(basefile);
                 }
+                /* dynamic urls */
                 else if (strncmp(resource, "/guess/", 7) == 0){
-                        guess = strndup(resource+7, sizeof(resource));
-                        syslog(LOG_DEBUG, "guess: %s", guess);
-                        prepare_response(resource, &xml, guess);
+                        prepare_response(resource, &xml, 0);
                         if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1) {
                                 syslog(LOG_ERR, "Malloc failed");
                                 exit(EXIT_FAILURE);
                         }
                         respond(sock, r);
-                        free(guess);
                         free(xml);
                         free(r);
                 }
                 else {
-                        send_file(sock, 
-                                "/home/bacs/dev/gladd/static/index.html");
+                        http_response(sock, 404);
                 }
         }
         else {
-                respond(sock, RESPONSE_405);
+                http_response(sock, 405);
         }
 
         /* close client connection */

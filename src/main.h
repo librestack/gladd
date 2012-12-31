@@ -27,6 +27,7 @@
 #define PROGRAM "gladd"
 
 #define RESPONSE_200 "HTTP/1.1 200 OK\nServer: gladd\nConnection: close\nContent-Type: %s\n\n%s"
+#define RESPONSE_404 "HTTP/1.1 404 Not Found\nServer: gladd\nConnection: close\nContent-Type: text/html\n\n<html><body><h1>404 Not Found</h1>\n</body>\n</html>\n"
 #define RESPONSE_405 "HTTP/1.1 405 Method Not Allowed\nServer: gladd\nConnection: close\nContent-Type: text/html\n\n<html><body><h1>405 Method Not Allowed</h1>\n</body>\n</html>\n"
 
 int sockme;
@@ -35,3 +36,4 @@ int main (void);
 void get_mime_type(char *mimetype, char *filename);
 void handle_connection(int sock, struct sockaddr_storage their_addr);
 void respond (int fd, char *response);
+void http_response(int sock, int code);
