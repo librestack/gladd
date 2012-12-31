@@ -6,6 +6,7 @@
 #define _GNU_SOURCE
 
 #define BUFSIZE 8096
+#define MAX_RESOURCE_LEN 256
 
 #include "main.h"
 #include "mime.h"
@@ -46,19 +47,21 @@ void *get_in_addr(struct sockaddr *sa)
  */
 void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
-        /* FIXME: some very lazy memory allocation here */
         char *basefile;
-        //char *r;
-        //char *xml;
-        char basedir[BUFSIZE];
+        char *basedir;
         char buf[BUFSIZE];
-        char filename[BUFSIZE];
-        char httpv[BUFSIZE];
-        char method[BUFSIZE];
-        char resource[BUFSIZE];
+        char *filename;
+
+        char httpv[8];
+        char method[8];
+        char resource[MAX_RESOURCE_LEN];
+
         char s[INET6_ADDRSTRLEN];
         int byte_count;
         int state;
+
+        //char *r;
+        //char *xml;
 
         inet_ntop(their_addr.ss_family,
                         get_in_addr((struct sockaddr *)&their_addr),
@@ -71,7 +74,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         syslog(LOG_DEBUG, "recv()'d %d bytes of data in buf\n", byte_count);
 
         if (sscanf(buf, "%s %s HTTP/%s", method, resource, httpv) != 3) {
-                syslog(LOG_INFO, "Invalid Request");
+                syslog(LOG_INFO, "Bad Request");
+                http_response(sock, 400);
                 exit(EXIT_FAILURE);
         }
 
@@ -90,11 +94,12 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 /* serve static files */
                 if (strncmp(resource, "/static/", 8) == 0) {
                         basefile = strndup(resource+8, sizeof(resource));
-                        sprintf(basedir,
-                                       "/home/bacs/dev/gladd/static/");
-                        sprintf(filename, "%s%s", basedir, basefile);
-                        send_file(sock, filename);
+                        asprintf(&basedir, "/home/bacs/dev/gladd/static/");
+                        asprintf(&filename, "%s%s", basedir, basefile);
+                        free(basedir);
                         free(basefile);
+                        send_file(sock, filename);
+                        free(filename);
                 }
                 /* dynamic urls */
                 /*
