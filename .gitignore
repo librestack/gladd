@@ -1,3 +1,4 @@
 gladd
 *.o
 *.lock
+*.swp
