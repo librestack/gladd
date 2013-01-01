@@ -1,5 +1,5 @@
 gladd
-test
+gladd_test
 *.o
 *.lock
 *.swp

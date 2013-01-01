@@ -34,8 +34,8 @@ test.o: test.c test.h config_test.h
 .PHONY: clean test testclean
 
 clean:
-	rm ${PROGRAM} ${OBJECTFILES} test test.o
+	rm ${PROGRAM} ${PROGRAM}_test ${OBJECTFILES} test.o
 
 test: ${TESTFILES}
-	${CC} ${CFLAGS} ${INCLUDES} -o test ${TESTFILES}
-	./test
+	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES}
+	./${PROGRAM}_test
