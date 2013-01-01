@@ -1,4 +1,5 @@
 gladd
+test
 *.o
 *.lock
 *.swp
