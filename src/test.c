@@ -16,8 +16,8 @@ static void printline(char *c, int len)
 static char * all_tests()
 {
         printline("*", 80);
-        //config_test_runner();
         mu_run_test(test_read_config_000);
+        mu_run_test(test_read_config_001);
         printline("*", 80);
         return 0;
 }

@@ -24,10 +24,10 @@ mime.o: mime.c mime.h
 config.o: config.c config.h
 	${CC} ${CFLAGS} -c config.c
 
-config_test.o: config_test.c config_test.h
+config_test.o: minunit.h config_test.c config_test.h
 	${CC} ${CFLAGS} -c config_test.c
 
-test.o: test.c test.h config_test.h
+test.o: minunit.h test.c test.h config_test.h
 	${CC} ${CFLAGS} ${INCLUDES} -c test.c
 
 
@@ -38,4 +38,4 @@ clean:
 
 test: ${TESTFILES}
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES}
-	./${PROGRAM}_test
+	./${PROGRAM}_test 2> /dev/null

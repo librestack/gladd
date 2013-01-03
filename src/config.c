@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <limits.h>
 
+
 int read_config(char *configfile)
 {
         FILE *fd;
@@ -16,7 +17,6 @@ int read_config(char *configfile)
                 return 1;
         }
                                                         
-
         /* read in config */
         // int fscanf(FILE *stream, const char *format, ...);
 

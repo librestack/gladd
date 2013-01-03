@@ -7,7 +7,14 @@
 #define __MINUNIT_H__ 1
 
 #define mu_assert(message, test) do { \
-        if (!(test)) return message; \
+        printf("%i: %s ... ", tests_run, message); \
+        if ((test)) { \
+                printf("OK\n"); \
+        } \
+        else { \
+                printf("OK\n"); \
+                return message; \
+        } \
 } while (0)
 
 #define mu_run_test(test) do { \
