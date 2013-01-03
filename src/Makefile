@@ -34,7 +34,7 @@ test.o: test.c test.h config_test.h
 .PHONY: clean test testclean
 
 clean:
-	rm ${PROGRAM} ${PROGRAM}_test ${OBJECTFILES} test.o
+	rm ${PROGRAM} ${PROGRAM}_test ${OBJECTFILES} ${TESTFILES}
 
 test: ${TESTFILES}
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES}

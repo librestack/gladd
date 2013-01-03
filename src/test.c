@@ -5,13 +5,25 @@
 #include "test.h"
  
 int tests_run = 0;
- 
-static char * all_tests() {
-        config_test_runner();
+
+static void printline(char *c, int len)
+{
+        for (; len > 1; len--)
+                printf("%s", c);
+        printf("\n");
+}
+
+static char * all_tests()
+{
+        printline("*", 80);
+        //config_test_runner();
+        mu_run_test(test_read_config_000);
+        printline("*", 80);
         return 0;
 }
  
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
         char *result = all_tests();
         if (result != 0) {
                 printf("%s\n", result);

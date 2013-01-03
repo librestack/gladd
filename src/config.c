@@ -1,19 +1,27 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <limits.h>
 
 int read_config(char *configfile)
 {
-        //FILE *fd;
+        FILE *fd;
 
         /* open file for reading */
-        //FILE *fopen(const char *path, const char *mode);
-        //fd = fopen(configfile, 'r');
+        fd = fopen(configfile, "r");
+        if (fd == NULL) {
+                int errsv = errno;
+                fprintf(stderr, "ERROR: %s\n", strerror(errsv));
+                return 1;
+        }
+                                                        
 
         /* read in config */
         // int fscanf(FILE *stream, const char *format, ...);
 
         /* close file */
-        //close(fd);
+        fclose(fd);
 
         return 0;
 }
