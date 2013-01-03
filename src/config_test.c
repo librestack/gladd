@@ -18,4 +18,3 @@ char *test_read_config_001(char *configfile)
         return 0;
 }
 
-

@@ -4,7 +4,9 @@
 #include <errno.h>
 #include <limits.h>
 
-
+/*
+ * read config file into memory
+ */
 int read_config(char *configfile)
 {
         FILE *fd;
