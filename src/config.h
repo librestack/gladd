@@ -1,13 +1,12 @@
 #ifndef __GLADD_CONFIG_H__
 #define __GLADD_CONFIG_H__ 1
 
-struct config_t {
+typedef struct config_t {
         int debug;
         int port;
-} config = {
-        0,      /* debug */
-        8080    /* port */
-};
+} config_t;
+
+extern config_t config;
 
 int read_config(char *configfile);
 int process_config_line(char *line);

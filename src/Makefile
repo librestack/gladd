@@ -10,6 +10,9 @@ TESTOBJECTS=config.o
 ${PROGRAM}: ${OBJECTFILES}
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} ${LIBS}
 
+${PROGRAM}_test: ${TESTOBJECTS} ${TESTFILES}
+	${CC} ${CFLAGS} -o ${PROGRAM}_test ${TESTFILES} ${TESTOBJECTS}
+
 handler.o: handler.c handler.h http.h main.h mime.h
 	${CC} ${CFLAGS} ${INCLUDES} -c handler.c ${LIBS}
 
@@ -30,9 +33,6 @@ config_test.o: minunit.h config_test.c config_test.h
 
 test.o: minunit.h test.c test.h config_test.h
 	${CC} ${CFLAGS} ${INCLUDES} -c test.c
-
-${PROGRAM}_test: ${TESTOBJECTS} ${TESTFILES}
-	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES} ${TESTOBJECTS}
 
 
 .PHONY: clean test
