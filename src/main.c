@@ -4,6 +4,7 @@
 
 #define _GNU_SOURCE
 
+#include <errno.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,6 +57,7 @@ int main (void)
                         struct addrinfo **res);
 
         int concounter = 0;
+        int errsv;
         int lockfd;
         int new_fd;
         int status;
@@ -65,6 +67,7 @@ int main (void)
         struct addrinfo *servinfo;
         struct addrinfo hints;
         struct sockaddr_storage their_addr;
+        char tcpport[5];
 
         /* obtain lockfile */
         lockfd = creat(LOCKFILE, 0644);
@@ -89,8 +92,9 @@ int main (void)
         hints.ai_family = AF_UNSPEC;            /* ipv4/ipv6 agnostic */
         hints.ai_socktype = SOCK_STREAM;        /* TCP stream sockets */
         hints.ai_flags = AI_PASSIVE;            /* get my ip */
+        snprintf(tcpport, 5, "%i", config.port);/* tcp port to listen on */
 
-        if ((status = getaddrinfo(NULL, "3000", &hints, &servinfo)) != 0) {
+        if ((status = getaddrinfo(NULL, tcpport, &hints, &servinfo)) != 0){
                 fprintf(stderr, "getaddrinfo error: %s\n",
                                 gai_strerror(status));
                 exit(EXIT_FAILURE);
@@ -109,7 +113,16 @@ int main (void)
         freeaddrinfo(servinfo);
 
         /* listening */
-        listen(sockme, BACKLOG);
+        if (listen(sockme, BACKLOG) == 0) {
+                syslog(LOG_INFO, "Listening on port %i", config.port);
+        }
+        else {
+                errsv = errno;
+                fprintf(stderr, "ERROR: %s\n", strerror(errsv));
+                syslog(LOG_ERR, "Failed to listen on port %i. Exiting.", 
+                                                                config.port);
+                exit(EXIT_FAILURE);
+        }
 
         addr_size = sizeof their_addr;
 

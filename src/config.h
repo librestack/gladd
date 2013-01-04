@@ -6,7 +6,7 @@ struct config_t {
         int port;
 } config = {
         0,      /* debug */
-        3000       /* port */
+        3000    /* port */
 };
 
 int read_config(char *configfile);
