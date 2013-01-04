@@ -34,10 +34,10 @@ char *test_process_config_line_000()
         return 0;
 }
 
-/* test valid config line is read */
+/* test default value of port=3000 */
 char *test_read_config_003()
 {
         read_config("test.conf");
-        mu_assert("Read giblet = 3", config.giblet == 3);
+        mu_assert("Ensure default port=3000", config.port == 3000);
         return 0;
 }

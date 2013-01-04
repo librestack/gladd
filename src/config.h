@@ -3,10 +3,10 @@
 
 struct config_t {
         int debug;
-        int giblet;
+        int port;
 } config = {
         0,      /* debug */
-        0       /* giblet */
+        3000       /* port */
 };
 
 int read_config(char *configfile);
