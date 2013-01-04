@@ -12,7 +12,7 @@
                 printf("OK\n"); \
         } \
         else { \
-                printf("OK\n"); \
+                printf("FAIL\n"); \
                 return message; \
         } \
 } while (0)

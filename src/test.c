@@ -18,6 +18,8 @@ static char * all_tests()
         printline("*", 80);
         mu_run_test(test_read_config_000);
         mu_run_test(test_read_config_001);
+        mu_run_test(test_read_config_002);
+        mu_run_test(test_read_config_003);
         printline("*", 80);
         return 0;
 }
