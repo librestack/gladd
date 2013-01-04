@@ -18,14 +18,22 @@ int process_config_line(char *line)
 {
         char *key = 0;
         char *value = 0;
-        //int i;
+        int i;
 
         if (line[0] == '#')
                 return 1; /* skipping comment */
         
         if (snprintf(line, LINE_MAX, "%s %s\n", key, value) < 0)
                 return 2; /* line was not valid */
-        /*
+
+        if (key == 0)
+                fprintf(stderr, "ERROR: no key\n");
+                return 8; /* no key */
+
+        if (value == 0)
+                fprintf(stderr, "ERROR: no value\n");
+                return 16; /* no value */
+
         if (strncmp(key, "port", 4)) {
                 i = atoi(value);
                 if ((i > 0) && (i <= 65535))
@@ -35,7 +43,6 @@ int process_config_line(char *line)
                         return 4;
                 return 0;
         }
-        */
 
         return 0;
 }

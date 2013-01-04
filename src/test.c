@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 {
         char *result = all_tests();
         if (result != 0) {
-                printf("%s\n", result);
+                printf("FIXME: %s\n", result);
         }
         else {
                 printf("ALL TESTS PASSED\n");
