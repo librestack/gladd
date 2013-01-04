@@ -26,6 +26,14 @@ char *test_read_config_002()
         return 0;
 }
 
+/* process_config_line() must return 1 if line is a comment */
+char *test_process_config_line_000()
+{
+        mu_assert("Ensure comments are skipped by config parser",
+                process_config_line("# This line is a comment\n") == 1);
+        return 0;
+}
+
 /* test valid config line is read */
 char *test_read_config_003()
 {

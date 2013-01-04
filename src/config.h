@@ -10,5 +10,6 @@ struct config_t {
 };
 
 int read_config(char *configfile);
+int process_config_line(char *line);
 
 #endif /* __GLADD_CONFIG_H__ */

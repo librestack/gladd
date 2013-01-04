@@ -4,12 +4,19 @@
 #include <errno.h>
 #include <limits.h>
 
-/*
- * read config file into memory
- */
+/* check config line and handle appropriately */
+int process_config_line(char *line)
+{
+        if (line[0] == '#')
+                return 1; /* skipping comment */
+        return 0;
+}
+
+/* read config file into memory */
 int read_config(char *configfile)
 {
         FILE *fd;
+        char line[LINE_MAX];
 
         /* open file for reading */
         fd = fopen(configfile, "r");
@@ -20,10 +27,13 @@ int read_config(char *configfile)
         }
                                                         
         /* read in config */
-        // int fscanf(FILE *stream, const char *format, ...);
+        while (fgets(line, LINE_MAX, fd) != NULL) {
+                process_config_line(line);
+        }
 
         /* close file */
         fclose(fd);
 
         return 0;
 }
+
