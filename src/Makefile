@@ -3,10 +3,11 @@ CFLAGS=-g -Wall -Werror
 INCLUDES=-I/usr/include/libxml2
 LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq
 PROGRAM=gladd
-OBJECTFILES=handler.o http.o main.o mime.o
-TESTFILES=test.o config.o config_test.o
+OBJECTFILES=config.o handler.o http.o main.o mime.o
+TESTFILES=test.o config_test.o
+TESTOBJECTS=config.o
 
-gladd: ${OBJECTFILES}
+${PROGRAM}: ${OBJECTFILES}
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} ${LIBS}
 
 handler.o: handler.c handler.h http.h main.h mime.h
@@ -15,7 +16,7 @@ handler.o: handler.c handler.h http.h main.h mime.h
 http.o: http.c http.h main.h
 	${CC} ${CFLAGS} ${INCLUDES} -c http.c
 
-main.o: main.c main.h handler.h
+main.o: main.c main.h handler.h config.h
 	${CC} ${CFLAGS} ${INCLUDES} -c main.c
 
 mime.o: mime.c mime.h
@@ -37,5 +38,5 @@ clean:
 	rm ${PROGRAM} ${PROGRAM}_test ${OBJECTFILES} ${TESTFILES}
 
 test: ${TESTFILES}
-	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES}
+	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES} ${TESTOBJECTS}
 	./${PROGRAM}_test 2> /dev/null

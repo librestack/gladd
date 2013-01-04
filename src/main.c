@@ -14,6 +14,7 @@
 #include <unistd.h>
 
 #include "main.h"
+#include "config.h"
 #include "handler.h"
 
 static void sigchld_handler (int signo);
