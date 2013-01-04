@@ -37,7 +37,6 @@ char *test_process_config_line_000()
 /* test default value of port=8080 */
 char *test_read_config_003()
 {
-        read_config("test.conf");
         mu_assert("Ensure default port=8080", config.port == 8080);
         return 0;
 }

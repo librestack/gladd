@@ -16,26 +16,12 @@ config_t config = {
 /* check config line and handle appropriately */
 int process_config_line(char *line)
 {
-        char *key = 0;
-        char *value = 0;
-        int i;
+        long i = 0;
 
         if (line[0] == '#')
                 return 1; /* skipping comment */
         
-        if (snprintf(line, LINE_MAX, "%s %s\n", key, value) < 0)
-                return 2; /* line was not valid */
-
-        if (key == 0)
-                fprintf(stderr, "ERROR: no key\n");
-                return 8; /* no key */
-
-        if (value == 0)
-                fprintf(stderr, "ERROR: no value\n");
-                return 16; /* no value */
-
-        if (strncmp(key, "port", 4)) {
-                i = atoi(value);
+        if (sscanf(line, "port %li", &i) == 1) {
                 if ((i > 0) && (i <= 65535))
                         config.port = i;
                 else
@@ -44,7 +30,8 @@ int process_config_line(char *line)
                 return 0;
         }
 
-        return 0;
+        fprintf(stderr, "ERROR: unrecognised key\n");
+        return -1; /* unrecognised key */
 }
 
 /* read config file into memory */

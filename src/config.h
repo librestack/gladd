@@ -3,7 +3,7 @@
 
 typedef struct config_t {
         int debug;
-        int port;
+        long port;
 } config_t;
 
 extern config_t config;
