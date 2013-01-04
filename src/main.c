@@ -40,6 +40,7 @@ static void sigterm_handler (int signo)
 static void sighup_handler (int signo)
 {
         syslog(LOG_INFO, "Received SIGHUP.  Reloading config.");
+        read_config(DEFAULT_CONFIG);
 }
 
 void respond (int fd, char *response)
@@ -80,6 +81,9 @@ int main (void)
         openlog(PROGRAM, LOG_CONS|LOG_PID, LOG_DAEMON);
 
         syslog(LOG_INFO, "Starting up.");
+
+        /* read config */
+        read_config(DEFAULT_CONFIG);
 
         memset(&hints, 0, sizeof hints);        /* zero memory */
         hints.ai_family = AF_UNSPEC;            /* ipv4/ipv6 agnostic */
