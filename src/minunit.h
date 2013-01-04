@@ -7,7 +7,7 @@
 #define __MINUNIT_H__ 1
 
 #define mu_assert(message, test) do { \
-        printf("%i: %s ... ", tests_run, message); \
+        printf("%03i: %-65s ... ", tests_run, message); \
         if ((test)) { \
                 printf("OK\n"); \
         } \

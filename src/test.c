@@ -16,6 +16,8 @@ static void printline(char *c, int len)
 static char * all_tests()
 {
         printline("*", 80);
+        printf("Running tests\n");
+        printline("*", 80);
         mu_run_test(test_read_config_000);
         mu_run_test(test_read_config_001);
         mu_run_test(test_read_config_002);
@@ -30,7 +32,9 @@ int main(int argc, char **argv)
 {
         char *result = all_tests();
         if (result != 0) {
+                printline("*", 80);
                 printf("FIXME: %s\n", result);
+                printline("*", 80);
         }
         else {
                 printf("ALL TESTS PASSED\n");

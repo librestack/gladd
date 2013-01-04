@@ -43,4 +43,4 @@ clean:
 test:
 	make clean || true
 	make ${PROGRAM}_test
-	./${PROGRAM}_test 2> /dev/null
+	./${PROGRAM}_test 2> /dev/null || true
