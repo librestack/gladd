@@ -1,1 +1,2 @@
-Implement views.conf.
+FEATURE: Implement views.conf.
+BUG: ipv6 listening not working by default

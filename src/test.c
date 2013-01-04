@@ -21,6 +21,7 @@ static char * all_tests()
         mu_run_test(test_read_config_002);
         mu_run_test(test_process_config_line_000);
         mu_run_test(test_read_config_003);
+        mu_run_test(test_read_config_004);
         printline("*", 80);
         return 0;
 }

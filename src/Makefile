@@ -31,12 +31,16 @@ config_test.o: minunit.h config_test.c config_test.h
 test.o: minunit.h test.c test.h config_test.h
 	${CC} ${CFLAGS} ${INCLUDES} -c test.c
 
+${PROGRAM}_test: ${TESTOBJECTS} ${TESTFILES}
+	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES} ${TESTOBJECTS}
 
-.PHONY: clean test testclean
+
+.PHONY: clean test
 
 clean:
 	rm ${PROGRAM} ${PROGRAM}_test ${OBJECTFILES} ${TESTFILES}
 
-test: ${TESTFILES}
-	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES} ${TESTOBJECTS}
+test:
+	make clean || true
+	make ${PROGRAM}_test
 	./${PROGRAM}_test 2> /dev/null

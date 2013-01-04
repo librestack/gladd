@@ -34,10 +34,18 @@ char *test_process_config_line_000()
         return 0;
 }
 
-/* test default value of port=3000 */
+/* test default value of port=8080 */
 char *test_read_config_003()
 {
         read_config("test.conf");
-        mu_assert("Ensure default port=3000", config.port == 3000);
+        mu_assert("Ensure default port=8080", config.port == 8080);
+        return 0;
+}
+
+/* test */
+char *test_read_config_004()
+{
+        read_config("test.conf");
+        mu_assert("Ensure port is set from config", config.port == 3000);
         return 0;
 }
