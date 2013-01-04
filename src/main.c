@@ -35,6 +35,12 @@ static void sigterm_handler (int signo)
         exit(EXIT_SUCCESS);
 }
 
+/* catch HUP and reload config */
+static void sighup_handler (int signo)
+{
+        syslog(LOG_INFO, "Received SIGHUP.  Reloading config.");
+}
+
 void respond (int fd, char *response)
 {
         send(fd, response, strlen(response), 0);
@@ -109,6 +115,9 @@ int main (void)
 
         /* catch SIGTERM for cleanup */
         signal(SIGTERM, sigterm_handler);
+
+        /* catch HUP signal for config reload */
+        signal(SIGHUP, sighup_handler);
 
         for (;;) {
                 /* incoming! */
