@@ -1,11 +1,13 @@
 #ifndef __GLADD_CONFIG_TEST_H__
 #define __GLADD_CONFIG_TEST_H__ 1
 
-char *test_read_config_000();
-char *test_read_config_001();
-char *test_read_config_002();
-char *test_read_config_003();
-char *test_process_config_line_000();
-char *test_read_config_004();
+char *test_config_skip_comment();
+char *test_config_skip_blank();
+char *test_config_open_success();
+char *test_config_open_fail();
+char *test_config_default_debug_value();
+char *test_config_default_port_value();
+char *test_config_set_debug_value();
+char *test_config_set_port_value();
 
 #endif /* __GLADD_CONFIG_TEST_H__ */

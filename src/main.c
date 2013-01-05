@@ -68,6 +68,7 @@ int main (void)
         struct addrinfo hints;
         struct sockaddr_storage their_addr;
         char tcpport[5];
+        char *errmsg;
 
         /* obtain lockfile */
         lockfd = creat(LOCKFILE, 0644);
@@ -86,13 +87,19 @@ int main (void)
         syslog(LOG_INFO, "Starting up.");
 
         /* read config */
-        read_config(DEFAULT_CONFIG);
+        if (read_config(DEFAULT_CONFIG) != 0) {
+                asprintf(&errmsg,"Failed to read config on startup. Exiting.");
+                syslog(LOG_ERR, "%s", errmsg);
+                fprintf(stderr, "%s\n", errmsg);
+                free(errmsg);
+                exit(EXIT_FAILURE);
+        }
 
-        memset(&hints, 0, sizeof hints);        /* zero memory */
-        hints.ai_family = AF_UNSPEC;            /* ipv4/ipv6 agnostic */
-        hints.ai_socktype = SOCK_STREAM;        /* TCP stream sockets */
-        hints.ai_flags = AI_PASSIVE;            /* get my ip */
-        snprintf(tcpport, 5, "%i", config.port);/* tcp port to listen on */
+        memset(&hints, 0, sizeof hints);          /* zero memory */
+        hints.ai_family = AF_UNSPEC;              /* ipv4/ipv6 agnostic */
+        hints.ai_socktype = SOCK_STREAM;          /* TCP stream sockets */
+        hints.ai_flags = AI_PASSIVE;              /* get my ip */
+        snprintf(tcpport, 5, "%li", config.port); /* tcp port to listen on */
 
         if ((status = getaddrinfo(NULL, tcpport, &hints, &servinfo)) != 0){
                 fprintf(stderr, "getaddrinfo error: %s\n",
@@ -114,12 +121,12 @@ int main (void)
 
         /* listening */
         if (listen(sockme, BACKLOG) == 0) {
-                syslog(LOG_INFO, "Listening on port %i", config.port);
+                syslog(LOG_INFO, "Listening on port %li", config.port);
         }
         else {
                 errsv = errno;
                 fprintf(stderr, "ERROR: %s\n", strerror(errsv));
-                syslog(LOG_ERR, "Failed to listen on port %i. Exiting.", 
+                syslog(LOG_ERR, "Failed to listen on port %li. Exiting.", 
                                                                 config.port);
                 exit(EXIT_FAILURE);
         }
