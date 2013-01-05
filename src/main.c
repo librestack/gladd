@@ -42,6 +42,8 @@ static void sighup_handler (int signo)
 {
         syslog(LOG_INFO, "Received SIGHUP.  Reloading config.");
 
+        /* FIXME: config reload fails, probably due to daemon() call
+         * changing working dir */
         if (read_config(DEFAULT_CONFIG) != 0) {
                 syslog(LOG_ERR, "Config reload failed.");
         }

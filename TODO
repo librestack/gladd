@@ -1,4 +1,6 @@
 BUG: SIGHUP config reload failing
+	This is likely because the daemon() call changes the working dir.
+
 FEATURE: add url handling to config
 FEATURE: Align debug values with syslog
 BUG: ipv6 listening not working by default
