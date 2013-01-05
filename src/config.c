@@ -36,10 +36,10 @@ int process_config_line(char *line)
                 return 1; /* skipping comment */
         
         if (sscanf(line, "%[a-zA-Z0-9]", value) == 0) {
-                /* skipping blank line */
-                return 1;
+                return 1; /* skipping blank line */
         }
         else if (sscanf(line, "%s %li", key, &i) == 2) {
+                /* process long integer config values */
                 if (strncmp(key, "debug", 5) == 0) {
                         return set_config_long(&config.debug,"debug",i,0,1);
                 }
