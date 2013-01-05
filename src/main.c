@@ -41,7 +41,11 @@ static void sigterm_handler (int signo)
 static void sighup_handler (int signo)
 {
         syslog(LOG_INFO, "Received SIGHUP.  Reloading config.");
-        read_config(DEFAULT_CONFIG);
+
+        if (read_config(DEFAULT_CONFIG) != 0) {
+                syslog(LOG_ERR, "Config reload failed.");
+        }
+
 }
 
 void respond (int fd, char *response)

@@ -47,6 +47,8 @@ char *test_config_open_fail()
 /* test default value of debug = 0 */
 char *test_config_default_debug_value()
 {
+        //config = config_default;
+        set_config_defaults();
         mu_assert("Ensure default debug=0", config.debug == 0);
         return 0;
 }
