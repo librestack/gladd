@@ -20,6 +20,14 @@ char *test_config_skip_blank()
         return 0;
 }
 
+/* process_config_line() must return -1 if line is invalid */
+char *test_config_invalid_line()
+{
+        mu_assert("Ensure invalid lines return error",
+                process_config_line("gibberish") == -1);
+        return 0;
+}
+
 /* test opening config file */
 char *test_config_open_success()
 {

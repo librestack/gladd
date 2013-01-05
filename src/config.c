@@ -8,46 +8,47 @@
 
 /* set config defaults */
 config_t config = {
-        .debug = 0,
-        .port = 8080
+        .debug          = 0,
+        .port           = 8080
 };
+
+/* set config value if long integer is between min and max */
+int set_config_long(long *confset, char *keyname, long i, long min, long max)
+{
+        if ((i >= min) && (i <= max)) {
+                *confset = i;
+        }
+        else {
+                fprintf(stderr,"ERROR: invalid %s value\n", keyname);
+                return -1;
+        }
+        return 0;
+}
 
 /* check config line and handle appropriately */
 int process_config_line(char *line)
 {
         long i = 0;
-        char str[LINE_MAX] = "";
+        char key[LINE_MAX] = "";
+        char value[LINE_MAX] = "";
 
         if (line[0] == '#')
                 return 1; /* skipping comment */
         
-        if (sscanf(line, "%[a-zA-Z0-9]", str) == 0) {
+        if (sscanf(line, "%[a-zA-Z0-9]", value) == 0) {
                 /* skipping blank line */
                 return 1;
         }
-        else if (sscanf(line, "debug %li", &i) == 1) {
-                if ((i >= 0) && (i <= 1)) {
-                        config.debug = i;
+        else if (sscanf(line, "%s %li", key, &i) == 2) {
+                if (strncmp(key, "debug", 5) == 0) {
+                        return set_config_long(&config.debug,"debug",i,0,1);
                 }
-                else {
-                        fprintf(stderr, "ERROR: invalid debug value\n");
-                        return -1;
+                else if (strncmp(key, "port", 4) == 0) {
+                        return set_config_long(&config.port,"port",i,1,65535);
                 }
-                return 0;
-        }
-        else if (sscanf(line, "port %li", &i) == 1) {
-                if ((i > 0) && (i <= 65535)) {
-                        config.port = i;
-                }
-                else {
-                        fprintf(stderr, "ERROR: invalid port\n");
-                        return -1;
-                }
-                return 0;
         }
 
-        fprintf(stderr, "ERROR: unrecognised key\n");
-        return -1; /* unrecognised key */
+        return -1; /* syntax error */
 }
 
 FILE *open_config(char *configfile)

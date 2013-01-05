@@ -20,6 +20,7 @@ static char * all_tests()
         printline("*", 80);
         mu_run_test(test_config_skip_comment);
         mu_run_test(test_config_skip_blank);
+        mu_run_test(test_config_invalid_line);
         mu_run_test(test_config_default_debug_value);
         mu_run_test(test_config_default_port_value);
         mu_run_test(test_config_open_fail);
