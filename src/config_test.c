@@ -75,7 +75,6 @@ char *test_config_set_debug_value()
 /* ensure value of port is set from config */
 char *test_config_set_port_value()
 {
-        //read_config("test.conf");
         mu_assert("Ensure port is set from config", config->port == 3000);
         return 0;
 }
@@ -83,7 +82,6 @@ char *test_config_set_port_value()
 /* read url directive from config file */
 char *test_config_read_url_static()
 {
-        //read_config("test.conf");
         mu_assert("Ensure urls are read from config", 
                         strncmp(config->urls->type, "static", 6) == 0);
         return 0;
@@ -94,8 +92,6 @@ char *test_config_read_url_static_next()
 {
         url_t *u;
         u = config->urls;
-
-        //read_config("test.conf");
 
         fprintf(stderr, "Config: %s\n", config->urls->url);
         fprintf(stderr, "First: %s\n", u->url);

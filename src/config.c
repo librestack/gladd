@@ -60,38 +60,51 @@ void free_urls()
         }
 }
 
-/* add url handler */
-int add_url_handler(char *value)
+/* static url handler */
+void handle_static_url(char params[LINE_MAX])
 {
         url_t *newurl;
-        char type[8];
         char url[LINE_MAX];
         char path[LINE_MAX];
-        char params[LINE_MAX];
 
         newurl = malloc(sizeof(struct url_t));
 
+        if (sscanf(params, "%s %s", url, path) == 2) {
+                newurl->type = "static";
+                newurl->url = strdup(url);
+                newurl->path = strdup(path);
+                newurl->next = NULL;
+                if (prevurl != NULL) {
+                        /* update ->next ptr in previous url
+                         * to point to new */
+                        prevurl->next = newurl;
+                }
+                else {
+                        /* no previous url, 
+                         * so set first ptr in config */
+                        config_new->urls = newurl;
+                }
+                prevurl = newurl;
+        }
+}
+
+/* add url handler */
+int add_url_handler(char *value)
+{
+        char type[8];
+        char params[LINE_MAX];
+
         if (sscanf(value, "%s %[^\n]", type, params) == 2) {
                 if (strncmp(type, "static", 6) == 0) {
-                        /* static url handler */
-                        if (sscanf(params, "%s %s", url, path) == 2) {
-                                newurl->type = "static";
-                                newurl->url = strdup(url);
-                                newurl->path = strdup(path);
-                                newurl->next = NULL;
-                                if (prevurl != NULL) {
-                                        /* update ->next ptr in previous url
-                                         * to point to new */
-                                        prevurl->next = newurl;
-                                }
-                                else {
-                                        /* no previous url, 
-                                         * so set first ptr in config */
-                                        config_new->urls = newurl;
-                                }
-                                prevurl = newurl;
-                        }
+                        handle_static_url(params);
                 }
+                else {
+                        fprintf(stderr, "unhandled url type %s", type);
+                        return 1;
+                }
+        }
+        else {
+                return 1;
         }
 
         return 0;
