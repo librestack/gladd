@@ -187,6 +187,8 @@ int send_file(int sock, char *path)
                 return 1;
         }
 
+        /* TODO: ensure file is a normal file, not a directory */
+
         /* get size of file */
         fstat(f, &stat_buf);
         syslog(LOG_DEBUG, "Sending %i bytes", (int)stat_buf.st_size);
