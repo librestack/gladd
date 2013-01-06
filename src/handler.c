@@ -91,7 +91,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         state = 1;
         setsockopt(sockme, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
 
-        /* TODO: refactor to remove duplication */
         if (strncmp(method, "GET", 3) == 0) {
 
                 u = config->urls;
@@ -104,7 +103,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                         asprintf(&filename, "%s%s", u->path,
                                                                     basefile);
                                         free(basefile);
-                                        send_file(sock, filename);
+                                        if (send_file(sock, filename) == 1)
+                                                http_response(sock, 404);
                                         free(filename);
                                         break;
                                 }
@@ -179,8 +179,6 @@ int send_file(int sock, char *path)
         off_t offset;
         int state;
         struct stat stat_buf;
-
-        /* TODO: first, check file exists, or return 404 */
 
         f = open(path, O_RDONLY);
         if (f == -1) {
