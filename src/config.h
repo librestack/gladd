@@ -23,5 +23,6 @@ int process_config_line(char *line);
 int read_config(char *configfile);
 int set_config_defaults();
 int set_config_long(long *confset, char *keyname, long i, long min, long max);
+void free_urls();
 
 #endif /* __GLADD_CONFIG_H__ */

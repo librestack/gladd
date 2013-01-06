@@ -3,6 +3,7 @@
 #include "minunit.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 
 /* process_config_line() must return 1 if line is a comment */
@@ -32,8 +33,11 @@ char *test_config_invalid_line()
 /* test opening config file */
 char *test_config_open_success()
 {
-        mu_assert("Open test.conf for reading", 
-                open_config("test.conf") != NULL);
+        FILE *fd;
+
+        fd = open_config("test.conf");
+        mu_assert("Open test.conf for reading", fd != NULL);
+        fclose(fd);
         return 0;
 }
 
@@ -71,7 +75,7 @@ char *test_config_set_debug_value()
 /* ensure value of port is set from config */
 char *test_config_set_port_value()
 {
-        read_config("test.conf");
+        //read_config("test.conf");
         mu_assert("Ensure port is set from config", config->port == 3000);
         return 0;
 }
@@ -79,7 +83,7 @@ char *test_config_set_port_value()
 /* read url directive from config file */
 char *test_config_read_url_static()
 {
-        read_config("test.conf");
+        //read_config("test.conf");
         mu_assert("Ensure urls are read from config", 
                         strncmp(config->urls->type, "static", 6) == 0);
         return 0;
@@ -91,20 +95,25 @@ char *test_config_read_url_static_next()
         url_t *u;
         u = config->urls;
 
-        read_config("test.conf");
+        //read_config("test.conf");
 
         fprintf(stderr, "Config: %s\n", config->urls->url);
         fprintf(stderr, "First: %s\n", u->url);
         mu_assert("Reading first url from config", 
                         strncmp(u->url, "/static/", strlen(u->url)) == 0);
+
         u = u->next;
         fprintf(stderr, "Second: %s\n", u->url);
         mu_assert("Reading second url from config", 
                         strncmp(u->url, "/static2/", strlen(u->url)) == 0);
-        fprintf(stderr, "Third: %s\n", u->url);
         u = u->next;
+        fprintf(stderr, "Third: %s\n", u->url);
         mu_assert("Reading third url from config", 
                         strncmp(u->url, "/static3/", strlen(u->url)) == 0);
 
+        mu_assert("Ensure final url->next returns NULL", u->next == NULL);
+
+        free_urls();
+        
         return 0;
 }

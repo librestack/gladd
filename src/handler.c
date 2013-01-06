@@ -94,8 +94,10 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         /* TODO: refactor to remove duplication */
         if (strncmp(method, "GET", 3) == 0) {
 
+                int safety_counter =0;
+
                 u = config->urls;
-                for (u = config->urls; u != NULL; u = config->urls->next) {
+                while ((u != NULL) && (safety_counter < 5)) {
                         syslog(LOG_DEBUG, "url matching... Trying %s", u->url);
                         if (strncmp(res, u->url, strlen(u->url)) == 0) {
                                 if (strncmp(u->type, "static", 6)) {
@@ -109,6 +111,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                         break;
                                 }
                         }
+                        u = config->urls->next;
+                        safety_counter++;
                 }
 
                 /* dynamic urls */

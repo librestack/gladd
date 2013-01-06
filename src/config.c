@@ -44,6 +44,22 @@ int set_config_long(long *confset, char *keyname, long i, long min, long max)
         return 0;
 }
 
+/* clean up config->urls memory */
+void free_urls()
+{
+        url_t *u;
+        url_t *tmp;
+
+        u = config->urls;
+        while (u != NULL) {
+                free(u->url);
+                free(u->path);
+                tmp = u;
+                u = u->next;
+                free(tmp);
+        }
+}
+
 /* add url handler */
 int add_url_handler(char *value)
 {
@@ -79,7 +95,7 @@ int add_url_handler(char *value)
         }
 
         /* TODO: plug this leak - can't free() here, need to do later */
-        //free(u);
+        //free(newurl);
 
         /* check newurl-> url etc are free()'d */
 
