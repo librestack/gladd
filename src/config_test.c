@@ -49,14 +49,14 @@ char *test_config_open_fail()
 char *test_config_default_debug_value()
 {
         set_config_defaults();
-        mu_assert("Ensure default debug=0", config.debug == 0);
+        mu_assert("Ensure default debug=0", config->debug == 0);
         return 0;
 }
 
 /* test default value of port=8080 */
 char *test_config_default_port_value()
 {
-        mu_assert("Ensure default port=8080", config.port == 8080);
+        mu_assert("Ensure default port=8080", config->port == 8080);
         return 0;
 }
 
@@ -64,7 +64,7 @@ char *test_config_default_port_value()
 char *test_config_set_debug_value()
 {
         read_config("test.conf");
-        mu_assert("Ensure debug is set from config", config.debug == 1);
+        mu_assert("Ensure debug is set from config", config->debug == 1);
         return 0;
 }
 
@@ -72,7 +72,7 @@ char *test_config_set_debug_value()
 char *test_config_set_port_value()
 {
         read_config("test.conf");
-        mu_assert("Ensure port is set from config", config.port == 3000);
+        mu_assert("Ensure port is set from config", config->port == 3000);
         return 0;
 }
 
@@ -81,6 +81,30 @@ char *test_config_read_url_static()
 {
         read_config("test.conf");
         mu_assert("Ensure urls are read from config", 
-                        strncmp(config.urls->type, "static", 6) == 0);
+                        strncmp(config->urls->type, "static", 6) == 0);
+        return 0;
+}
+
+/* test successive reads of url->next */
+char *test_config_read_url_static_next()
+{
+        url_t *u;
+        u = config->urls;
+
+        read_config("test.conf");
+
+        fprintf(stderr, "Config: %s\n", config->urls->url);
+        fprintf(stderr, "First: %s\n", u->url);
+        mu_assert("Reading first url from config", 
+                        strncmp(u->url, "/static/", strlen(u->url)) == 0);
+        u = u->next;
+        fprintf(stderr, "Second: %s\n", u->url);
+        mu_assert("Reading second url from config", 
+                        strncmp(u->url, "/static2/", strlen(u->url)) == 0);
+        fprintf(stderr, "Third: %s\n", u->url);
+        u = u->next;
+        mu_assert("Reading third url from config", 
+                        strncmp(u->url, "/static3/", strlen(u->url)) == 0);
+
         return 0;
 }

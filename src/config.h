@@ -16,7 +16,7 @@ typedef struct config_t {
         struct url_t *urls;
 } config_t;
 
-extern config_t config;
+extern config_t *config;
 
 FILE *open_config(char *configfile);
 int process_config_line(char *line);

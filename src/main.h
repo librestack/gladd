@@ -5,7 +5,7 @@
 #define BUFSIZE 8096
 #define LOCKFILE ".gladd.lock"
 #define PROGRAM "gladd"
-#define DEFAULT_CONFIG "gladd.conf"
+#define DEFAULT_CONFIG "/etc/gladd.conf"
 
 int sockme;
 

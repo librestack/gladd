@@ -28,6 +28,7 @@ static char * all_tests()
         mu_run_test(test_config_set_debug_value);
         mu_run_test(test_config_set_port_value);
         mu_run_test(test_config_read_url_static);
+        mu_run_test(test_config_read_url_static_next);
         printline("*", 80);
         return 0;
 }

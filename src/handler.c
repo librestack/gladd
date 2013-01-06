@@ -49,17 +49,18 @@ void *get_in_addr(struct sockaddr *sa)
 void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
         char *basefile;
-        char *basedir;
         char buf[BUFSIZE];
         char *filename;
 
         char httpv[8];
         char method[8];
-        char resource[MAX_RESOURCE_LEN];
+        char res[MAX_RESOURCE_LEN];
 
         char s[INET6_ADDRSTRLEN];
         int byte_count;
         int state;
+        
+        url_t *u;
 
         //char *r;
         //char *xml;
@@ -74,14 +75,14 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         byte_count = recv(sock, buf, sizeof buf, 0);
         syslog(LOG_DEBUG, "recv()'d %d bytes of data in buf\n", byte_count);
 
-        if (sscanf(buf, "%s %s HTTP/%s", method, resource, httpv) != 3) {
+        if (sscanf(buf, "%s %s HTTP/%s", method, res, httpv) != 3) {
                 syslog(LOG_INFO, "Bad Request");
                 http_response(sock, 400);
                 exit(EXIT_FAILURE);
         }
 
         syslog(LOG_DEBUG, "Method: %s", method);
-        syslog(LOG_DEBUG, "Resource: %s", resource);
+        syslog(LOG_DEBUG, "Resource: %s", res);
         syslog(LOG_DEBUG, "HTTP Version: %s", httpv);
 
         /* Return HTTP response */
@@ -92,20 +93,28 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
         /* TODO: refactor to remove duplication */
         if (strncmp(method, "GET", 3) == 0) {
-                /* serve static files */
-                if (strncmp(resource, "/static/", 8) == 0) {
-                        basefile = strndup(resource+8, sizeof(resource));
-                        asprintf(&basedir, "/home/bacs/dev/gladd/static/");
-                        asprintf(&filename, "%s%s", basedir, basefile);
-                        free(basedir);
-                        free(basefile);
-                        send_file(sock, filename);
-                        free(filename);
+
+                u = config->urls;
+                for (u = config->urls; u != NULL; u = config->urls->next) {
+                        syslog(LOG_DEBUG, "url matching... Trying %s", u->url);
+                        if (strncmp(res, u->url, strlen(u->url)) == 0) {
+                                if (strncmp(u->type, "static", 6)) {
+                                        /* serve static files */
+                                        basefile = strndup(res+8, sizeof(res));
+                                        asprintf(&filename, "%s%s", u->path,
+                                                                    basefile);
+                                        free(basefile);
+                                        send_file(sock, filename);
+                                        free(filename);
+                                        break;
+                                }
+                        }
                 }
+
                 /* dynamic urls */
                 /*
-                else if (strncmp(resource, "/guess/", 7) == 0){
-                        prepare_response(resource, &xml, 0);
+                else if (strncmp(res, "/guess/", 7) == 0){
+                        prepare_response(res, &xml, 0);
                         if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1) {
                                 syslog(LOG_ERR, "Malloc failed");
                                 exit(EXIT_FAILURE);
@@ -115,7 +124,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         free(r);
                 }
                 */
-                else {
+                if (u == NULL) {
+                        /* Not found */
                         http_response(sock, 404);
                 }
         }

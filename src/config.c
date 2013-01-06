@@ -12,10 +12,10 @@ config_t config_default = {
         .port           = 8080
 };
 
-config_t config;
-config_t config_new;
+config_t *config;
+config_t *config_new;
 
-static url_t *p;        /* pointer to last url */
+url_t *prevurl;        /* pointer to last url */
 
 /* set config defaults if they haven't been set already */
 int set_config_defaults()
@@ -25,7 +25,7 @@ int set_config_defaults()
         if (defaults_set != 0)
                 return 1;
 
-        config = config_default;
+        config = &config_default;
 
         defaults_set = 1;
         return 0;
@@ -47,35 +47,41 @@ int set_config_long(long *confset, char *keyname, long i, long min, long max)
 /* add url handler */
 int add_url_handler(char *value)
 {
-        url_t *u;
+        url_t *newurl;
         char type[8];
         char url[LINE_MAX];
         char path[LINE_MAX];
         char params[LINE_MAX];
 
-        u = malloc(sizeof(struct url_t));
+        newurl = malloc(sizeof(struct url_t));
 
         if (sscanf(value, "%s %[^\n]", type, params) == 2) {
                 if (strncmp(type, "static", 6) == 0) {
                         /* static url handler */
                         if (sscanf(params, "%s %s", url, path) == 2) {
-                                u->type = "static";
-                                u->url = url;
-                                u->path = path;
-                                u->next = NULL;
-                                if (p != NULL) {
-                                        p->next = u;
+                                newurl->type = "static";
+                                newurl->url = strdup(url);
+                                newurl->path = strdup(path);
+                                newurl->next = NULL;
+                                if (prevurl != NULL) {
+                                        /* update ->next ptr in previous url
+                                         * to point to new */
+                                        prevurl->next = newurl;
                                 }
                                 else {
-                                        config_new.urls = u;
+                                        /* no previous url, 
+                                         * so set first ptr in config */
+                                        config_new->urls = newurl;
                                 }
-                                p = u;
+                                prevurl = newurl;
                         }
                 }
         }
 
-        /* TODO: plug this leak */
+        /* TODO: plug this leak - can't free() here, need to do later */
         //free(u);
+
+        /* check newurl-> url etc are free()'d */
 
         return 0;
 }
@@ -96,11 +102,11 @@ int process_config_line(char *line)
         else if (sscanf(line, "%s %li", key, &i) == 2) {
                 /* process long integer config values */
                 if (strncmp(key, "debug", 5) == 0) {
-                        return set_config_long(&config_new.debug,
+                        return set_config_long(&config_new->debug,
                                                 "debug", i, 0, 1);
                 }
                 else if (strncmp(key, "port", 4) == 0) {
-                        return set_config_long(&config_new.port, 
+                        return set_config_long(&config_new->port, 
                                                 "port", i, 1, 65535);
                 }
         }
@@ -135,9 +141,9 @@ int read_config(char *configfile)
         int retval = 0;
 
         set_config_defaults();
-        config_new = config_default;
+        config_new = &config_default;
 
-        p = NULL;
+        prevurl = NULL;
 
         /* open file for reading */
         fd = open_config(configfile);
