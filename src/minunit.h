@@ -15,11 +15,11 @@
                 printf("FAIL\n"); \
                 return message; \
         } \
+        tests_run++; \
 } while (0)
 
 #define mu_run_test(test) do { \
         char *message = test(); \
-        tests_run++; \
         if (message) return message; \
 } while (0)
 
