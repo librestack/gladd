@@ -94,13 +94,11 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         /* TODO: refactor to remove duplication */
         if (strncmp(method, "GET", 3) == 0) {
 
-                int safety_counter =0;
-
                 u = config->urls;
-                while ((u != NULL) && (safety_counter < 5)) {
+                while (u != NULL) {
                         syslog(LOG_DEBUG, "url matching... Trying %s", u->url);
                         if (strncmp(res, u->url, strlen(u->url)) == 0) {
-                                if (strncmp(u->type, "static", 6)) {
+                                if (strncmp(u->type, "static", 6) == 0) {
                                         /* serve static files */
                                         basefile = strndup(res+8, sizeof(res));
                                         asprintf(&filename, "%s%s", u->path,
@@ -111,8 +109,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                         break;
                                 }
                         }
-                        u = config->urls->next;
-                        safety_counter++;
+                        u = u->next;
                 }
 
                 /* dynamic urls */
