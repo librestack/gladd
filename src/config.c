@@ -94,11 +94,6 @@ int add_url_handler(char *value)
                 }
         }
 
-        /* TODO: plug this leak - can't free() here, need to do later */
-        //free(newurl);
-
-        /* check newurl-> url etc are free()'d */
-
         return 0;
 }
 
