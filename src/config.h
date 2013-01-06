@@ -3,9 +3,17 @@
 
 #include <stdio.h>
 
+typedef struct url_t {
+        char *type;
+        char *url;
+        char *path;
+        struct url_t *next;
+} url_t;
+
 typedef struct config_t {
         long debug;
         long port;
+        struct url_t *urls;
 } config_t;
 
 extern config_t config;

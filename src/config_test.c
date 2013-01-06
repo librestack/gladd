@@ -2,6 +2,7 @@
 #include "config.h"
 #include "minunit.h"
 #include <stdio.h>
+#include <string.h>
 
 
 /* process_config_line() must return 1 if line is a comment */
@@ -47,7 +48,6 @@ char *test_config_open_fail()
 /* test default value of debug = 0 */
 char *test_config_default_debug_value()
 {
-        //config = config_default;
         set_config_defaults();
         mu_assert("Ensure default debug=0", config.debug == 0);
         return 0;
@@ -73,5 +73,14 @@ char *test_config_set_port_value()
 {
         read_config("test.conf");
         mu_assert("Ensure port is set from config", config.port == 3000);
+        return 0;
+}
+
+/* read url directive from config file */
+char *test_config_read_url_static()
+{
+        read_config("test.conf");
+        mu_assert("Ensure urls are read from config", 
+                        strncmp(config.urls->type, "static", 6) == 0);
         return 0;
 }

@@ -13,7 +13,7 @@ ${PROGRAM}: ${OBJECTFILES}
 ${PROGRAM}_test: ${TESTOBJECTS} ${TESTFILES}
 	${CC} ${CFLAGS} -o ${PROGRAM}_test ${TESTFILES} ${TESTOBJECTS}
 
-handler.o: handler.c handler.h http.h main.h mime.h
+handler.o: handler.c handler.h http.h main.h mime.h config.h
 	${CC} ${CFLAGS} ${INCLUDES} -c handler.c ${LIBS}
 
 http.o: http.c http.h main.h

@@ -8,6 +8,7 @@
 #define BUFSIZE 8096
 #define MAX_RESOURCE_LEN 256
 
+#include "config.h"
 #include "main.h"
 #include "mime.h"
 #include "http.h"

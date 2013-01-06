@@ -15,6 +15,8 @@ config_t config_default = {
 config_t config;
 config_t config_new;
 
+static url_t *p;        /* pointer to last url */
+
 /* set config defaults if they haven't been set already */
 int set_config_defaults()
 {
@@ -42,6 +44,42 @@ int set_config_long(long *confset, char *keyname, long i, long min, long max)
         return 0;
 }
 
+/* add url handler */
+int add_url_handler(char *value)
+{
+        url_t *u;
+        char type[8];
+        char url[LINE_MAX];
+        char path[LINE_MAX];
+        char params[LINE_MAX];
+
+        u = malloc(sizeof(struct url_t));
+
+        if (sscanf(value, "%s %[^\n]", type, params) == 2) {
+                if (strncmp(type, "static", 6) == 0) {
+                        /* static url handler */
+                        if (sscanf(params, "%s %s", url, path) == 2) {
+                                u->type = "static";
+                                u->url = url;
+                                u->path = path;
+                                u->next = NULL;
+                                if (p != NULL) {
+                                        p->next = u;
+                                }
+                                else {
+                                        config_new.urls = u;
+                                }
+                                p = u;
+                        }
+                }
+        }
+
+        /* TODO: plug this leak */
+        //free(u);
+
+        return 0;
+}
+
 /* check config line and handle appropriately */
 int process_config_line(char *line)
 {
@@ -64,6 +102,11 @@ int process_config_line(char *line)
                 else if (strncmp(key, "port", 4) == 0) {
                         return set_config_long(&config_new.port, 
                                                 "port", i, 1, 65535);
+                }
+        }
+        else if (sscanf(line, "%s %[^\n]", key, value) == 2) {
+                if (strncmp(key, "url", 3) == 0) {
+                        return add_url_handler(value);
                 }
         }
 
@@ -93,6 +136,8 @@ int read_config(char *configfile)
 
         set_config_defaults();
         config_new = config_default;
+
+        p = NULL;
 
         /* open file for reading */
         fd = open_config(configfile);

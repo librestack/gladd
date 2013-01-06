@@ -10,5 +10,6 @@ char *test_config_default_debug_value();
 char *test_config_default_port_value();
 char *test_config_set_debug_value();
 char *test_config_set_port_value();
+char *test_config_read_url_static();
 
 #endif /* __GLADD_CONFIG_TEST_H__ */
