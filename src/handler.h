@@ -25,7 +25,7 @@
 
 
 /* TEMP */
-#define RESPONSE_200 "HTTP/1.1 200 OK\nServer: webguessd\nConnection: close\nContent-Type: %s\n\n%s"
+#define RESPONSE_200 "HTTP/1.1 200 OK\nServer: gladd\nConnection: close\nContent-Type: %s\n\n%s"
 
 #include <sys/socket.h>
 
