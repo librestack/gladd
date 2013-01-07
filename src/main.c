@@ -83,6 +83,7 @@ int main (void)
         int errsv;
         int lockfd;
         int new_fd;
+        FILE *fd;
         int status;
         int yes=1;
         pid_t pid;
@@ -156,7 +157,18 @@ int main (void)
 
         addr_size = sizeof their_addr;
 
-        daemon(0, 0);
+        if (daemon(0, 0) == -1) {
+                errsv = errno;
+                fprintf(stderr, "ERROR: %s\n", strerror(errsv));
+                syslog(LOG_ERR, "Failed to daemonize. Exiting.");
+                exit(EXIT_FAILURE);
+        }
+
+        /* write pid to lockfile */
+        fd = fdopen(lockfd, "w");
+        fprintf(fd, "%i", getpid());
+        fclose(fd);
+
 
         /* set up child signal handler */
         signal(SIGCHLD, sigchld_handler);
