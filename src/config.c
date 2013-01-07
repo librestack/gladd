@@ -121,12 +121,13 @@ int add_url_handler(char *value)
                         handle_static_url(params);
                 }
                 else {
-                        fprintf(stderr, "unhandled url type %s", type);
-                        return 1;
+                        fprintf(stderr, "skipping unhandled url type '%s'\n", 
+                                                                        type);
+                        return -1;
                 }
         }
         else {
-                return 1;
+                return -1;
         }
 
         return 0;
