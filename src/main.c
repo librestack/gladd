@@ -157,6 +157,7 @@ int main (void)
 
         addr_size = sizeof their_addr;
 
+        /* daemonize */
         if (daemon(0, 0) == -1) {
                 errsv = errno;
                 fprintf(stderr, "ERROR: %s\n", strerror(errsv));
@@ -168,7 +169,6 @@ int main (void)
         fd = fdopen(lockfd, "w");
         fprintf(fd, "%i", getpid());
         fclose(fd);
-
 
         /* set up child signal handler */
         signal(SIGCHLD, sigchld_handler);
