@@ -1,5 +1,5 @@
-/* 
- * main.h
+/*
+ * signals.c - handle process signals
  *
  * this file is part of GLADD
  *
@@ -20,17 +20,38 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GLADD_MAIN_H__
-#define __GLADD_MAIN_H__ 1
+#include <stdio.h>
+#include <stdlib.h>
+#include <syslog.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include "config.h"
+#include "signals.h"
 
-#define BACKLOG 10  /* how many pending connectiong to hold in queue */
-#define BUFSIZE 8096
-#define LOCKFILE ".gladd.lock"
-#define PROGRAM "gladd"
-#define DEFAULT_CONFIG "/etc/gladd.conf"
+/* clean up zombie children */
+void sigchld_handler (int signo)
+{
+        int status;
+        wait(&status);
+}
 
-int sockme;
+/* catch SIGTERM and clean up */
+void sigterm_handler (int signo)
+{
+        close(sockme);
+        syslog(LOG_INFO, "Received SIGTERM.  Shutting down.");
+        closelog();
+        free_urls();
+        exit(EXIT_SUCCESS);
+}
 
-int main (int argc, char **argv);
+/* catch HUP and reload config */
+void sighup_handler (int signo)
+{
+        syslog(LOG_INFO, "Received SIGHUP.  Reloading config.");
 
-#endif /* __GLADD_MAIN_H__ */
+        if (read_config(DEFAULT_CONFIG) != 0) {
+                syslog(LOG_ERR, "Config reload failed.");
+        }
+
+}

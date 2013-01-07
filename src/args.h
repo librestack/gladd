@@ -1,5 +1,5 @@
-/* 
- * main.h
+/*
+ * args.h - handle commandline arguments
  *
  * this file is part of GLADD
  *
@@ -20,17 +20,9 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GLADD_MAIN_H__
-#define __GLADD_MAIN_H__ 1
+#ifndef __GLADD_ARGS_H__
+#define __GLADD_ARGS_H__ 1
 
-#define BACKLOG 10  /* how many pending connectiong to hold in queue */
-#define BUFSIZE 8096
-#define LOCKFILE ".gladd.lock"
-#define PROGRAM "gladd"
-#define DEFAULT_CONFIG "/etc/gladd.conf"
+int process_args(int argc, char **argv);
 
-int sockme;
-
-int main (int argc, char **argv);
-
-#endif /* __GLADD_MAIN_H__ */
+#endif /* __GLADD_ARGS_H__ */

@@ -24,15 +24,17 @@ INCLUDES=-I/usr/include/libxml2
 LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
-OBJECTFILES=config.o handler.o http.o main.o mime.o
-TESTFILES=test.o config_test.o
-TESTOBJECTS=config.o
+OBJECTFILES=args.o config.o handler.o http.o mime.o signals.o
+TESTFILES=test.o config_test.o main_test.o
 
-${PROGRAM}: ${OBJECTFILES}
-	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} ${LIBS}
+${PROGRAM}: ${PROGRAM}_test main.o
+	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} main.o ${LIBS}
 
-${PROGRAM}_test: ${TESTOBJECTS} ${TESTFILES}
-	${CC} ${CFLAGS} -o ${PROGRAM}_test ${TESTFILES} ${TESTOBJECTS}
+${PROGRAM}_test: ${OBJECTFILES} ${TESTFILES}
+	${CC} ${CFLAGS}  ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES} ${OBJECTFILES} ${LIBS}
+
+args.o: args.c args.h
+	${CC} ${CFLAGS} -c args.c
 
 handler.o: handler.c handler.h http.h main.h mime.h config.h
 	${CC} ${CFLAGS} ${INCLUDES} -c handler.c ${LIBS}
@@ -43,8 +45,14 @@ http.o: http.c http.h main.h
 main.o: main.c main.h handler.h config.h
 	${CC} ${CFLAGS} ${INCLUDES} -c main.c
 
+main_test.o: minunit.h main_test.c main_test.h main.c main.h handler.h config.h
+	${CC} ${CFLAGS} ${INCLUDES} -c main_test.c main.c
+
 mime.o: mime.c mime.h
 	${CC} ${CFLAGS} ${INCLUDES} -c mime.c
+
+signals.o: signals.c signals.h
+	${CC} ${CFLAGS} -c signals.c
 
 config.o: config.c config.h
 	${CC} ${CFLAGS} -c config.c
@@ -52,7 +60,7 @@ config.o: config.c config.h
 config_test.o: minunit.h config_test.c config_test.h
 	${CC} ${CFLAGS} -c config_test.c
 
-test.o: minunit.h test.c test.h config_test.h
+test.o: minunit.h test.c test.h config_test.h main_test.h
 	${CC} ${CFLAGS} ${INCLUDES} -c test.c
 
 
@@ -63,8 +71,7 @@ clean:
 
 test:
 	make clean || true
-	make ${PROGRAM}_test
-	./${PROGRAM}_test 2> /dev/null || true
+	make && ./${PROGRAM}_test 2> /dev/null || true
 
 install:
 	cp ${PROGRAM} ${INSTALLDIR}

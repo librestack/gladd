@@ -25,6 +25,14 @@
 
 #include <stdio.h>
 
+#define BACKLOG 10  /* how many pending connectiong to hold in queue */
+#define BUFSIZE 8096
+#define LOCKFILE ".gladd.lock"
+#define PROGRAM "gladd"
+#define DEFAULT_CONFIG "/etc/gladd.conf"
+
+extern int sockme;
+
 typedef struct url_t {
         char *type;
         char *url;

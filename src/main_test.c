@@ -1,5 +1,5 @@
 /* 
- * main.h
+ * main_test.c - unit tests for main.c
  *
  * this file is part of GLADD
  *
@@ -20,17 +20,15 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GLADD_MAIN_H__
-#define __GLADD_MAIN_H__ 1
+#include "main_test.h"
+#include "main.h"
+#include "minunit.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
-#define BACKLOG 10  /* how many pending connectiong to hold in queue */
-#define BUFSIZE 8096
-#define LOCKFILE ".gladd.lock"
-#define PROGRAM "gladd"
-#define DEFAULT_CONFIG "/etc/gladd.conf"
-
-int sockme;
-
-int main (int argc, char **argv);
-
-#endif /* __GLADD_MAIN_H__ */
+char *test_main_something()
+{
+        mu_assert("Test Something", 1 == 0);
+        return 0;
+}

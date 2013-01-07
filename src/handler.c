@@ -255,3 +255,9 @@ int send_file(int sock, char *path)
 
         return 0;
 }
+
+void respond (int fd, char *response)
+{
+        send(fd, response, strlen(response), 0);
+}
+

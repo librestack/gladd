@@ -1,5 +1,5 @@
-/* 
- * main.h
+/*
+ * signals.h - handle process signals
  *
  * this file is part of GLADD
  *
@@ -20,17 +20,11 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GLADD_MAIN_H__
-#define __GLADD_MAIN_H__ 1
+#ifndef __GLADD_SIGNALS_H__
+#define __GLADD_SIGNALS_H__ 1
 
-#define BACKLOG 10  /* how many pending connectiong to hold in queue */
-#define BUFSIZE 8096
-#define LOCKFILE ".gladd.lock"
-#define PROGRAM "gladd"
-#define DEFAULT_CONFIG "/etc/gladd.conf"
+void sigchld_handler (int signo);
+void sigterm_handler (int signo);
+void sighup_handler (int signo);
 
-int sockme;
-
-int main (int argc, char **argv);
-
-#endif /* __GLADD_MAIN_H__ */
+#endif /* __GLADD_SIGNALS_H__ */

@@ -35,44 +35,10 @@
 #include "main.h"
 #include "config.h"
 #include "handler.h"
+#include "signals.h"
+#include "args.h"
 
-static void sigchld_handler (int signo);
-static void sigterm_handler (int signo);
-
-/* clean up zombie children */
-static void sigchld_handler (int signo)
-{
-        int status;
-        wait(&status);
-}
-
-/* catch SIGTERM and clean up */
-static void sigterm_handler (int signo)
-{
-        close(sockme);
-        syslog(LOG_INFO, "Received SIGTERM.  Shutting down.");
-        closelog();
-        free_urls();
-        exit(EXIT_SUCCESS);
-}
-
-/* catch HUP and reload config */
-static void sighup_handler (int signo)
-{
-        syslog(LOG_INFO, "Received SIGHUP.  Reloading config.");
-
-        if (read_config(DEFAULT_CONFIG) != 0) {
-                syslog(LOG_ERR, "Config reload failed.");
-        }
-
-}
-
-void respond (int fd, char *response)
-{
-        send(fd, response, strlen(response), 0);
-}
-
-int main (void)
+int main (int argc, char **argv)
 {
         int getaddrinfo(const char *node,
                         const char *service,
@@ -93,6 +59,11 @@ int main (void)
         struct sockaddr_storage their_addr;
         char tcpport[5];
         char *errmsg;
+
+        /* check commandline args */
+        if (argc > 1) {
+                process_args(argc, argv);
+        }
 
         /* obtain lockfile */
         lockfd = creat(LOCKFILE, 0644);
@@ -200,4 +171,3 @@ int main (void)
                 }
         }
 }
-
