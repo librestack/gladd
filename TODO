@@ -2,4 +2,5 @@ FEATURE: add url handling to config
 FEATURE: add stop restart and reload command line options
 FEATURE: add --config command line option
 FEATURE: Align debug values with syslog
+BUG: config reload is happening, even if it "failed"
 BUG: ipv6 listening not working by default
