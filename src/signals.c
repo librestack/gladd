@@ -53,5 +53,4 @@ void sighup_handler (int signo)
         if (read_config(DEFAULT_CONFIG) != 0) {
                 syslog(LOG_ERR, "Config reload failed.");
         }
-
 }
