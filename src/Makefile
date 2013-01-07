@@ -25,7 +25,7 @@ LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
 OBJECTFILES=args.o config.o handler.o http.o mime.o signals.o
-TESTFILES=test.o config_test.o main_test.o
+TESTFILES=test.o args_test.o config_test.o main_test.o
 
 ${PROGRAM}: ${PROGRAM}_test main.o
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} main.o ${LIBS}
@@ -35,6 +35,9 @@ ${PROGRAM}_test: ${OBJECTFILES} ${TESTFILES}
 
 args.o: args.c args.h
 	${CC} ${CFLAGS} -c args.c
+
+args_test.o: args_test.c args_test.h
+	${CC} ${CFLAGS} -c args_test.c
 
 handler.o: handler.c handler.h http.h main.h mime.h config.h
 	${CC} ${CFLAGS} ${INCLUDES} -c handler.c ${LIBS}

@@ -1,6 +1,5 @@
 /* 
- * minunit.h - simple unit testing macros
- * based on code from http://www.jera.com/techinfo/jtns/jtn002.html
+ * args_test.h - unit tests for args.c
  *
  * this file is part of GLADD
  *
@@ -21,28 +20,9 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __MINUNIT_H__
-#define __MINUNIT_H__ 1
+#ifndef __GLADD_ARGS_TEST_H__
+#define __GLADD_ARGS_TEST_H__ 1
 
-#include <stdio.h>
+char *test_args_invalid();
 
-#define mu_assert(message, test) do { \
-        printf("%03i: %-65s ... ", tests_run, message); \
-        if ((test)) { \
-                printf("OK\n"); \
-        } \
-        else { \
-                printf("FAIL\n"); \
-                return message; \
-        } \
-        tests_run++; \
-} while (0)
-
-#define mu_run_test(test) do { \
-        char *message = test(); \
-        if (message) return message; \
-} while (0)
-
-extern int tests_run;
-
-#endif /* __MINUNIT_H__ */
+#endif /* __GLADD_ARGS_TEST_H__ */

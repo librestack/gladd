@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "args_test.h"
 #include "config_test.h"
 #include "main_test.h"
 #include "test.h"
@@ -52,7 +53,8 @@ static char * all_tests()
         mu_run_test(test_config_set_port_value);
         mu_run_test(test_config_read_url_static);
         mu_run_test(test_config_read_url_static_next);
-        mu_run_test(test_main_something);
+        mu_run_test(test_args_invalid);
+        //mu_run_test(test_main_something);
         printline("*", 80);
         return 0;
 }

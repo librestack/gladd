@@ -20,7 +20,9 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
+
 int process_args(int argc, char **argv)
 {
-        return 0;
+        return -1;
 }
