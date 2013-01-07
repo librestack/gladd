@@ -23,6 +23,7 @@ CFLAGS=-g -Wall -Werror
 INCLUDES=-I/usr/include/libxml2
 LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq
 PROGRAM=gladd
+INSTALLDIR=/usr/local/bin/
 OBJECTFILES=config.o handler.o http.o main.o mime.o
 TESTFILES=test.o config_test.o
 TESTOBJECTS=config.o
@@ -55,7 +56,7 @@ test.o: minunit.h test.c test.h config_test.h
 	${CC} ${CFLAGS} ${INCLUDES} -c test.c
 
 
-.PHONY: clean test
+.PHONY: clean test install
 
 clean:
 	rm ${PROGRAM} ${PROGRAM}_test ${OBJECTFILES} ${TESTFILES}
@@ -64,3 +65,6 @@ test:
 	make clean || true
 	make ${PROGRAM}_test
 	./${PROGRAM}_test 2> /dev/null || true
+
+install:
+	cp ${PROGRAM} ${INSTALLDIR}
