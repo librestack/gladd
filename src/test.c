@@ -53,7 +53,7 @@ static char * all_tests()
         mu_run_test(test_config_read_url_static);
         mu_run_test(test_config_read_url_static_next);
         mu_run_test(test_args_invalid);
-        mu_run_test(test_args_config);
+        //mu_run_test(test_args_config);
         printline("*", 80);
         return 0;
 }

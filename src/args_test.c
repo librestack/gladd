@@ -34,6 +34,7 @@ char *test_args_invalid()
         return 0;
 }
 
+/* TODO: complete this test & invoke from test.c */
 char *test_args_config()
 {
         char *argv[] = {"--config", "blah.conf"};
