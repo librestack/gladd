@@ -33,3 +33,12 @@ char *test_args_invalid()
                 process_args(argc , argv) == -1);
         return 0;
 }
+
+char *test_args_config()
+{
+        char *argv[] = {"--config", "blah.conf"};
+        int argc = sizeof(argv) / sizeof(int);
+        mu_assert("Ensure process_args() accepts --config", 
+                process_args(argc , argv) == 0);
+        return 0;
+}

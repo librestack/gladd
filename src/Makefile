@@ -25,7 +25,7 @@ LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
 OBJECTFILES=args.o config.o handler.o http.o mime.o signals.o
-TESTFILES=test.o args_test.o config_test.o main_test.o
+TESTFILES=test.o args_test.o config_test.o
 
 ${PROGRAM}: ${PROGRAM}_test main.o
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} main.o ${LIBS}
@@ -48,9 +48,6 @@ http.o: http.c http.h main.h
 main.o: main.c main.h handler.h config.h
 	${CC} ${CFLAGS} ${INCLUDES} -c main.c
 
-main_test.o: minunit.h main_test.c main_test.h main.c main.h handler.h config.h
-	${CC} ${CFLAGS} ${INCLUDES} -c main_test.c main.c
-
 mime.o: mime.c mime.h
 	${CC} ${CFLAGS} ${INCLUDES} -c mime.c
 
@@ -63,7 +60,7 @@ config.o: config.c config.h
 config_test.o: minunit.h config_test.c config_test.h
 	${CC} ${CFLAGS} -c config_test.c
 
-test.o: minunit.h test.c test.h config_test.h main_test.h
+test.o: minunit.h test.c test.h config_test.h args_test.h
 	${CC} ${CFLAGS} ${INCLUDES} -c test.c
 
 
