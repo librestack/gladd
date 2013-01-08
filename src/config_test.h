@@ -34,5 +34,7 @@ char *test_config_set_debug_value();
 char *test_config_set_port_value();
 char *test_config_read_url_static();
 char *test_config_read_url_static_next();
+char *test_config_add_acl_invalid();
+char *test_config_acl_allow_all();
 
 #endif /* __GLADD_CONFIG_TEST_H__ */

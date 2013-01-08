@@ -37,6 +37,7 @@ config_t config_default = {
 config_t *config;
 config_t *config_new;
 
+acl_t *prevacl;        /* pointer to last acl */
 url_t *prevurl;        /* pointer to last url */
 
 /* set config defaults if they haven't been set already */
@@ -133,6 +134,40 @@ int add_url_handler(char *value)
         return 0;
 }
 
+/* add acl */
+int add_acl (char *value)
+{
+        acl_t *newacl;
+        char type[LINE_MAX];
+        char url[LINE_MAX];
+        char auth[LINE_MAX];
+
+        newacl = malloc(sizeof(struct acl_t));
+
+        if (sscanf(value, "%s %s %s", url, type, auth) == 3) {
+                if ((strncmp(type, "allow", 5) == 0) ||
+                (strncmp(type, "deny", 5) == 0)) {
+                        newacl->type = type;
+                        newacl->url = url;
+                        newacl->auth = auth;
+                }
+                if (prevacl != NULL) {
+                        /* update ->next ptr in previous acl
+                         * to point to new */
+                        prevacl->next = newacl;
+                }
+                else {
+                        /* no previous acl, 
+                         * so set first ptr in config */
+                        config_new->acls = newacl;
+                }
+                prevacl = newacl;
+ 
+        }
+
+        return -1; /* default is to reject */
+}
+
 /* check config line and handle appropriately */
 int process_config_line(char *line)
 {
@@ -160,6 +195,9 @@ int process_config_line(char *line)
         else if (sscanf(line, "%s %[^\n]", key, value) == 2) {
                 if (strncmp(key, "url", 3) == 0) {
                         return add_url_handler(value);
+                }
+                else if (strncmp(key, "acl", 3) == 0) {
+                        return add_acl(value);
                 }
         }
 

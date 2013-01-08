@@ -131,7 +131,27 @@ char *test_config_read_url_static_next()
 
         mu_assert("Ensure final url->next returns NULL", u->next == NULL);
 
-        free_urls();
+        free_urls(); /* call this only after all url tests are complete */
         
+        return 0;
+}
+
+/* ensure add_acl() rejects junk */
+char *test_config_add_acl_invalid()
+{
+        mu_assert("ensure add_acl() rejects junk", add_acl("invalid junk"));
+        return 0;
+}
+
+/* test acl can be read from config */
+char *test_config_acl_allow_all()
+{
+        /* read and check first acl */
+        mu_assert("test acl->type is read from config", 
+                    strncmp(config->acls->type, "allow", 
+                                strlen(config->acls->type)) == 0);
+        mu_assert("test acl->url is read from config", 
+                    strncmp(config->acls->url, "/", 
+                                strlen(config->acls->url)) == 0);
         return 0;
 }
