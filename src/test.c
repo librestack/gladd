@@ -55,6 +55,8 @@ static char * all_tests()
         mu_run_test(test_config_read_url_static_next);
         mu_run_test(test_args_invalid);
         mu_run_test(test_auth_default);
+        mu_run_test(test_config_add_acl_invalid);
+        mu_run_test(test_config_acl_allow_all);
         printline("*", 80);
         return 0;
 }
