@@ -33,18 +33,27 @@
 
 extern int sockme;
 
+typedef struct acl_t {
+        char *type; /* allow or deny */
+        char *url;
+        char *auth;
+        char *params;
+        struct acl_t *next;
+} acl_t;
+
+typedef struct config_t {
+        long debug;
+        long port;
+        struct url_t *urls;
+        struct acl_t *acls;
+} config_t;
+
 typedef struct url_t {
         char *type;
         char *url;
         char *path;
         struct url_t *next;
 } url_t;
-
-typedef struct config_t {
-        long debug;
-        long port;
-        struct url_t *urls;
-} config_t;
 
 extern config_t *config;
 
@@ -53,6 +62,7 @@ int process_config_line(char *line);
 int read_config(char *configfile);
 int set_config_defaults();
 int set_config_long(long *confset, char *keyname, long i, long min, long max);
+int add_acl (char *value);
 void free_urls();
 
 #endif /* __GLADD_CONFIG_H__ */
