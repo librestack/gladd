@@ -24,8 +24,8 @@ INCLUDES=-I/usr/include/libxml2
 LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
-OBJECTFILES=args.o config.o handler.o http.o mime.o signals.o
-TESTFILES=test.o args_test.o config_test.o
+OBJECTFILES=args.o auth.o config.o handler.o http.o mime.o signals.o
+TESTFILES=test.o args_test.o auth_test.o config_test.o
 
 ${PROGRAM}: ${PROGRAM}_test main.o
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} main.o ${LIBS}
@@ -38,6 +38,12 @@ args.o: args.c args.h
 
 args_test.o: args_test.c args_test.h
 	${CC} ${CFLAGS} -c args_test.c
+
+auth.o: auth.c auth.h
+	${CC} ${CFLAGS} -c auth.c
+
+auth_test.o: auth_test.c auth_test.h
+	${CC} ${CFLAGS} -c auth_test.c
 
 handler.o: handler.c handler.h http.h main.h mime.h config.h
 	${CC} ${CFLAGS} ${INCLUDES} -c handler.c ${LIBS}
@@ -60,7 +66,7 @@ config.o: config.c config.h
 config_test.o: minunit.h config_test.c config_test.h
 	${CC} ${CFLAGS} -c config_test.c
 
-test.o: minunit.h test.c test.h config_test.h args_test.h
+test.o: minunit.h test.c test.h config_test.h args_test.h auth_test.h
 	${CC} ${CFLAGS} ${INCLUDES} -c test.c
 
 
