@@ -163,7 +163,8 @@ int add_acl (char *value)
         if (sscanf(value, "%s %s %s", url, type, auth) == 3) {
                 newacl = malloc(sizeof(struct acl_t));
                 if ((strncmp(type, "allow", 5) == 0) ||
-                (strncmp(type, "deny", 5) == 0)) {
+                    (strncmp(type, "deny", 5) == 0)) 
+                {
                         newacl->type = strdup(type);
                         newacl->url = strdup(url);
                         newacl->auth = strdup(auth);
