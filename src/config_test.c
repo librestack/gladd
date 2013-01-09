@@ -156,6 +156,8 @@ char *test_config_acl_allow_all()
                     strncmp(acl->type, "allow", strlen(acl->type)) == 0);
         mu_assert("test acl->url is read from config", 
                     strncmp(acl->url, "/", strlen(acl->url)) == 0);
+
+        /* TODO: add more syntax testing */
         
         mu_assert("Ensure final acl->next returns NULL", acl->next == NULL);
 

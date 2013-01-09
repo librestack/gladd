@@ -1,6 +1,11 @@
-FEATURE: add url handling to config
+FEATURE: add more acl syntax tests
+FEATURE: enable acl checks
 FEATURE: add stop restart and reload command line options
 FEATURE: add --config command line option
 FEATURE: Align debug values with syslog
+FEATURE: add handling for url sqlview (pg lookups)
+FEATURE: add handling for url sqlurl
+FEATURE: add handling for url ldap lookups
+FEATURE: enable POST updating of data
 BUG: config reload is happening, even if it "failed"
 BUG: ipv6 listening not working by default
