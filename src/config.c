@@ -67,6 +67,24 @@ int set_config_long(long *confset, char *keyname, long i, long min, long max)
         return 0;
 }
 
+/* clean up config->acls memory */
+void free_acls()
+{
+        acl_t *a;
+        acl_t *tmp;
+
+        a = config->acls;
+        while (a != NULL) {
+                free(a->type);
+                free(a->url);
+                free(a->auth);
+                free(a->params);
+                tmp = a;
+                a = a->next;
+                free(tmp);
+        }
+}
+
 /* clean up config->urls memory */
 void free_urls()
 {
@@ -138,18 +156,17 @@ int add_url_handler(char *value)
 int add_acl (char *value)
 {
         acl_t *newacl;
-        char type[LINE_MAX];
-        char url[LINE_MAX];
-        char auth[LINE_MAX];
-
-        newacl = malloc(sizeof(struct acl_t));
+        char type[LINE_MAX] = "";
+        char url[LINE_MAX] = "";
+        char auth[LINE_MAX] = "";
 
         if (sscanf(value, "%s %s %s", url, type, auth) == 3) {
+                newacl = malloc(sizeof(struct acl_t));
                 if ((strncmp(type, "allow", 5) == 0) ||
                 (strncmp(type, "deny", 5) == 0)) {
-                        newacl->type = type;
-                        newacl->url = url;
-                        newacl->auth = auth;
+                        newacl->type = strdup(type);
+                        newacl->url = strdup(url);
+                        newacl->auth = strdup(auth);
                 }
                 if (prevacl != NULL) {
                         /* update ->next ptr in previous acl
@@ -162,7 +179,7 @@ int add_acl (char *value)
                         config_new->acls = newacl;
                 }
                 prevacl = newacl;
- 
+                return 0;
         }
 
         return -1; /* default is to reject */

@@ -63,6 +63,7 @@ int read_config(char *configfile);
 int set_config_defaults();
 int set_config_long(long *confset, char *keyname, long i, long min, long max);
 int add_acl (char *value);
+void free_acls();
 void free_urls();
 
 #endif /* __GLADD_CONFIG_H__ */

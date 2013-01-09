@@ -146,12 +146,20 @@ char *test_config_add_acl_invalid()
 /* test acl can be read from config */
 char *test_config_acl_allow_all()
 {
+        acl_t *acl;
+        acl = config->acls;
+
         /* read and check first acl */
+        mu_assert("test acl->auth is read from config", 
+                    strncmp(acl->auth, "*", strlen(acl->auth)) == 0);
         mu_assert("test acl->type is read from config", 
-                    strncmp(config->acls->type, "allow", 
-                                strlen(config->acls->type)) == 0);
+                    strncmp(acl->type, "allow", strlen(acl->type)) == 0);
         mu_assert("test acl->url is read from config", 
-                    strncmp(config->acls->url, "/", 
-                                strlen(config->acls->url)) == 0);
+                    strncmp(acl->url, "/", strlen(acl->url)) == 0);
+        
+        mu_assert("Ensure final acl->next returns NULL", acl->next == NULL);
+
+        free_acls(); /* call this only after all acl tests are complete */
+
         return 0;
 }
