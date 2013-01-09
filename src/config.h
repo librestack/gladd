@@ -45,6 +45,7 @@ typedef struct acl_t {
 typedef struct config_t {
         long debug;
         long port;
+        char *authrealm;
         struct url_t *urls;
         struct acl_t *acls;
 } config_t;

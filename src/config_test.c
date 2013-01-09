@@ -72,17 +72,13 @@ char *test_config_open_fail()
 }
 
 /* test default value of debug = 0 */
-char *test_config_default_debug_value()
+char *test_config_defaults()
 {
         set_config_defaults();
         mu_assert("Ensure default debug=0", config->debug == 0);
-        return 0;
-}
-
-/* test default value of port=8080 */
-char *test_config_default_port_value()
-{
         mu_assert("Ensure default port=8080", config->port == 8080);
+        mu_assert("Ensure default authrealm=gladd", 
+                strncmp(config->authrealm, "gladd", 5) == 0);
         return 0;
 }
 

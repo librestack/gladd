@@ -49,6 +49,7 @@ int set_config_defaults()
                 return 1;
 
         config = &config_default;
+        config->authrealm = "gladd";
 
         defaults_set = 1;
         return 0;

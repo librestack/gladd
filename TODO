@@ -10,6 +10,7 @@ FEATURE: enable POST updating of data
 FEATURE: send WWW-Authenticate header with 401 Unauthorized
 FEATURE: enable HTTP auth
 FEATURE: send Allow header with 405 Method Not Allowed
+FEATURE: set config->authrealm from config file
 BUG: config reload is happening, even if it "failed"
 BUG: config reload isn't working for acls
 BUG: ipv6 listening not working by default
