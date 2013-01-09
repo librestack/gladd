@@ -109,8 +109,12 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         state = 1;
         setsockopt(sockme, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
 
-        if (check_auth(method, res) == -1) {
-                http_response(sock, 401); /* Unauthorized */
+        int auth = -1;
+
+        /* check auth & auth */
+        auth = check_auth(method, res);
+        if (auth != 0) {
+                http_response(sock, auth);
         }
         else if (strncmp(method, "GET", 3) == 0) {
 

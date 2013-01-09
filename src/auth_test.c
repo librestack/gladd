@@ -27,21 +27,21 @@
 /* ensure check_auth() returns -1 by default */
 char *test_auth_default()
 {
-        mu_assert("ensure check_auth() returns -1 by default", 
-                check_auth("POST", "/blah/") == -1);
+        mu_assert("ensure check_auth() returns 403 Forbidden by default", 
+                check_auth("POST", "/blah/") == 403);
         return 0;
 }
 
 char *test_auth_deny()
 {
         mu_assert("ensure GET /static/secret.html denied", 
-                check_auth("GET", "/static/secret.html") == -1);
+                check_auth("GET", "/static/secret.html") == 403);
 
         mu_assert("ensure GET /denyme.html denied", 
-                check_auth("GET", "/denyme.html") == -1);
+                check_auth("GET", "/denyme.html") == 403);
 
         mu_assert("ensure POST /static/index.html denied", 
-                check_auth("POST", "/static/index.html") == -1);
+                check_auth("POST", "/static/index.html") == 403);
         return 0;
 }
 

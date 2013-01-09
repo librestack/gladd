@@ -27,7 +27,7 @@
 
 /* 
  * check if authorized for requested method and url
- * default is to return -1 (deny)
+ * default is to return 403 Forbidden
  * a return value of 0 is allow.
  */
 int check_auth(char *method, char *url)
@@ -46,7 +46,7 @@ int check_auth(char *method, char *url)
                                 syslog(LOG_DEBUG, "acl matches");
                                 /* acl matches, return 0 if allow, else -1 */
                                 return 
-                                    strncmp(a->type, "allow", 5) == 0 ? 0 : -1;
+                                    strncmp(a->type, "allow", 5) == 0 ? 0:403;
                         }
                 }
                 a = a->next;
@@ -55,5 +55,5 @@ int check_auth(char *method, char *url)
                 return 0;
         }
 
-        return -1; /* default is to deny access */
+        return 403; /* default is to deny access */
 }
