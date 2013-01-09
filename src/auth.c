@@ -55,5 +55,6 @@ int check_auth(char *method, char *url)
                 return 0;
         }
 
+        syslog(LOG_DEBUG, "no acl matched");
         return 403; /* default is to deny access */
 }

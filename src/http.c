@@ -78,7 +78,7 @@ void http_response(int sock, int code)
 
         if (code == 401) {
                 /* 401 Unauthorized MUST include WWW-Authenticate header */
-                asprintf(&headers, "WWW-Authenticate: Basic realm=%s\n", 
+                asprintf(&headers, "\nWWW-Authenticate: Basic realm=\"%s\"", 
                                 config->authrealm);
         }
 
