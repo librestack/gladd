@@ -35,6 +35,7 @@ extern int sockme;
 
 typedef struct acl_t {
         char *type; /* allow or deny */
+        char *method;
         char *url;
         char *auth;
         char *params;

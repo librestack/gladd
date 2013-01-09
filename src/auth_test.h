@@ -24,5 +24,7 @@
 #define __GLADD_AUTH_TEST_H__ 1
 
 char *test_auth_default();
+char *test_auth_deny();
+char *test_auth_allow();
 
 #endif /* __GLADD_AUTH_TEST_H__ */

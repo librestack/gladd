@@ -75,8 +75,9 @@ void free_acls()
 
         a = config->acls;
         while (a != NULL) {
-                free(a->type);
+                free(a->method);
                 free(a->url);
+                free(a->type);
                 free(a->auth);
                 free(a->params);
                 tmp = a;
@@ -156,18 +157,20 @@ int add_url_handler(char *value)
 int add_acl (char *value)
 {
         acl_t *newacl;
-        char type[LINE_MAX] = "";
+        char method[LINE_MAX] = "";
         char url[LINE_MAX] = "";
+        char type[LINE_MAX] = "";
         char auth[LINE_MAX] = "";
 
-        if (sscanf(value, "%s %s %s", url, type, auth) == 3) {
+        if (sscanf(value, "%s %s %s %s", method, url, type, auth) == 4) {
                 newacl = malloc(sizeof(struct acl_t));
                 if ((strncmp(type, "allow", 5) == 0) ||
                     (strncmp(type, "deny", 5) == 0)) 
                 {
-                        newacl->type = strdup(type);
-                        newacl->url = strdup(url);
-                        newacl->auth = strdup(auth);
+                        newacl->method = strndup(method, LINE_MAX);
+                        newacl->url = strndup(url, LINE_MAX);
+                        newacl->type = strndup(type, LINE_MAX);
+                        newacl->auth = strndup(auth, LINE_MAX);
                 }
                 if (prevacl != NULL) {
                         /* update ->next ptr in previous acl

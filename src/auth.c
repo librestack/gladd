@@ -20,7 +20,40 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-int check_auth()
+#include "auth.h"
+#include "config.h"
+#include <string.h>
+#include <syslog.h>
+
+/* 
+ * check if authorized for requested method and url
+ * default is to return -1 (deny)
+ * a return value of 0 is allow.
+ */
+int check_auth(char *method, char *url)
 {
+        acl_t *a;
+
+        a = config->acls;
+        while (a != NULL) {
+                syslog(LOG_DEBUG, 
+                        "Checking acls for %s %s ... trying %s %s", 
+                        method, url, a->method, a->url);
+                if ((strncmp(url, a->url, strlen(a->url)) == 0) &&
+                    (strncmp(method, a->method, strlen(method)) == 0))
+                {
+                        if (strncmp(a->auth, "*", strlen(a->auth)) == 0) {
+                                syslog(LOG_DEBUG, "acl matches");
+                                /* acl matches, return 0 if allow, else -1 */
+                                return 
+                                    strncmp(a->type, "allow", 5) == 0 ? 0 : -1;
+                        }
+                }
+                a = a->next;
+        }
+        if (a != NULL) {
+                return 0;
+        }
+
         return -1; /* default is to deny access */
 }

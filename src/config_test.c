@@ -147,18 +147,41 @@ char *test_config_add_acl_invalid()
 char *test_config_acl_allow_all()
 {
         acl_t *acl;
-        acl = config->acls;
 
         /* read and check first acl */
-        mu_assert("test acl->auth is read from config", 
+        acl = config->acls;
+        mu_assert("test 1st acl->method is read from config",
+                        strncmp(acl->method, "GET", strlen(acl->method)) == 0);
+        mu_assert("test 1st acl->url is read from config", 
+                    strncmp(acl->url, "/static/secret.html",
+                                                strlen(acl->url)) == 0);
+        mu_assert("test 1st acl->type is read from config", 
+                    strncmp(acl->type, "deny", strlen(acl->type)) == 0);
+        mu_assert("test 1st acl->auth is read from config", 
                     strncmp(acl->auth, "*", strlen(acl->auth)) == 0);
-        mu_assert("test acl->type is read from config", 
+        /* check second acl */
+        acl = acl->next;
+        mu_assert("test 2nd acl->method is read from config",
+                        strncmp(acl->method, "GET", strlen(acl->method)) == 0);
+        mu_assert("test 2nd acl->url is read from config", 
+                    strncmp(acl->url, "/static/", strlen(acl->url)) == 0);
+        mu_assert("test 2nd acl->type is read from config", 
                     strncmp(acl->type, "allow", strlen(acl->type)) == 0);
-        mu_assert("test acl->url is read from config", 
-                    strncmp(acl->url, "/", strlen(acl->url)) == 0);
+        mu_assert("test 2nd acl->auth is read from config", 
+                    strncmp(acl->auth, "*", strlen(acl->auth)) == 0);
 
-        /* TODO: add more syntax testing */
-        
+        /* check third acl */
+        acl = acl->next;
+        mu_assert("test 3rd acl->method is read from config",
+                        strncmp(acl->method, "GET", strlen(acl->method)) == 0);
+        mu_assert("test 3rd acl->url is read from config", 
+                    strncmp(acl->url, "/", strlen(acl->url)) == 0);
+        mu_assert("test 3rd acl->type is read from config", 
+                    strncmp(acl->type, "deny", strlen(acl->type)) == 0);
+        mu_assert("test 3rd acl->auth is read from config", 
+                    strncmp(acl->auth, "*", strlen(acl->auth)) == 0);
+
+        /* ensure no more acls */
         mu_assert("Ensure final acl->next returns NULL", acl->next == NULL);
 
         free_acls(); /* call this only after all acl tests are complete */

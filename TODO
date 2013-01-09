@@ -7,5 +7,7 @@ FEATURE: add handling for url sqlview (pg lookups)
 FEATURE: add handling for url sqlurl
 FEATURE: add handling for url ldap lookups
 FEATURE: enable POST updating of data
+FEATURE: send WWW-Authenticate header with 401 Unauthorized
 BUG: config reload is happening, even if it "failed"
+BUG: config reload isn't working for acls
 BUG: ipv6 listening not working by default

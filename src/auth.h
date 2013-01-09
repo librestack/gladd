@@ -23,6 +23,6 @@
 #ifndef __GLADD_AUTH_H__
 #define __GLADD_AUTH_H__ 1
 
-int check_auth();
+int check_auth(char *method, char *url);
 
 #endif /* __GLADD_AUTH_H__ */

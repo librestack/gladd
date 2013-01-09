@@ -25,6 +25,7 @@
 #define BUFSIZE 8096
 #define MAX_RESOURCE_LEN 256
 
+#include "auth.h"
 #include "config.h"
 #include "main.h"
 #include "mime.h"
@@ -108,7 +109,10 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         state = 1;
         setsockopt(sockme, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
 
-        if (strncmp(method, "GET", 3) == 0) {
+        if (check_auth(method, res) == -1) {
+                http_response(sock, 401); /* Unauthorized */
+        }
+        else if (strncmp(method, "GET", 3) == 0) {
 
                 u = config->urls;
                 while (u != NULL) {
