@@ -77,6 +77,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         char s[INET6_ADDRSTRLEN];
         int byte_count;
         int state;
+        int auth = -1;
         
         url_t *u;
 
@@ -108,8 +109,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         /* put a cork in it */
         state = 1;
         setsockopt(sockme, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
-
-        int auth = -1;
 
         /* check auth & auth */
         auth = check_auth(method, res);

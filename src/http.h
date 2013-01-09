@@ -24,7 +24,7 @@
 #define __GLADD_HTTP_H__ 1
 
 #define HTTPKEYS (sizeof httpcode / sizeof (struct http_status))
-#define HTTP_RESPONSE "HTTP/1.1 %i %s\nServer: gladd\nConnection: close\nContent-Type: %s\n\n<html><body><h1>%i %s</h1>\n</body>\n</html>\n"
+#define HTTP_RESPONSE "HTTP/1.1 %1$i %2$s\nServer: gladd\nConnection: close\nContent-Type: %3$s%4$s\n\n<html><body><h1>%1$i %2$s</h1>\n</body>\n</html>\n"
 
 struct http_status {
         int code;

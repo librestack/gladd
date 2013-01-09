@@ -23,6 +23,8 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <syslog.h>
+#include "config.h"
 #include "handler.h"
 #include "http.h"
 
@@ -72,11 +74,19 @@ void http_response(int sock, int code)
         char *response;
         char *status;
         char *mime = "text/html";
+        char *headers = "";
+
+        if (code == 401) {
+                /* 401 Unauthorized MUST include WWW-Authenticate header */
+                asprintf(&headers, "WWW-Authenticate: Basic realm=%s\n", 
+                                config->authrealm);
+        }
 
         status = get_status(code).status;
-        asprintf(&response, HTTP_RESPONSE, code, status, mime, code, status);
+        asprintf(&response, HTTP_RESPONSE, code, status, mime, headers);
         respond(sock, response);
         free(response);
+        free(headers);
 }
 
 struct http_status get_status(int code)

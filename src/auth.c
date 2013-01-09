@@ -44,7 +44,7 @@ int check_auth(char *method, char *url)
                 {
                         if (strncmp(a->auth, "*", strlen(a->auth)) == 0) {
                                 syslog(LOG_DEBUG, "acl matches");
-                                /* acl matches, return 0 if allow, else -1 */
+                                /* acl matches, return 0 if allow, else 403 */
                                 return 
                                     strncmp(a->type, "allow", 5) == 0 ? 0:403;
                         }
