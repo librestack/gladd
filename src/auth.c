@@ -39,6 +39,7 @@ int check_auth(char *method, char *url)
                 syslog(LOG_DEBUG, 
                         "Checking acls for %s %s ... trying %s %s", 
                         method, url, a->method, a->url);
+                /* ensure method and url matches */
                 if ((strncmp(url, a->url, strlen(a->url)) == 0) &&
                     (strncmp(method, a->method, strlen(method)) == 0))
                 {

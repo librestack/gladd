@@ -24,7 +24,7 @@
 #include "auth_test.h"
 #include "minunit.h"
 
-/* ensure check_auth() returns -1 by default */
+/* ensure check_auth() returns 403 by default */
 char *test_auth_default()
 {
         mu_assert("ensure check_auth() returns 403 Forbidden by default", 

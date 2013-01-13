@@ -162,32 +162,49 @@ int add_acl (char *value)
         char url[LINE_MAX] = "";
         char type[LINE_MAX] = "";
         char auth[LINE_MAX] = "";
+        char authtype[LINE_MAX] = "";
 
-        if (sscanf(value, "%s %s %s %s", method, url, type, auth) == 4) {
-                newacl = malloc(sizeof(struct acl_t));
-                if ((strncmp(type, "allow", 5) == 0) ||
-                    (strncmp(type, "deny", 5) == 0)) 
-                {
-                        newacl->method = strndup(method, LINE_MAX);
-                        newacl->url = strndup(url, LINE_MAX);
-                        newacl->type = strndup(type, LINE_MAX);
-                        newacl->auth = strndup(auth, LINE_MAX);
-                }
-                if (prevacl != NULL) {
-                        /* update ->next ptr in previous acl
-                         * to point to new */
-                        prevacl->next = newacl;
-                }
-                else {
-                        /* no previous acl, 
-                         * so set first ptr in config */
-                        config_new->acls = newacl;
-                }
-                prevacl = newacl;
-                return 0;
+        if ((sscanf(value, "%s %s %s %s", 
+                method, url, type, auth) != 4) &&
+        (sscanf(value, "%s %s %s %s %s", 
+                method, url, type, auth, authtype) != 5))
+        {
+                /* config line didn't match expected patterns */
+                return -1;
         }
 
-        return -1; /* default is to reject */
+        newacl = malloc(sizeof(struct acl_t));
+        if ((strncmp(type, "allow", 5) == 0) ||
+            (strncmp(type, "deny", 5) == 0))
+        {
+                newacl->method = strndup(method, LINE_MAX);
+                newacl->url = strndup(url, LINE_MAX);
+                newacl->type = strndup(type, LINE_MAX);
+                newacl->auth = strndup(auth, LINE_MAX);
+        }
+        else if (strncmp(type, "require", 5) == 0) {
+                newacl->method = strndup(method, LINE_MAX);
+                newacl->url = strndup(url, LINE_MAX);
+                newacl->type = strndup(type, LINE_MAX);
+                newacl->auth = strndup(auth, LINE_MAX);
+                newacl->params = strndup(authtype, LINE_MAX);
+        }
+        else {
+                /* invalid type */
+                return -1;
+        }
+        if (prevacl != NULL) {
+                /* update ->next ptr in previous acl
+                 * to point to new */
+                prevacl->next = newacl;
+        }
+        else {
+                /* no previous acl, 
+                 * so set first ptr in config */
+                config_new->acls = newacl;
+        }
+        prevacl = newacl;
+        return 0;
 }
 
 /* check config line and handle appropriately */
