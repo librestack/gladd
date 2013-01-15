@@ -100,6 +100,7 @@ char *test_config_set_port_value()
 /* read url directive from config file */
 char *test_config_read_url_static()
 {
+        mu_assert("Ensure urls are read from config", config->urls != NULL);
         mu_assert("Ensure urls are read from config", 
                         strncmp(config->urls->type, "static", 6) == 0);
         return 0;
