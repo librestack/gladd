@@ -25,10 +25,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
-#include "config.h"
 #include "db.h"
 
-void db_connect_pg(db_t *db)
+int db_connect_pg(db_t *db)
 {
         char *conninfo;
         PGconn     *conn;
@@ -38,27 +37,28 @@ void db_connect_pg(db_t *db)
         {
                 fprintf(stderr, 
                         "asprintf failed for conninfo in db_connect_pg()\n");
-                return;
+                return -2;
         }
         conn = PQconnectdb(conninfo);
         if (PQstatus(conn) != CONNECTION_OK)
         {
                 syslog(LOG_ERR, "connection to database failed.\n");
                 syslog(LOG_DEBUG, "%s", PQerrorMessage(conn));
-                return;
+                fprintf(stderr, "%s", PQerrorMessage(conn));
+                return PQstatus(conn);
         }
         db->conn = conn;
+        return 0;
 }
 
 /* connect to specified database 
  * pointer to the connection is stored in db_t struct 
  */
-void db_connect(db_t *db)
+int db_connect(db_t *db)
 {
-
         if (db == NULL) {
                 fprintf(stderr, "No database info supplied to db_connect()\n");
-                return;
+                return -1;
         }
         if (strcmp(db->type, "pg") == 0) {
                 return db_connect_pg(db);
@@ -68,4 +68,60 @@ void db_connect(db_t *db)
                         "Invalid database type '%s' passed to db_connect()\n", 
                         db->type);
         }
+        return 0;
+}
+
+int db_disconnect(db_t *db)
+{
+        if (db == NULL) {
+                fprintf(stderr, 
+                        "No database info supplied to db_disconnect()\n");
+                return -1;
+        }
+        if (strcmp(db->type, "pg") == 0) {
+                return db_disconnect_pg(db);
+        }
+        else {
+                fprintf(stderr, 
+                    "Invalid database type '%s' passed to db_disconnect()\n",
+                    db->type);
+        }
+        return 0;
+}
+
+int db_disconnect_pg(db_t *db)
+{
+        /*
+        if (sizeof(db->conn) != sizeof(PGconn)) {
+                fprintf(stderr, "db_disconnect_pg() called on non-PG db\n");
+                return;
+        }
+        */
+        PQfinish(db->conn);
+
+        return 0;
+}
+
+int db_create(db_t *db)
+{
+        if (db == NULL) {
+                fprintf(stderr, 
+                        "No database info supplied to db_create()\n");
+                return -1;
+        }
+        if (strcmp(db->type, "pg") == 0) {
+                return db_create_pg(db);
+        }
+        else {
+                fprintf(stderr, 
+                    "Invalid database type '%s' passed to db_create()\n",
+                    db->type);
+        }
+        return 0;
+}
+
+int db_create_pg(db_t *db)
+{
+        
+        return 0;
 }

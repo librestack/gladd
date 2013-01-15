@@ -23,5 +23,13 @@
 #ifndef __GLADD_DB_H__
 #define __GLADD_DB_H__ 1
 
+#include "config.h"
+
+int db_connect(db_t *db);
+int db_connect_pg(db_t *db);
+int db_create(db_t *db);
+int db_create_pg(db_t *db);
+int db_disconnect(db_t *db);
+int db_disconnect_pg(db_t *db);
 
 #endif /* __GLADD_DB_H__ */
