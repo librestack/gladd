@@ -23,14 +23,18 @@
 #define _GNU_SOURCE
 #include <libpq-fe.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
 #include "db.h"
 
+/* connect to a postgresql database */
+/* FIXME: memory leak in here, despite PQfinish() */
 int db_connect_pg(db_t *db)
 {
         char *conninfo;
-        PGconn     *conn;
+        PGconn *conn;
+        int retval = 0;
 
         if (asprintf(&conninfo,
                 "host = %s dbname = %s", db->host, db->db) == -1)
@@ -40,12 +44,15 @@ int db_connect_pg(db_t *db)
                 return -2;
         }
         conn = PQconnectdb(conninfo);
+        free(conninfo);
         if (PQstatus(conn) != CONNECTION_OK)
         {
                 syslog(LOG_ERR, "connection to database failed.\n");
                 syslog(LOG_DEBUG, "%s", PQerrorMessage(conn));
                 fprintf(stderr, "%s", PQerrorMessage(conn));
-                return PQstatus(conn);
+                retval = PQstatus(conn);
+                PQfinish(conn);
+                return retval;
         }
         db->conn = conn;
         return 0;
@@ -53,6 +60,7 @@ int db_connect_pg(db_t *db)
 
 /* connect to specified database 
  * pointer to the connection is stored in db_t struct 
+ * a wrapper for the database-specific functions
  */
 int db_connect(db_t *db)
 {
@@ -71,6 +79,7 @@ int db_connect(db_t *db)
         return 0;
 }
 
+/* wrapper for the database-specific disconnect functions */
 int db_disconnect(db_t *db)
 {
         if (db == NULL) {
@@ -89,6 +98,7 @@ int db_disconnect(db_t *db)
         return 0;
 }
 
+/* disconnect from a postgresql db */
 int db_disconnect_pg(db_t *db)
 {
         /*
@@ -102,6 +112,7 @@ int db_disconnect_pg(db_t *db)
         return 0;
 }
 
+/* wrapper for the database-specific db creation functions */
 int db_create(db_t *db)
 {
         if (db == NULL) {
@@ -120,8 +131,8 @@ int db_create(db_t *db)
         return 0;
 }
 
+/* TODO: db_create_pg() */
 int db_create_pg(db_t *db)
 {
-        
         return 0;
 }

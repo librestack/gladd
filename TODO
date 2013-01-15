@@ -13,6 +13,7 @@ FEATURE: send Allow header with 405 Method Not Allowed
 FEATURE: set config->authrealm from config file
 FEATURE: acl allow / deny by IP
 FEATURE: verify dbs in sqlurls are defined somewhere in config
+BUG: memory leak in db_connect_pg()
 BUG: config reload is happening, even if it "failed"
 BUG: config reload isn't working for acls
 BUG: ipv6 listening not working by default

@@ -99,6 +99,7 @@ void free_dbs()
                 free(d->type);
                 free(d->host);
                 free(d->db);
+                //free(d->conn);
                 tmp = d;
                 d = d->next;
                 free(tmp);
@@ -288,6 +289,7 @@ int add_db (char *value)
                 newdb->type = strndup(type, LINE_MAX);
                 newdb->host = strndup(host, LINE_MAX);
                 newdb->db = strndup(db, LINE_MAX);
+                newdb->conn=NULL;
                 newdb->next=NULL;
         }
         else {
