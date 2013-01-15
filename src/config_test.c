@@ -185,3 +185,20 @@ char *test_config_acl_allow_all()
 
         return 0;
 }
+
+char *test_config_db()
+{
+        db_t *db;
+
+        mu_assert("Ensure dbs are read from config", config->dbs != NULL);
+
+        /* read and check first database */
+        db = config->dbs;
+
+        //mu_assert("Ensure db config is read", 1==0);
+
+        /* ensure no more dbs */
+        //mu_assert("Ensure final db->next returns NULL", db->next == NULL);
+
+        return 0;
+}
