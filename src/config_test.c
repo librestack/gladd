@@ -121,8 +121,10 @@ char *test_config_read_url_static_next()
         mu_assert("Checking 3rd url from config", 
                         strncmp(u->url, "/static3/", strlen(u->url)) == 0);
         mu_assert("Reading 4th url from config", u = u->next);
-        mu_assert("Checking 4th url from config", 
-                        strncmp(u->url, "/static3/", strlen(u->url)) == 0);
+        mu_assert("Checking 4th url from config ... url", 
+                        strncmp(u->url, "/sqlview/", strlen(u->url)) == 0);
+        mu_assert("... db", strcmp(u->db, "db1") == 0);
+        mu_assert("... view", strcmp(u->view, "someview") == 0);
 
         mu_assert("Ensure final url->next returns NULL", u->next == NULL);
 

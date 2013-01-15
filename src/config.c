@@ -105,7 +105,7 @@ void free_urls()
 }
 
 /* static url handler */
-void handle_static_url(char params[LINE_MAX])
+void handle_url_static(char params[LINE_MAX])
 {
         url_t *newurl;
         char url[LINE_MAX];
@@ -132,6 +132,36 @@ void handle_static_url(char params[LINE_MAX])
         }
 }
 
+/* handle sqlview type urls */
+void handle_url_sqlview(char params[LINE_MAX])
+{
+        url_t *newurl;
+        char url[LINE_MAX];
+        char db[LINE_MAX];
+        char view[LINE_MAX];
+
+        newurl = malloc(sizeof(struct url_t));
+
+        if (sscanf(params, "%s %s %s", url, db, view) == 3) {
+                newurl->type = "sqlview";
+                newurl->url = strdup(url);
+                newurl->db = strdup(db);
+                newurl->view = strdup(view);
+                newurl->next = NULL;
+                if (prevurl != NULL) {
+                        /* update ->next ptr in previous url
+                         * to point to new */
+                        prevurl->next = newurl;
+                }
+                else {
+                        /* no previous url, 
+                         * so set first ptr in config */
+                        config_new->urls = newurl;
+                }
+                prevurl = newurl;
+        }
+}
+
 /* add url handler */
 int add_url_handler(char *value)
 {
@@ -140,7 +170,10 @@ int add_url_handler(char *value)
 
         if (sscanf(value, "%s %[^\n]", type, params) == 2) {
                 if (strncmp(type, "static", 6) == 0) {
-                        handle_static_url(params);
+                        handle_url_static(params);
+                }
+                else if (strcmp(type, "sqlview") == 0) {
+                        handle_url_sqlview(params);
                 }
                 else {
                         fprintf(stderr, "skipping unhandled url type '%s'\n", 
