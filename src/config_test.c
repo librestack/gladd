@@ -205,7 +205,7 @@ char *test_config_db()
         mu_assert("Check 2nd db->alias", strcmp(db->alias, "db2") == 0);
         mu_assert("Check 2nd db->type", strcmp(db->type, "pg") == 0);
         mu_assert("Check 2nd db->host", strcmp(db->host, "localhost") == 0);
-        mu_assert("Check first db->db", strcmp(db->db, "someotherdb") == 0);
+        mu_assert("Check 2nd db->db", strcmp(db->db, "someotherdb") == 0);
 
         /* ensure no more dbs */
         mu_assert("Ensure final db->next returns NULL", db->next == NULL);
