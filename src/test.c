@@ -59,6 +59,9 @@ static char * all_tests()
         mu_run_test(test_config_add_acl_invalid);
         mu_run_test(test_config_acl_allow_all);
         mu_run_test(test_config_db);
+        free_acls();
+        free_dbs();
+        free_urls();
         printline("*", 80);
         return 0;
 }

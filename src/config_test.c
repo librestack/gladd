@@ -21,7 +21,6 @@
  */
 
 #include "config_test.h"
-#include "config.h"
 #include "minunit.h"
 #include <stdio.h>
 #include <string.h>
@@ -128,8 +127,6 @@ char *test_config_read_url_static_next()
 
         mu_assert("Ensure final url->next returns NULL", u->next == NULL);
 
-        free_urls(); /* call this only after all url tests are complete */
-        
         return 0;
 }
 
@@ -181,8 +178,6 @@ char *test_config_acl_allow_all()
         /* ensure no more acls */
         mu_assert("Ensure final acl->next returns NULL", acl->next == NULL);
 
-        free_acls(); /* call this only after all acl tests are complete */
-
         return 0;
 }
 
@@ -209,8 +204,6 @@ char *test_config_db()
 
         /* ensure no more dbs */
         mu_assert("Ensure final db->next returns NULL", db->next == NULL);
-
-        free_dbs(); /* call only after all db tests are complete */
 
         return 0;
 }

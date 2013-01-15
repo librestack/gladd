@@ -23,6 +23,8 @@
 #ifndef __GLADD_CONFIG_TEST_H__
 #define __GLADD_CONFIG_TEST_H__ 1
 
+#include "config.h"
+
 char *test_config_skip_comment();
 char *test_config_skip_blank();
 char *test_config_invalid_line();
