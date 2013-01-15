@@ -77,7 +77,7 @@ clean:
 
 test:
 	make clean || true
-	make && ./${PROGRAM}_test 2> /dev/null || true
+	make && ./${PROGRAM}_test || true
 
 install:
 	cp ${PROGRAM} ${INSTALLDIR}
