@@ -37,8 +37,9 @@ config_t config_default = {
 config_t *config;
 config_t *config_new;
 
-acl_t *prevacl;        /* pointer to last acl */
-url_t *prevurl;        /* pointer to last url */
+acl_t *prevacl;         /* pointer to last acl */
+db_t  *prevdb;          /* pointer to last db */
+url_t *prevurl;         /* pointer to last url */
 
 /* set config defaults if they haven't been set already */
 int set_config_defaults()
@@ -190,7 +191,7 @@ int add_acl (char *value)
                 newacl->params = strndup(authtype, LINE_MAX);
         }
         else {
-                /* invalid type */
+                fprintf(stderr, "Invalid acl type\n");
                 return -1;
         }
         if (prevacl != NULL) {
@@ -210,6 +211,42 @@ int add_acl (char *value)
 /* store database config */
 int add_db (char *value)
 {
+        db_t *newdb;
+        char alias[LINE_MAX] = "";
+        char type[LINE_MAX] = "";
+        char host[LINE_MAX] = "";
+        char db[LINE_MAX] = "";
+
+        if (sscanf(value, "%s %s %s %s", alias, type, host, db) != 4)
+        {
+                /* config line didn't match expected patterns */
+                return -1;
+        }
+
+        newdb = malloc(sizeof(struct db_t));
+
+        if (strcmp(type, "pg") == 0) {
+                newdb->alias = strndup(alias, LINE_MAX);
+                newdb->type = strndup(type, LINE_MAX);
+                newdb->host = strndup(host, LINE_MAX);
+                newdb->db = strndup(db, LINE_MAX);
+        }
+        else {
+                fprintf(stderr, "Invalid database type\n");
+                return -1;
+        }
+
+        if (prevdb != NULL) {
+                /* update ->next ptr in previous db
+                 * to point to new */
+                prevdb->next = newdb;
+        }
+        else {
+                /* no previous db, 
+                 * so set first ptr in config */
+                config_new->dbs = newdb;
+        }
+        prevdb = newdb;
         return 0;
 }
 

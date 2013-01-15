@@ -195,10 +195,20 @@ char *test_config_db()
         /* read and check first database */
         db = config->dbs;
 
-        //mu_assert("Ensure db config is read", 1==0);
+        mu_assert("Check 1st db->alias", strcmp(db->alias, "db1") == 0);
+        mu_assert("Check 1st db->type", strcmp(db->type, "pg") == 0);
+        mu_assert("Check 1st db->host", strcmp(db->host, "localhost") == 0);
+        mu_assert("Check 1st db->db", strcmp(db->db, "somedb") == 0);
+
+        /* check next db */
+        db = db->next;
+        mu_assert("Check 2nd db->alias", strcmp(db->alias, "db2") == 0);
+        mu_assert("Check 2nd db->type", strcmp(db->type, "pg") == 0);
+        mu_assert("Check 2nd db->host", strcmp(db->host, "localhost") == 0);
+        mu_assert("Check first db->db", strcmp(db->db, "someotherdb") == 0);
 
         /* ensure no more dbs */
-        //mu_assert("Ensure final db->next returns NULL", db->next == NULL);
+        mu_assert("Ensure final db->next returns NULL", db->next == NULL);
 
         return 0;
 }

@@ -52,10 +52,10 @@ typedef struct config_t {
 } config_t;
 
 typedef struct db_t {
-        char alias[16];
-        char type[8];
-        char host[64];
-        char db[64];
+        char *alias;
+        char *type;
+        char *host;
+        char *db;
         struct db_t *next;
 } db_t;
 
@@ -63,8 +63,8 @@ typedef struct url_t {
         char *type;
         char *url;
         char *path;
-        char db[64];
-        char view[64];
+        char *db;
+        char *view;
         struct url_t *next;
 } url_t;
 
