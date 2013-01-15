@@ -136,3 +136,40 @@ int db_create_pg(db_t *db)
 {
         return 0;
 }
+
+/* execute some sql on a database
+ * wrapper for db-specific functions */
+int db_exec_sql(db_t *db, char *sql)
+{
+        if (db == NULL) {
+                fprintf(stderr, 
+                        "No database info supplied to db_exec_sql()\n");
+                return -1;
+        }
+        if (strcmp(db->type, "pg") == 0) {
+                return db_exec_sql_pg(db, sql);
+        }
+        else {
+                fprintf(stderr, 
+                    "Invalid database type '%s' passed to db_exec_sql()\n",
+                    db->type);
+        }
+        return 0;
+}
+
+/* execute sql against a postgresql db */
+int db_exec_sql_pg(db_t *db, char *sql)
+{
+        PGresult *res;
+
+        res = PQexec(db->conn, sql);
+        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+                fprintf(stderr,
+                        "SQL exec failed: %s", PQerrorMessage(db->conn));
+                PQclear(res);
+                return -1;
+        }
+        PQclear(res);
+
+        return 0;
+}

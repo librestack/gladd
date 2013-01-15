@@ -40,6 +40,16 @@ char *test_db_connect()
 
         mu_assert("db_connect()", db_connect(db) == 0);
         mu_assert("Test database connection", db->conn != NULL);
+
+        mu_assert("db_exec_sql() invalid sql returns failure",
+                db_exec_sql(db, "invalidsql") != 0);
+/*
+        mu_assert("db_exec_sql() DROP TABLE",
+                db_exec_sql(db, "DROP TABLE test;") == 0);
+*/
+        mu_assert("db_exec_sql() CREATE TABLE",
+                db_exec_sql(db, "BEGIN; CREATE TABLE test(); ROLLBACK") == 0);
+
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
 
         return 0;
