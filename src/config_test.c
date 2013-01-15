@@ -110,20 +110,18 @@ char *test_config_read_url_static()
 char *test_config_read_url_static_next()
 {
         url_t *u;
-        u = config->urls;
 
-        fprintf(stderr, "Config: %s\n", config->urls->url);
-        fprintf(stderr, "First: %s\n", u->url);
-        mu_assert("Reading first url from config", 
+        mu_assert("Reading 1st url from config", u = config->urls);
+        mu_assert("Checking 1st url from config", 
                         strncmp(u->url, "/static/", strlen(u->url)) == 0);
-
-        u = u->next;
-        fprintf(stderr, "Second: %s\n", u->url);
-        mu_assert("Reading second url from config", 
+        mu_assert("Reading 2nd url from config", u = u->next);
+        mu_assert("Checking 2nd url from config", 
                         strncmp(u->url, "/static2/", strlen(u->url)) == 0);
-        u = u->next;
-        fprintf(stderr, "Third: %s\n", u->url);
-        mu_assert("Reading third url from config", 
+        mu_assert("Reading 3rd url from config", u = u->next);
+        mu_assert("Checking 3rd url from config", 
+                        strncmp(u->url, "/static3/", strlen(u->url)) == 0);
+        mu_assert("Reading 4th url from config", u = u->next);
+        mu_assert("Checking 4th url from config", 
                         strncmp(u->url, "/static3/", strlen(u->url)) == 0);
 
         mu_assert("Ensure final url->next returns NULL", u->next == NULL);
