@@ -52,11 +52,12 @@ typedef struct config_t {
 } config_t;
 
 typedef struct db_t {
-        char *alias;
-        char *type;
-        char *host;
-        char *db;
-        struct db_t *next;
+        char *alias; /* a convenient handle to refer to this db by */
+        char *type;  /* "pg" = postgres only supported at present */
+        char *host;  /* hostname or ip for this database eg. "localhost" */
+        char *db;    /* name of the database */
+        void *conn;  /* pointer to open db connection */
+        struct db_t *next; /* pointer to next db so we can loop through them */
 } db_t;
 
 typedef struct url_t {

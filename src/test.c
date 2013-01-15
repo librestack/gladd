@@ -26,6 +26,7 @@
 #include "args_test.h"
 #include "auth_test.h"
 #include "config_test.h"
+#include "db_test.h"
 #include "test.h"
  
 int tests_run = 0;
@@ -59,6 +60,7 @@ static char * all_tests()
         mu_run_test(test_config_add_acl_invalid);
         mu_run_test(test_config_acl_allow_all);
         mu_run_test(test_config_db);
+        mu_run_test(test_db_connect);
         free_acls();
         free_dbs();
         free_urls();
