@@ -207,6 +207,12 @@ int add_acl (char *value)
         return 0;
 }
 
+/* store database config */
+int add_db (char *value)
+{
+        return 0;
+}
+
 /* check config line and handle appropriately */
 int process_config_line(char *line)
 {
@@ -232,11 +238,18 @@ int process_config_line(char *line)
                 }
         }
         else if (sscanf(line, "%s %[^\n]", key, value) == 2) {
-                if (strncmp(key, "url", 3) == 0) {
+                if (strcmp(key, "url") == 0) {
                         return add_url_handler(value);
                 }
-                else if (strncmp(key, "acl", 3) == 0) {
+                else if (strcmp(key, "acl") == 0) {
                         return add_acl(value);
+                }
+                else if (strcmp(key, "db") == 0) {
+                        return add_db(value);
+                }
+                else {
+                        fprintf(stderr, "unknown config directive '%s'\n", 
+                                                                        key);
                 }
         }
 
@@ -280,7 +293,6 @@ int read_config(char *configfile)
                 if (process_config_line(line) < 0) {
                         printf("Error in line %i of %s.\n", lc, configfile);
                         retval = 1;
-                        break;
                 }
         }
 

@@ -48,12 +48,23 @@ typedef struct config_t {
         char *authrealm;
         struct url_t *urls;
         struct acl_t *acls;
+        struct db_t *dbs;
 } config_t;
+
+typedef struct db_t {
+        char alias[16];
+        char type[8];
+        char host[64];
+        char db[64];
+        struct db_t *next;
+} db_t;
 
 typedef struct url_t {
         char *type;
         char *url;
         char *path;
+        char db[64];
+        char view[64];
         struct url_t *next;
 } url_t;
 
@@ -65,6 +76,7 @@ int read_config(char *configfile);
 int set_config_defaults();
 int set_config_long(long *confset, char *keyname, long i, long min, long max);
 int add_acl (char *value);
+int add_db (char *value);
 void free_acls();
 void free_urls();
 
