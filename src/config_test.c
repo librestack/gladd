@@ -210,5 +210,7 @@ char *test_config_db()
         /* ensure no more dbs */
         mu_assert("Ensure final db->next returns NULL", db->next == NULL);
 
+        free_dbs(); /* call only after all db tests are complete */
+
         return 0;
 }

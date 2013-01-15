@@ -78,6 +78,7 @@ int set_config_long(long *confset, char *keyname, long i, long min, long max);
 int add_acl (char *value);
 int add_db (char *value);
 void free_acls();
+void free_dbs();
 void free_urls();
 
 #endif /* __GLADD_CONFIG_H__ */

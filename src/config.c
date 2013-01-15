@@ -88,6 +88,23 @@ void free_acls()
         }
 }
 
+void free_dbs()
+{
+        db_t *d;
+        db_t *tmp;
+
+        d = config->dbs;
+        while (d != NULL) {
+                free(d->alias);
+                free(d->type);
+                free(d->host);
+                free(d->db);
+                tmp = d;
+                d = d->next;
+                free(tmp);
+        }
+}
+
 /* clean up config->urls memory */
 void free_urls()
 {
@@ -98,6 +115,8 @@ void free_urls()
         while (u != NULL) {
                 free(u->url);
                 free(u->path);
+                free(u->db);
+                free(u->view);
                 tmp = u;
                 u = u->next;
                 free(tmp);
