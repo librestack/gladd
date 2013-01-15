@@ -173,3 +173,42 @@ int db_exec_sql_pg(db_t *db, char *sql)
 
         return 0;
 }
+
+/* return all results from a cursor
+ * wrapper for db-specific functions */
+int db_fetch_all(db_t *db, char *cursor)
+{
+        if (db == NULL) {
+                fprintf(stderr, 
+                        "No database info supplied to db_fetch_all()\n");
+                return -1;
+        }
+        if (strcmp(db->type, "pg") == 0) {
+                return db_fetch_all_pg(db, cursor);
+        }
+        else {
+                fprintf(stderr, 
+                    "Invalid database type '%s' passed to db_fetch_all()\n",
+                    db->type);
+        }
+        return 0;
+}
+
+/* return all results from a cursor - postgres */
+int db_fetch_all_pg(db_t *db, char *cursor)
+{
+        char *sql;
+        PGresult *res;
+
+        asprintf(&sql, "FETCH ALL in %s;", cursor);
+        res = PQexec(db->conn, sql);
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+                fprintf(stderr, "FETCH ALL failed: %s", 
+                        PQerrorMessage(db->conn));
+                return -1;
+        }
+
+        PQclear(res);
+
+        return 0;
+}

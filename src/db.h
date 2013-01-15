@@ -33,5 +33,7 @@ int db_disconnect(db_t *db);
 int db_disconnect_pg(db_t *db);
 int db_exec_sql(db_t *db, char *sql);
 int db_exec_sql_pg(db_t *db, char *sql);
+int db_fetch_all(db_t *db, char *cursor);
+int db_fetch_all_pg(db_t *db, char *cursor);
 
 #endif /* __GLADD_DB_H__ */
