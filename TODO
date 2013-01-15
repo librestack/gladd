@@ -12,6 +12,7 @@ FEATURE: enable HTTP auth
 FEATURE: send Allow header with 405 Method Not Allowed
 FEATURE: set config->authrealm from config file
 FEATURE: acl allow / deny by IP
+BUG: config reload not loading any urls, if any one is invalid
 BUG: config reload is happening, even if it "failed"
 BUG: config reload isn't working for acls
 BUG: ipv6 listening not working by default
