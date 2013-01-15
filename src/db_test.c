@@ -43,8 +43,12 @@ char *test_db_connect()
 
         mu_assert("db_exec_sql() invalid sql returns failure",
                 db_exec_sql(db, "invalidsql") != 0);
+        mu_assert("db_exec_sql() BEGIN",
+                db_exec_sql(db, "BEGIN;") == 0);
         mu_assert("db_exec_sql() CREATE TABLE",
-                db_exec_sql(db, "BEGIN; CREATE TABLE test(); ROLLBACK") == 0);
+                db_exec_sql(db, "CREATE TABLE test();") == 0);
+        mu_assert("db_exec_sql() ROLLBACK",
+                db_exec_sql(db, "ROLLBACK;") == 0);
 
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
 
