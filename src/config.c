@@ -136,6 +136,8 @@ void handle_url_static(char params[LINE_MAX])
                 newurl->type = "static";
                 newurl->url = strdup(url);
                 newurl->path = strdup(path);
+                newurl->db = NULL;
+                newurl->view = NULL;
                 newurl->next = NULL;
                 if (prevurl != NULL) {
                         /* update ->next ptr in previous url
@@ -166,6 +168,7 @@ void handle_url_sqlview(char params[LINE_MAX])
                 newurl->url = strdup(url);
                 newurl->db = strdup(db);
                 newurl->view = strdup(view);
+                newurl->path = NULL;
                 newurl->next = NULL;
                 if (prevurl != NULL) {
                         /* update ->next ptr in previous url
@@ -234,6 +237,8 @@ int add_acl (char *value)
                 newacl->url = strndup(url, LINE_MAX);
                 newacl->type = strndup(type, LINE_MAX);
                 newacl->auth = strndup(auth, LINE_MAX);
+                newacl->params = NULL;
+                newacl->next = NULL;
         }
         else if (strncmp(type, "require", 5) == 0) {
                 newacl->method = strndup(method, LINE_MAX);
@@ -241,6 +246,7 @@ int add_acl (char *value)
                 newacl->type = strndup(type, LINE_MAX);
                 newacl->auth = strndup(auth, LINE_MAX);
                 newacl->params = strndup(authtype, LINE_MAX);
+                newacl->next = NULL;
         }
         else {
                 fprintf(stderr, "Invalid acl type\n");
@@ -282,6 +288,7 @@ int add_db (char *value)
                 newdb->type = strndup(type, LINE_MAX);
                 newdb->host = strndup(host, LINE_MAX);
                 newdb->db = strndup(db, LINE_MAX);
+                newdb->next=NULL;
         }
         else {
                 fprintf(stderr, "Invalid database type\n");
