@@ -23,4 +23,6 @@
 #ifndef __GLADD_XML_H__
 #define __GLADD_XML_H__ 1
 
+int buildxml(char **xmldoc);
+
 #endif /* __GLADD_XML_H__ */

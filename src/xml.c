@@ -24,3 +24,26 @@
 #include <libxml/parser.h>
 #include "xml.h"
 
+int buildxml(char **xml)
+{
+        xmlNodePtr n;
+        xmlDocPtr doc;
+        xmlChar *xmlbuff;
+        int buffersize;
+
+        doc = xmlNewDoc(BAD_CAST "1.0");
+        n = xmlNewNode(NULL, BAD_CAST "resources");
+        xmlDocSetRootElement(doc, n);
+
+        /* flatten xml */
+        xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
+        *xml = malloc(snprintf(NULL, 0, "%s", (char *) xmlbuff) + 1);
+        sprintf(*xml, "%s", (char *) xmlbuff);
+
+        xmlFree(xmlbuff);
+        xmlFreeDoc(doc);
+
+        fprintf(stderr, "%s", *xml);
+
+        return 0;
+}

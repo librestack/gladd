@@ -21,3 +21,19 @@
  */
 
 #include "xml_test.h"
+#include "xml.h"
+#include "minunit.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+char *test_xml_doc()
+{
+        char *xmldoc;
+        mu_assert("Beginning test_xml_doc", buildxml(&xmldoc) == 0);
+        mu_assert("Verify XML content", 
+                strcmp(xmldoc,
+                "<?xml version=\"1.0\"?>\n<resources/>\n") == 0);
+        free(xmldoc);
+        return 0;
+}

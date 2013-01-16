@@ -23,4 +23,6 @@
 #ifndef __GLADD_XML_TEST_H__
 #define __GLADD_XML_TEST_H__ 1
 
+char *test_xml_doc();
+
 #endif /*__GLADD_XML_TEST_H__ */
