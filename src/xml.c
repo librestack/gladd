@@ -24,16 +24,30 @@
 #include <libxml/parser.h>
 #include "xml.h"
 
+int flattenxml(xmlDocPtr doc, char **xml);
+
 int buildxml(char **xml)
 {
         xmlNodePtr n;
         xmlDocPtr doc;
-        xmlChar *xmlbuff;
-        int buffersize;
 
         doc = xmlNewDoc(BAD_CAST "1.0");
         n = xmlNewNode(NULL, BAD_CAST "resources");
         xmlDocSetRootElement(doc, n);
+
+        flattenxml(doc, xml);
+
+        xmlFreeDoc(doc);
+
+        fprintf(stderr, "%s", *xml); /* FIXME: temp */
+
+        return 0;
+}
+
+int flattenxml(xmlDocPtr doc, char **xml)
+{
+        xmlChar *xmlbuff;
+        int buffersize;
 
         /* flatten xml */
         xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
@@ -41,9 +55,6 @@ int buildxml(char **xml)
         sprintf(*xml, "%s", (char *) xmlbuff);
 
         xmlFree(xmlbuff);
-        xmlFreeDoc(doc);
-
-        fprintf(stderr, "%s", *xml);
-
+        
         return 0;
 }
