@@ -22,6 +22,7 @@
 
 #define _GNU_SOURCE
 #include <libxml/parser.h>
+#include "config.h"
 #include "xml.h"
 
 int flattenxml(xmlDocPtr doc, char **xml);
@@ -36,10 +37,52 @@ int buildxml(char **xml)
         xmlDocSetRootElement(doc, n);
 
         flattenxml(doc, xml);
-
         xmlFreeDoc(doc);
 
         fprintf(stderr, "%s", *xml); /* FIXME: temp */
+
+        return 0;
+}
+
+int sqltoxml(db_t *db, char *sql, char **xml)
+{
+        int rowc;
+        row_t *rows;
+        char *cursorsql;
+        xmlNodePtr n;
+        xmlDocPtr doc;
+        field_t *f;
+
+        asprintf(&cursorsql, "DECLARE sqltoxml CURSOR FOR %s", sql);
+
+        db_connect(db);
+        db_exec_sql(db, "BEGIN;");
+        db_exec_sql(db, cursorsql);
+        db_fetch_all(db, "sqltoxml", &rows, &rowc);
+        db_exec_sql(db, "END;");
+        free(cursorsql);
+
+        doc = xmlNewDoc(BAD_CAST "1.0");
+        n = xmlNewNode(NULL, BAD_CAST "resources");
+        xmlDocSetRootElement(doc, n);
+
+        /* insert query results */
+        fprintf(stderr, "Rows returned: %i\n", rowc);
+        if (rowc > 0) {
+                f = rows->fields;
+                while (f != NULL) {
+                        xmlNewTextChild(n, NULL,
+                                (xmlChar*) f->fname,
+                                (xmlChar*) f->fvalue);
+                        f = f->next;
+                }
+        }
+        free_rows(rows);
+
+        flattenxml(doc, xml);
+        xmlFreeDoc(doc);
+
+        db_disconnect(db);
 
         return 0;
 }

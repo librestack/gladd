@@ -20,8 +20,11 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include "xml_test.h"
 #include "xml.h"
+#include "config.h"
+#include "db.h"
 #include "minunit.h"
 #include <stdio.h>
 #include <string.h>
@@ -29,11 +32,22 @@
 
 char *test_xml_doc()
 {
+        db_t *db;
+        char *sql;
         char *xmldoc;
+
         mu_assert("Beginning test_xml_doc", buildxml(&xmldoc) == 0);
         mu_assert("Verify XML content", 
                 strcmp(xmldoc,
                 "<?xml version=\"1.0\"?>\n<resources/>\n") == 0);
         free(xmldoc);
+
+        db = config->dbs->next;
+        asprintf(&sql, "SELECT * FROM test;");
+        mu_assert("sqltoxml()", sqltoxml(db, sql, &xmldoc) == 0);
+        fprintf(stderr, "%s", xmldoc);
+        free(sql);
+        free(xmldoc);
+
         return 0;
 }
