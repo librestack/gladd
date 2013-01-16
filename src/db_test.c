@@ -30,6 +30,9 @@ char *test_db_connect()
 {
         db_t *db;
         db = config->dbs;
+        row_t *r;
+        int rowc;
+        field_t *f;
 
         mu_assert("Ensure db_connect() fails when db doesn't exist",
                 db_connect(db) == 1);
@@ -66,28 +69,22 @@ char *test_db_connect()
                 db_exec_sql(db,
                 "DECLARE testcursor CURSOR FOR SELECT * FROM test;") == 0);
 
-        row_t *r;
-        int rowc;
-
         mu_assert("db_fetch_all() FETCH ALL",
                 db_fetch_all(db, "testcursor", &r, &rowc) == 0);
 
         fprintf(stderr, "Row count: %i\n", rowc);
 
-        field_t *f;
-
         mu_assert("Get 1st row", f = r->fields);
         mu_assert("Check 1st field name", strcmp(f->fname, "id") == 0);
         mu_assert("Check 1st field value", strcmp(f->fvalue, "0") == 0);
-        f = f->next;
+        mu_assert("Get next field", f = f->next);
         mu_assert("Check 2nd field name", strcmp(f->fname, "name") == 0);
         mu_assert("Check 2nd field value", strncmp(f->fvalue, "boris",5) == 0);
         mu_assert("Ensure last field->next == NULL", f->next == NULL);
-
         mu_assert("Get 2nd row", f = r->next->fields);
         mu_assert("Check 1st field name", strcmp(f->fname, "id") == 0);
         mu_assert("Check 1st field value", strcmp(f->fvalue, "5") == 0);
-        f = f->next;
+        mu_assert("Get next field", f = f->next);
         mu_assert("Check 2nd field name", strcmp(f->fname, "name") == 0);
         mu_assert("Check 2nd field value", strncmp(f->fvalue, "ivan", 4) == 0);
         mu_assert("Ensure last field->next == NULL", f->next == NULL);
