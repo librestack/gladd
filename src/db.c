@@ -176,7 +176,7 @@ int db_exec_sql_pg(db_t *db, char *sql)
 
 /* return all results from a cursor
  * wrapper for db-specific functions */
-int db_fetch_all(db_t *db, char *cursor, field_t *fields)
+int db_fetch_all(db_t *db, char *cursor, row_t **rows, int *rowc)
 {
         if (db == NULL) {
                 fprintf(stderr, 
@@ -184,7 +184,7 @@ int db_fetch_all(db_t *db, char *cursor, field_t *fields)
                 return -1;
         }
         if (strcmp(db->type, "pg") == 0) {
-                return db_fetch_all_pg(db, cursor, fields);
+                return db_fetch_all_pg(db, cursor, rows, rowc);
         }
         else {
                 fprintf(stderr, 
@@ -195,47 +195,72 @@ int db_fetch_all(db_t *db, char *cursor, field_t *fields)
 }
 
 /* return all results from a cursor - postgres */
-int db_fetch_all_pg(db_t *db, char *cursor, field_t *fields)
+int db_fetch_all_pg(db_t *db, char *cursor, row_t **rows, int *rowc)
 {
         char *sql;
         PGresult *res;
-        int i;
+        int i, j;
         int nFields;
         field_t *f;
-        field_t *ftmp;
+        field_t *ftmp = NULL;
+        row_t *r;
+        row_t *rtmp = NULL;
 
         asprintf(&sql, "FETCH ALL in %s;", cursor);
         res = PQexec(db->conn, sql);
+        free(sql);
         if (PQresultStatus(res) != PGRES_TUPLES_OK) {
                 fprintf(stderr, "FETCH ALL failed: %s", 
                         PQerrorMessage(db->conn));
                 return -1;
         }
 
-        /* bung fields into struct */
+        /* populate rows and fields */
         nFields = PQnfields(res);
-        for (i = 0; i < nFields; i++) {
-                if (fields->fname == NULL) {
-                        fields->fname = strdup(PQfname(res, i));
-                        fields->next = NULL;
-                }
-                else {
+        for (j = 0; j < PQntuples(res); j++) {
+                r = malloc(sizeof(row_t));
+                r->fields = NULL;
+                r->next = NULL;
+                for (i = 0; i < nFields; i++) {
                         f = malloc(sizeof(field_t));
                         f->fname = strdup(PQfname(res, i));
+                        f->fvalue = strdup(PQgetvalue(res, j, i));
                         f->next = NULL;
-                        if (fields->next == NULL) {
-                                fields -> next = f;
+                        if (r->fields == NULL) {
+                                r->fields = f;
                         }
-                        else {
+                        if (ftmp != NULL) {
                                 ftmp->next = f;
                         }
                         ftmp = f;
                 }
+                if (rtmp == NULL) {
+                        /* as this is our first row, update the ptr */
+                        *rows = r;
+                }
+                else {
+                        rtmp->next = r;
+                }
+                ftmp = NULL;
+                rtmp = r;
         }
+        *rowc = PQntuples(res);
 
         PQclear(res);
 
         return 0;
+}
+
+/* free row_t struct */
+void free_rows(row_t *r)
+{
+        row_t *tmp;
+        while (r != NULL) {
+                //free_fields(r->fields);
+                tmp = r;
+                free(tmp);
+                r = r->next;
+        }
 }
 
 /* free field_t struct */
@@ -244,6 +269,7 @@ void free_fields(field_t *f)
         field_t *tmp;
         while (f != NULL) {
                 free(f->fname);
+                free(f->fvalue);
                 tmp = f;
                 free(tmp);
                 f = f->next;

@@ -27,8 +27,14 @@
 
 typedef struct field_t {
         char *fname;
+        char *fvalue;
         struct field_t *next;
 } field_t;
+
+typedef struct row_t {
+        struct field_t *fields;
+        struct row_t *next;
+} row_t;
 
 int db_connect(db_t *db);
 int db_connect_pg(db_t *db);
@@ -38,9 +44,10 @@ int db_disconnect(db_t *db);
 int db_disconnect_pg(db_t *db);
 int db_exec_sql(db_t *db, char *sql);
 int db_exec_sql_pg(db_t *db, char *sql);
-int db_fetch_all(db_t *db, char *cursor, field_t *fields);
-int db_fetch_all_pg(db_t *db, char *cursor, field_t *fields);
+int db_fetch_all(db_t *db, char *cursor, row_t **rows, int *rowc);
+int db_fetch_all_pg(db_t *db, char *cursor, row_t **rows, int *rowc);
 void free_fields(field_t *f);
+void free_rows(row_t *r);
 
 
 #endif /* __GLADD_DB_H__ */
