@@ -60,8 +60,18 @@ char *test_db_connect()
                 db_exec_sql(db,
                 "DECLARE testcursor CURSOR FOR SELECT * FROM test;") == 0);
 
-        mu_assert("db_fetch_all() FETCH ALL",
-                db_fetch_all(db, "testcursor") == 0);
+        field_t *f;
+        f = malloc(sizeof(field_t));
+
+        mu_assert("db_fetch_all_pg() FETCH ALL",
+                db_fetch_all_pg(db, "testcursor", f) == 0);
+
+        mu_assert("Check 1st field name", strcmp(f->fname, "id") == 0);
+        f = f->next;
+        mu_assert("Check 2nd field name", strcmp(f->fname, "name") == 0);
+        mu_assert("Ensure last field->next == NULL", f->next == NULL);
+
+        free_fields(f);
 
         mu_assert("db_exec_sql() ROLLBACK",
                 db_exec_sql(db, "ROLLBACK;") == 0);

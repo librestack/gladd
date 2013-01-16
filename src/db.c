@@ -176,7 +176,7 @@ int db_exec_sql_pg(db_t *db, char *sql)
 
 /* return all results from a cursor
  * wrapper for db-specific functions */
-int db_fetch_all(db_t *db, char *cursor)
+int db_fetch_all(db_t *db, char *cursor, field_t *fields)
 {
         if (db == NULL) {
                 fprintf(stderr, 
@@ -184,7 +184,7 @@ int db_fetch_all(db_t *db, char *cursor)
                 return -1;
         }
         if (strcmp(db->type, "pg") == 0) {
-                return db_fetch_all_pg(db, cursor);
+                return db_fetch_all_pg(db, cursor, fields);
         }
         else {
                 fprintf(stderr, 
@@ -195,10 +195,14 @@ int db_fetch_all(db_t *db, char *cursor)
 }
 
 /* return all results from a cursor - postgres */
-int db_fetch_all_pg(db_t *db, char *cursor)
+int db_fetch_all_pg(db_t *db, char *cursor, field_t *fields)
 {
         char *sql;
         PGresult *res;
+        int i;
+        int nFields;
+        field_t *f;
+        field_t *ftmp;
 
         asprintf(&sql, "FETCH ALL in %s;", cursor);
         res = PQexec(db->conn, sql);
@@ -208,7 +212,41 @@ int db_fetch_all_pg(db_t *db, char *cursor)
                 return -1;
         }
 
+        /* bung fields into struct */
+        nFields = PQnfields(res);
+        for (i = 0; i < nFields; i++) {
+                fprintf(stderr, "%-15s\n", PQfname(res, i));
+                if (fields->fname == NULL) {
+                        fields->fname = strdup(PQfname(res, i));
+                        fields->next = NULL;
+                }
+                else {
+                        f = malloc(sizeof(field_t));
+                        f->fname = strdup(PQfname(res, i));
+                        f->next = NULL;
+                        if (fields->next == NULL) {
+                                fields -> next = f;
+                        }
+                        else {
+                                ftmp->next = f;
+                        }
+                        ftmp = f;
+                }
+        }
+
         PQclear(res);
 
         return 0;
+}
+
+/* free field_t struct */
+void free_fields(field_t *f)
+{
+        field_t *tmp;
+        while (f != NULL) {
+                free(f->fname);
+                tmp = f;
+                free(tmp);
+                f = f->next;
+        }
 }
