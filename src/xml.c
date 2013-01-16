@@ -49,7 +49,6 @@ int flattenxml(xmlDocPtr doc, char **xml)
         xmlChar *xmlbuff;
         int buffersize;
 
-        /* flatten xml */
         xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
         *xml = malloc(snprintf(NULL, 0, "%s", (char *) xmlbuff) + 1);
         sprintf(*xml, "%s", (char *) xmlbuff);
