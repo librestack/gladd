@@ -132,6 +132,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                         free(filename);
                                         break;
                                 }
+                                /* insert sqlview here */
                                 else {
                                         syslog(LOG_ERR, 
                                                 "Unknown url type '%s'",

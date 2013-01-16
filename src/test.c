@@ -27,6 +27,7 @@
 #include "auth_test.h"
 #include "config_test.h"
 #include "db_test.h"
+#include "xml_test.h"
 #include "test.h"
  
 int tests_run = 0;
