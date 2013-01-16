@@ -254,24 +254,24 @@ int db_fetch_all_pg(db_t *db, char *cursor, row_t **rows, int *rowc)
 /* free row_t struct */
 void free_rows(row_t *r)
 {
-        row_t *tmp;
+        row_t *next_r;
         while (r != NULL) {
-                //free_fields(r->fields);
-                tmp = r;
-                free(tmp);
-                r = r->next;
+                free_fields(r->fields);
+                next_r = r->next;
+                free(r);
+                r = next_r;
         }
 }
 
 /* free field_t struct */
 void free_fields(field_t *f)
 {
-        field_t *tmp;
+        field_t *next_f;
         while (f != NULL) {
                 free(f->fname);
                 free(f->fvalue);
-                tmp = f;
-                free(tmp);
-                f = f->next;
+                next_f = f->next;
+                free(f);
+                f = next_f;
         }
 }

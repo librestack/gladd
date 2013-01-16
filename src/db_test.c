@@ -84,8 +84,7 @@ char *test_db_connect()
         mu_assert("Check 2nd field value", strncmp(f->fvalue, "boris",5) == 0);
         mu_assert("Ensure last field->next == NULL", f->next == NULL);
 
-        mu_assert("Get 2nd row", r = r->next);
-        f = r->fields;
+        mu_assert("Get 2nd row", f = r->next->fields);
         mu_assert("Check 1st field name", strcmp(f->fname, "id") == 0);
         mu_assert("Check 1st field value", strcmp(f->fvalue, "5") == 0);
         f = f->next;
