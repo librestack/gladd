@@ -1,0 +1,48 @@
+{
+   libpq hack 01 connectOptions1
+   Memcheck:Leak
+   fun:malloc
+   fun:nss_parse_service_list
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getpwuid_r@@GLIBC_2.2.5
+   fun:getpwuid
+   fun:pqGetpwuid
+   fun:pg_fe_getauthname
+   fun:conninfo_add_defaults
+   fun:parse_connection_string
+   fun:connectOptions1
+}
+{
+   libpq hack 02 connectOptions1
+   Memcheck:Leak
+   fun:malloc
+   fun:tsearch
+   fun:__nss_lookup_function
+   obj:*
+   obj:*
+   fun:getpwuid_r@@GLIBC_2.2.5
+   fun:getpwuid
+   fun:pqGetpwuid
+   fun:pg_fe_getauthname
+   fun:conninfo_add_defaults
+   fun:parse_connection_string
+   fun:connectOptions1
+}
+{
+   libpq hack 03 PQconnectStart
+   Memcheck:Leak
+   fun:malloc
+   fun:__nss_lookup_function
+   obj:*
+   obj:*
+   fun:getpwuid_r@@GLIBC_2.2.5
+   fun:getpwuid
+   fun:pqGetpwuid
+   fun:pg_fe_getauthname
+   fun:conninfo_add_defaults
+   fun:parse_connection_string
+   fun:connectOptions1
+   fun:PQconnectStart
+}

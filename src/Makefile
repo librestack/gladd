@@ -76,7 +76,7 @@ test.o: minunit.h test.c test.h db_test.h config_test.h args_test.h auth_test.h
 	${CC} ${CFLAGS} ${INCLUDES} -c test.c
 
 
-.PHONY: clean test install
+.PHONY: clean test leakcheck install
 
 clean:
 	rm ${PROGRAM} ${PROGRAM}_test ${OBJECTFILES} ${TESTFILES}
@@ -84,6 +84,9 @@ clean:
 test:
 	make clean || true
 	make && ./${PROGRAM}_test || true
+
+leakcheck:
+	valgrind -v --leak-check=full --suppressions=.valgrind.suppressions ./gladd_test
 
 install:
 	cp ${PROGRAM} ${INSTALLDIR}
