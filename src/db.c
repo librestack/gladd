@@ -215,7 +215,6 @@ int db_fetch_all_pg(db_t *db, char *cursor, field_t *fields)
         /* bung fields into struct */
         nFields = PQnfields(res);
         for (i = 0; i < nFields; i++) {
-                fprintf(stderr, "%-15s\n", PQfname(res, i));
                 if (fields->fname == NULL) {
                         fields->fname = strdup(PQfname(res, i));
                         fields->next = NULL;

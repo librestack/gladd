@@ -63,8 +63,8 @@ char *test_db_connect()
         field_t *f;
         f = malloc(sizeof(field_t));
 
-        mu_assert("db_fetch_all_pg() FETCH ALL",
-                db_fetch_all_pg(db, "testcursor", f) == 0);
+        mu_assert("db_fetch_all() FETCH ALL",
+                db_fetch_all(db, "testcursor", f) == 0);
 
         mu_assert("Check 1st field name", strcmp(f->fname, "id") == 0);
         f = f->next;
