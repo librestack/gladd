@@ -173,12 +173,21 @@ int db_exec_sql(db_t *db, char *sql)
         if (strcmp(db->type, "pg") == 0) {
                 return db_exec_sql_pg(db, sql);
         }
+        else if (strcmp(db->type, "my") == 0) {
+                return db_exec_sql_my(db, sql);
+        }
         else {
                 fprintf(stderr, 
                     "Invalid database type '%s' passed to db_exec_sql()\n",
                     db->type);
         }
         return 0;
+}
+
+/* execute sql against a mysql db */
+int db_exec_sql_my(db_t *db, char *sql)
+{
+        return -1;
 }
 
 /* execute sql against a postgresql db */
