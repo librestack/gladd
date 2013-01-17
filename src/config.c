@@ -311,6 +311,21 @@ int add_db (char *value)
         return 0;
 }
 
+/* return the db_t pointer for this db alias */
+db_t *getdb(char *alias)
+{
+        db_t *db;
+
+        db = config->dbs;
+        while (db != NULL) {
+                if (strcmp(alias, db->alias) == 0)
+                        return db;
+                db = db->next;
+        }
+
+        return NULL; /* db not found */
+}
+
 /* check config line and handle appropriately */
 int process_config_line(char *line)
 {

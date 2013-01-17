@@ -22,6 +22,7 @@
 
 #define _GNU_SOURCE
 #include <libxml/parser.h>
+#include <syslog.h>
 #include "config.h"
 #include "string.h"
 #include "xml.h"
@@ -54,7 +55,8 @@ int sqltoxml(db_t *db, char *sql, char **xml)
         xmlDocPtr doc;
         field_t *f;
 
-        asprintf(&cursorsql, "DECLARE sqltoxml CURSOR FOR %s", sql);
+        if (asprintf(&cursorsql, "DECLARE sqltoxml CURSOR FOR %s", sql) == -1)
+                return -1;
 
         db_connect(db);
         db_exec_sql(db, "BEGIN;");
@@ -68,7 +70,7 @@ int sqltoxml(db_t *db, char *sql, char **xml)
         xmlDocSetRootElement(doc, n);
 
         /* insert query results */
-        fprintf(stderr, "Rows returned: %i\n", rowc);
+        syslog(LOG_DEBUG, "Rows returned: %i\n", rowc);
         if (rowc > 0) {
                 f = rows->fields;
                 while (f != NULL) {

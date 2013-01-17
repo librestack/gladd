@@ -27,10 +27,12 @@
 
 #include "auth.h"
 #include "config.h"
+#include "db.h"
+#include "handler.h"
+#include "http.h"
 #include "main.h"
 #include "mime.h"
-#include "http.h"
-#include "handler.h"
+#include "xml.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -81,8 +83,9 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         
         url_t *u;
 
-        //char *r;
-        //char *xml;
+        char *r;
+        char *sql;
+        char *xml;
 
         inet_ntop(their_addr.ss_family,
                         get_in_addr((struct sockaddr *)&their_addr),
@@ -132,7 +135,31 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                         free(filename);
                                         break;
                                 }
-                                /* insert sqlview here */
+                                else if (strcmp(u->type, "sqlview") == 0) {
+                                        /* handle sqlview */
+                                        db_t *db;
+                                        if (!(db = getdb(u->db))) {
+                                                http_response(sock, 500);
+                                        }
+                                        asprintf(&sql, "SELECT * FROM %s;",
+                                                        u->view);
+                                        if (sqltoxml(db, sql, &xml) != 0) {
+                                                free(sql);
+                                                http_response(sock, 500);
+                                        }
+                                        if (asprintf(&r, RESPONSE_200,
+                                                MIME_XML, xml) == -1)
+                                        {
+                                                syslog(LOG_ERR,
+                                                        "Malloc failed");
+                                                exit(EXIT_FAILURE);
+                                        }
+                                        respond(sock, r);
+                                        free(r);
+                                        free(sql);
+                                        free(xml);
+                                        break;
+                                }
                                 else {
                                         syslog(LOG_ERR, 
                                                 "Unknown url type '%s'",
@@ -142,19 +169,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         u = u->next;
                 }
 
-                /* dynamic urls */
-                /*
-                else if (strncmp(res, "/guess/", 7) == 0){
-                        prepare_response(res, &xml, 0);
-                        if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1) {
-                                syslog(LOG_ERR, "Malloc failed");
-                                exit(EXIT_FAILURE);
-                        }
-                        respond(sock, r);
-                        free(xml);
-                        free(r);
-                }
-                */
                 if (u == NULL) {
                         /* Not found */
                         http_response(sock, 404);

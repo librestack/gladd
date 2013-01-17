@@ -205,5 +205,9 @@ char *test_config_db()
         /* ensure no more dbs */
         mu_assert("Ensure final db->next returns NULL", db->next == NULL);
 
+        /* fetch db by alias */
+        mu_assert("getdb() - fetch db by alias",
+                strcmp(getdb("db_test")->db, "gladd_test") == 0);
+
         return 0;
 }
