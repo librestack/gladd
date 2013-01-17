@@ -195,10 +195,17 @@ char *test_config_db()
         mu_assert("Check 1st db->host", strcmp(db->host, "localhost") == 0);
         mu_assert("Check 1st db->db", strcmp(db->db, "gladd_fake") == 0);
 
-        /* check next db */
-        db = db->next;
+        /* check next (postgres) db */
+        mu_assert("Test reading postgres db from config", db = db->next);
         mu_assert("Check 2nd db->alias", strcmp(db->alias, "db_test") == 0);
         mu_assert("Check 2nd db->type", strcmp(db->type, "pg") == 0);
+        mu_assert("Check 2nd db->host", strcmp(db->host, "localhost") == 0);
+        mu_assert("Check 2nd db->db", strcmp(db->db, "gladd_test") == 0);
+
+        /* check next (mysql) db */
+        mu_assert("Test reading mysql db from config", db = db->next);
+        mu_assert("Check 2nd db->alias", strcmp(db->alias, "db_test_my") == 0);
+        mu_assert("Check 2nd db->type", strcmp(db->type, "my") == 0);
         mu_assert("Check 2nd db->host", strcmp(db->host, "localhost") == 0);
         mu_assert("Check 2nd db->db", strcmp(db->db, "gladd_test") == 0);
 

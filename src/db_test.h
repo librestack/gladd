@@ -25,6 +25,7 @@
 
 #include "db.h"
 
-char *test_db_connect();
+char *test_dbs();               /* loop through all test dbs */
+char *test_db(db_t *db);        /* test one db */
 
 #endif /* __GLADD_DB_TEST_H__ */

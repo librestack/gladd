@@ -22,6 +22,7 @@
 
 #define _GNU_SOURCE
 #include <libpq-fe.h>
+#include <mysql.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,11 +42,40 @@ int db_connect(db_t *db)
         if (strcmp(db->type, "pg") == 0) {
                 return db_connect_pg(db);
         }
+        else if (strcmp(db->type, "my") == 0) {
+                return db_connect_my(db);
+        }
         else {
                 fprintf(stderr, 
                         "Invalid database type '%s' passed to db_connect()\n", 
                         db->type);
+                return -1;
         }
+        return 0;
+}
+
+/* connect to mysql database */
+int db_connect_my(db_t *db)
+{
+        MYSQL *conn;
+
+        conn = mysql_init(NULL);
+        if (conn == NULL) {
+                fprintf(stderr, "%u: %s\n", mysql_errno(conn),
+                                            mysql_error(conn));
+                return -1;
+        }
+
+        if (mysql_real_connect(conn, db->host, db->user, db->pass,
+                                                NULL, 0, NULL, 0) == NULL)
+        {
+                fprintf(stderr, "%u: %s\n", mysql_errno(conn),
+                                            mysql_error(conn));
+                return -1;
+        }
+
+        db->conn = conn;
+
         return 0;
 }
 

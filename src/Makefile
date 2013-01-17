@@ -53,7 +53,7 @@ config_test.o: minunit.h config_test.c config_test.h
 	${CC} ${CFLAGS} -c config_test.c
 
 db.o: db.c db.h
-	${CC} ${CFLAGS} -c db.c
+	${CC} ${CFLAGS} -c db.c ${LIBS}
 
 db_test.o: db_test.c db_test.h
 	${CC} ${CFLAGS} -c db_test.c

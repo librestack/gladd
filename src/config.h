@@ -56,6 +56,8 @@ typedef struct db_t {
         char *type;  /* "pg" = postgres only supported at present */
         char *host;  /* hostname or ip for this database eg. "localhost" */
         char *db;    /* name of the database */
+        char *user;  /* username (mysql) */
+        char *pass;  /* password (mysql) */
         void *conn;  /* pointer to open db connection */
         struct db_t *next; /* pointer to next db so we can loop through them */
 } db_t;

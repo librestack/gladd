@@ -99,7 +99,8 @@ void free_dbs()
                 free(d->type);
                 free(d->host);
                 free(d->db);
-                //free(d->conn);
+                free(d->user);
+                free(d->pass);
                 tmp = d;
                 d = d->next;
                 free(tmp);
@@ -275,11 +276,17 @@ int add_db (char *value)
         char type[LINE_MAX] = "";
         char host[LINE_MAX] = "";
         char db[LINE_MAX] = "";
+        char user[LINE_MAX] = "";
+        char pass[LINE_MAX] = "";
 
-        if (sscanf(value, "%s %s %s %s", alias, type, host, db) != 4)
+        /* mysql config line have 6 args, postgres has 4 */
+        if (sscanf(value, "%s %s %s %s %s %s", alias, type, host, db,
+                                                            user, pass) != 6)
         {
-                /* config line didn't match expected patterns */
-                return -1;
+                if (sscanf(value, "%s %s %s %s", alias, type, host, db) != 4) {
+                        /* config line didn't match expected patterns */
+                        return -1;
+                }
         }
 
         newdb = malloc(sizeof(struct db_t));
@@ -289,6 +296,18 @@ int add_db (char *value)
                 newdb->type = strndup(type, LINE_MAX);
                 newdb->host = strndup(host, LINE_MAX);
                 newdb->db = strndup(db, LINE_MAX);
+                newdb->user=NULL;
+                newdb->pass=NULL;
+                newdb->conn=NULL;
+                newdb->next=NULL;
+        }
+        else if (strcmp(type, "my") == 0) {
+                newdb->alias = strndup(alias, LINE_MAX);
+                newdb->type = strndup(type, LINE_MAX);
+                newdb->host = strndup(host, LINE_MAX);
+                newdb->db = strndup(db, LINE_MAX);
+                newdb->user = strndup(user, LINE_MAX);
+                newdb->pass = strndup(pass, LINE_MAX);
                 newdb->conn=NULL;
                 newdb->next=NULL;
         }

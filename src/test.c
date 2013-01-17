@@ -62,7 +62,7 @@ static char * all_tests()
         mu_run_test(test_config_add_acl_invalid);
         mu_run_test(test_config_acl_allow_all);
         mu_run_test(test_config_db);
-        mu_run_test(test_db_connect);
+        mu_run_test(test_dbs);
         mu_run_test(test_xml_doc);
         mu_run_test(test_string_trimstr);
         free_acls();

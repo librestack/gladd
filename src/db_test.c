@@ -26,21 +26,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *test_db_connect()
+char *test_dbs()
 {
         db_t *db;
         db = config->dbs;
-        row_t *r;
-        int rowc;
-        field_t *f;
 
         mu_assert("Ensure db_connect() fails when db doesn't exist",
                 db_connect(db) == 1);
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
 
-        /* TODO: create database automatically with db_create() */
+        mu_assert("Get first test database from config", db = db->next);
+        while (db != NULL) {
+                mu_run_test(test_db, db);
+                db = db->next;
+        }
 
-        mu_assert("Get test database from config", db = db->next);
+        return 0;
+}
+
+char *test_db(db_t *db)
+{
+        row_t *r;
+        int rowc;
+        field_t *f;
 
         mu_assert("db_connect()", db_connect(db) == 0);
         mu_assert("Test database connection", db->conn != NULL);

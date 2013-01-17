@@ -37,6 +37,7 @@ typedef struct row_t {
 } row_t;
 
 int db_connect(db_t *db);
+int db_connect_my(db_t *db);
 int db_connect_pg(db_t *db);
 int db_create(db_t *db);
 int db_create_pg(db_t *db);
@@ -48,6 +49,5 @@ int db_fetch_all(db_t *db, char *cursor, row_t **rows, int *rowc);
 int db_fetch_all_pg(db_t *db, char *cursor, row_t **rows, int *rowc);
 void free_fields(field_t *f);
 void free_rows(row_t *r);
-
 
 #endif /* __GLADD_DB_H__ */
