@@ -27,6 +27,7 @@
 #include "auth_test.h"
 #include "config_test.h"
 #include "db_test.h"
+#include "string_test.h"
 #include "xml_test.h"
 #include "test.h"
  
@@ -63,6 +64,7 @@ static char * all_tests()
         mu_run_test(test_config_db);
         mu_run_test(test_db_connect);
         mu_run_test(test_xml_doc);
+        mu_run_test(test_string_trimstr);
         free_acls();
         free_dbs();
         free_urls();

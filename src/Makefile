@@ -24,8 +24,8 @@ INCLUDES=-I/usr/include/libxml2
 LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
-OBJECTFILES=args.o auth.o db.o config.o handler.o http.o mime.o signals.o xml.o
-TESTFILES=test.o args_test.o auth_test.o db_test.o config_test.o xml_test.o
+OBJECTFILES=args.o auth.o db.o config.o handler.o http.o mime.o signals.o string.o xml.o
+TESTFILES=test.o args_test.o auth_test.o db_test.o config_test.o string_test.o xml_test.o
 
 ${PROGRAM}: ${PROGRAM}_test main.o
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} main.o ${LIBS}
@@ -44,6 +44,12 @@ auth.o: auth.c auth.h
 
 auth_test.o: auth_test.c auth_test.h
 	${CC} ${CFLAGS} -c auth_test.c
+
+config.o: config.c config.h
+	${CC} ${CFLAGS} -c config.c
+
+config_test.o: minunit.h config_test.c config_test.h
+	${CC} ${CFLAGS} -c config_test.c
 
 db.o: db.c db.h
 	${CC} ${CFLAGS} -c db.c
@@ -66,11 +72,11 @@ mime.o: mime.c mime.h
 signals.o: signals.c signals.h
 	${CC} ${CFLAGS} -c signals.c
 
-config.o: config.c config.h
-	${CC} ${CFLAGS} -c config.c
+string.o: string.c string.h
+	${CC} ${CFLAGS} -c string.c
 
-config_test.o: minunit.h config_test.c config_test.h
-	${CC} ${CFLAGS} -c config_test.c
+string_test.o: string_test.c string_test.h
+	${CC} ${CFLAGS} -c string_test.c
 
 test.o: minunit.h test.c test.h db_test.h config_test.h args_test.h auth_test.h
 	${CC} ${CFLAGS} -c test.c
