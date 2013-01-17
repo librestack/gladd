@@ -23,6 +23,7 @@
 #define _GNU_SOURCE
 #include <libxml/parser.h>
 #include "config.h"
+#include "string.h"
 #include "xml.h"
 
 int flattenxml(xmlDocPtr doc, char **xml);
@@ -73,7 +74,7 @@ int sqltoxml(db_t *db, char *sql, char **xml)
                 while (f != NULL) {
                         xmlNewTextChild(n, NULL,
                                 (xmlChar*) f->fname,
-                                (xmlChar*) f->fvalue);
+                                (xmlChar*) strip(f->fvalue));
                         f = f->next;
                 }
         }

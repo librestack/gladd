@@ -171,35 +171,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         exit (EXIT_SUCCESS);
 }
 
-
-/*
- *  prepare an XML document response
- *
- *  free() xml after use
- */
-int prepare_response(char resource[], char **xml, char *query)
-{
-        xmlNodePtr n;
-        xmlDocPtr doc;
-        xmlChar *xmlbuff;
-        int buffersize;
-
-        doc = xmlNewDoc(BAD_CAST "1.0");
-        n = xmlNewNode(NULL, BAD_CAST "resources");
-
-        xmlDocSetRootElement(doc, n);
-
-        /* flatten xml */
-        xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
-        *xml = malloc(snprintf(NULL, 0, "%s", (char *) xmlbuff));
-        sprintf(*xml, "%s", (char *) xmlbuff);
-
-        xmlFree(xmlbuff);
-        xmlFreeDoc(doc);
-
-        return 0;
-}
-
 int send_file(int sock, char *path)
 {
         char *r;
