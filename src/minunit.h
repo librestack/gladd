@@ -38,8 +38,8 @@
         tests_run++; \
 } while (0)
 
-#define mu_run_test(test) do { \
-        char *message = test(); \
+#define mu_run_test(test, ...) do { \
+        char *message = test(__VA_ARGS__); \
         if (message) return message; \
 } while (0)
 
