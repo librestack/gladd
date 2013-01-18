@@ -224,12 +224,21 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
         if (strcmp(db->type, "pg") == 0) {
                 return db_fetch_all_pg(db, sql, rows, rowc);
         }
+        else if (strcmp(db->type, "my") == 0) {
+                return db_fetch_all_my(db, sql, rows, rowc);
+        }
         else {
                 fprintf(stderr, 
                     "Invalid database type '%s' passed to db_fetch_all()\n",
                     db->type);
         }
         return 0;
+}
+
+/* return all results from a cursor - postgres */
+int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
+{
+        return -1;
 }
 
 /* return all results from a cursor - postgres */
