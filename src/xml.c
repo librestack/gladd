@@ -40,6 +40,7 @@ int buildxml(char **xml)
 
         flattenxml(doc, xml);
         xmlFreeDoc(doc);
+        xmlCleanupParser();
 
         fprintf(stderr, "%s", *xml); /* FIXME: temp */
 
