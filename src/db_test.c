@@ -56,29 +56,26 @@ char *test_db(db_t *db)
         mu_assert("db_exec_sql() invalid sql returns failure",
                 db_exec_sql(db, "invalidsql") != 0);
         mu_assert("db_exec_sql() BEGIN",
-                db_exec_sql(db, "BEGIN;") == 0);
+                db_exec_sql(db, "BEGIN") == 0);
         mu_assert("db_exec_sql() DROP TABLE",
-                db_exec_sql(db, "DROP TABLE IF EXISTS test;") == 0);
+                db_exec_sql(db, "DROP TABLE IF EXISTS test") == 0);
         mu_assert("db_exec_sql() CREATE TABLE",
                 db_exec_sql(db,
-                "CREATE TABLE IF NOT EXISTS test(id integer, name char(32));")
+                "CREATE TABLE IF NOT EXISTS test(id integer, name char(32))")
                 == 0);
         mu_assert("db_exec_sql() INSERT",
                 db_exec_sql(db,
-                "INSERT INTO test(id, name) VALUES (0, 'boris');") == 0);
+                "INSERT INTO test(id, name) VALUES (0, 'boris')") == 0);
         mu_assert("db_exec_sql() INSERT",
                 db_exec_sql(db,
-                "INSERT INTO test(id, name) VALUES (5, 'ivan');") == 0);
+                "INSERT INTO test(id, name) VALUES (5, 'ivan')") == 0);
         mu_assert("db_exec_sql() COMMIT",
-                db_exec_sql(db, "COMMIT;") == 0);
+                db_exec_sql(db, "COMMIT") == 0);
         mu_assert("db_exec_sql() BEGIN",
-                db_exec_sql(db, "BEGIN;") == 0);
-        mu_assert("db_exec_sql() DECLARE CURSOR",
-                db_exec_sql(db,
-                "DECLARE testcursor CURSOR FOR SELECT * FROM test;") == 0);
+                db_exec_sql(db, "BEGIN") == 0);
 
-        mu_assert("db_fetch_all() FETCH ALL",
-                db_fetch_all(db, "testcursor", &r, &rowc) == 0);
+        mu_assert("db_fetch_all() SELECT",
+                db_fetch_all(db, "SELECT * FROM test", &r, &rowc) == 0);
 
         fprintf(stderr, "Row count: %i\n", rowc);
 
@@ -100,7 +97,7 @@ char *test_db(db_t *db)
         free_rows(r);
 
         mu_assert("db_exec_sql() ROLLBACK",
-                db_exec_sql(db, "ROLLBACK;") == 0);
+                db_exec_sql(db, "ROLLBACK") == 0);
 
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
 
