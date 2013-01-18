@@ -20,7 +20,7 @@
 
 CC=gcc
 CFLAGS=-g -Wall -Werror
-INCLUDES=-I/usr/include/libxml2
+INCLUDES=-I/usr/include/libxml2 -I/usr/include/postgresql
 MYSQLFLAGS=`mysql_config --cflags --libs`
 LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq ${MYSQLFLAGS} -lmysqlclient
 PROGRAM=gladd
@@ -53,7 +53,7 @@ config_test.o: minunit.h config_test.c config_test.h
 	${CC} ${CFLAGS} -c config_test.c
 
 db.o: db.c db.h
-	${CC} ${CFLAGS} -c db.c ${LIBS}
+	${CC} ${CFLAGS} ${INCLUDES} -c db.c ${LIBS}
 
 db_test.o: db_test.c db_test.h
 	${CC} ${CFLAGS} -c db_test.c
