@@ -248,16 +248,58 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
 /* return all results from a SELECT - postgres */
 int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
 {
+        MYSQL_RES *res;
+        MYSQL_ROW row;
+        MYSQL_FIELD *fields;
+        int i;
+        int nFields;
+        field_t *f;
+        field_t *ftmp = NULL;
+        row_t *r;
+        row_t *rtmp = NULL;
+
+        *rowc = 0;
+
         if (mysql_query(db->conn, sql) != 0) {
                 fprintf(stderr, "%u: %s\n", mysql_errno(db->conn), 
                                             mysql_error(db->conn));
                 return -1;
         }
-        if (mysql_store_result(db->conn) != 0) {
-                fprintf(stderr, "%u: %s\n", mysql_errno(db->conn), 
-                                            mysql_error(db->conn));
-                return -1;
+        res = mysql_store_result(db->conn);
+        *rowc = mysql_num_rows(res);
+        /* populate rows and fields */
+        fields = mysql_fetch_fields(res);
+        nFields = mysql_num_fields(res);
+        while ((row = mysql_fetch_row(res))) {
+                r = malloc(sizeof(row_t));
+                r->fields = NULL;
+                r->next = NULL;
+                for (i = 0; i < nFields; i++) {
+                        f = malloc(sizeof(field_t));
+                        f->fname = fields[i].name;
+                        f->fvalue = strdup(row[i]);
+                        f->next = NULL;
+                        if (r->fields == NULL) {
+                                r->fields = f;
+                        }
+                        if (ftmp != NULL) {
+                                ftmp->next = f;
+                        }
+                        ftmp = f;
+                }
+                if (rtmp == NULL) {
+                        /* as this is our first row, update the ptr */
+                        *rows = r;
+                }
+                else {
+                        rtmp->next = r;
+                }
+                ftmp = NULL;
+                rtmp = r;
+                rowc++;
         }
+        mysql_free_result(res);
+
         return 0;
 }
 
