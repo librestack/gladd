@@ -50,20 +50,12 @@ int sqltoxml(db_t *db, char *sql, char **xml)
 {
         int rowc;
         row_t *rows;
-        char *cursorsql;
         xmlNodePtr n;
         xmlDocPtr doc;
         field_t *f;
 
-        if (asprintf(&cursorsql, "DECLARE sqltoxml CURSOR FOR %s", sql) == -1)
-                return -1;
-
         db_connect(db);
-        db_exec_sql(db, "BEGIN;");
-        db_exec_sql(db, cursorsql);
-        db_fetch_all(db, "sqltoxml", &rows, &rowc);
-        db_exec_sql(db, "END;");
-        free(cursorsql);
+        db_fetch_all(db, sql, &rows, &rowc);
 
         doc = xmlNewDoc(BAD_CAST "1.0");
         n = xmlNewNode(NULL, BAD_CAST "resources");
