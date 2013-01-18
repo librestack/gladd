@@ -46,7 +46,6 @@ char *test_xml_doc()
         db = config->dbs->next;
         asprintf(&sql, "SELECT * FROM test;");
         mu_assert("sqltoxml()", sqltoxml(db, sql, &xmldoc) == 0);
-        fprintf(stderr, "%s", xmldoc);
         free(sql);
 #endif /* _NPG */
 
