@@ -145,11 +145,22 @@ int db_disconnect(db_t *db)
         if (strcmp(db->type, "pg") == 0) {
                 return db_disconnect_pg(db);
         }
+        else if (strcmp(db->type, "my") == 0) {
+                return db_disconnect_my(db);
+        }
         else {
                 fprintf(stderr, 
                     "Invalid database type '%s' passed to db_disconnect()\n",
                     db->type);
         }
+        return 0;
+}
+
+/* disconnect from a mysql db */
+int db_disconnect_my(db_t *db)
+{
+        mysql_close(db->conn);
+
         return 0;
 }
 
@@ -238,7 +249,16 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
 /* return all results from a cursor - postgres */
 int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
 {
-        return -1;
+        mysql_close(db->conn);
+        return db_exec_sql_my(db, sql);
+        /*
+        if (mysql_store_result(db->conn) != 0) {
+                fprintf(stderr, "%u: %s\n", mysql_errno(db->conn), 
+                                            mysql_error(db->conn));
+                return -1;
+        }
+        return 0;
+        */
 }
 
 /* return all results from a cursor - postgres */
