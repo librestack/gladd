@@ -277,7 +277,7 @@ int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
                 for (i = 0; i < nFields; i++) {
                         f = malloc(sizeof(field_t));
                         f->fname = fields[i].name;
-                        f->fvalue = strdup(row[i]);
+                        f->fvalue = row[i] ? row[i] : "NULL";
                         f->next = NULL;
                         if (r->fields == NULL) {
                                 r->fields = f;
