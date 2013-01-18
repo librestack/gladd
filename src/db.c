@@ -73,7 +73,6 @@ int db_connect_my(db_t *db)
                                             mysql_error(conn));
                 return -1;
         }
-
         db->conn = conn;
 
         return 0;
@@ -223,7 +222,7 @@ int db_exec_sql_pg(db_t *db, char *sql)
         return 0;
 }
 
-/* return all results from a cursor
+/* return all results from a SELECT
  * wrapper for db-specific functions */
 int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
 {
@@ -246,22 +245,23 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
         return 0;
 }
 
-/* return all results from a cursor - postgres */
+/* return all results from a SELECT - postgres */
 int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
 {
-        mysql_close(db->conn);
-        return db_exec_sql_my(db, sql);
-        /*
+        if (mysql_query(db->conn, sql) != 0) {
+                fprintf(stderr, "%u: %s\n", mysql_errno(db->conn), 
+                                            mysql_error(db->conn));
+                return -1;
+        }
         if (mysql_store_result(db->conn) != 0) {
                 fprintf(stderr, "%u: %s\n", mysql_errno(db->conn), 
                                             mysql_error(db->conn));
                 return -1;
         }
         return 0;
-        */
 }
 
-/* return all results from a cursor - postgres */
+/* return all results from a SELECT - postgres */
 int db_fetch_all_pg(db_t *db, char *sql, row_t **rows, int *rowc)
 {
         PGresult *res;
@@ -318,7 +318,7 @@ int db_fetch_all_pg(db_t *db, char *sql, row_t **rows, int *rowc)
 /* free field_t struct */
 void free_fields(field_t *f)
 {
-        field_t *next_f;
+        field_t *next_f = NULL;
         while (f != NULL) {
                 free(f->fname);
                 free(f->fvalue);
@@ -331,9 +331,9 @@ void free_fields(field_t *f)
 /* free row_t struct */
 void free_rows(row_t *r)
 {
-        row_t *next_r;
+        row_t *next_r = NULL;
         while (r != NULL) {
-                free_fields(r->fields);
+                //free_fields(r->fields);
                 next_r = r->next;
                 free(r);
                 r = next_r;

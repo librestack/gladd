@@ -42,8 +42,6 @@ int buildxml(char **xml)
         xmlFreeDoc(doc);
         xmlCleanupParser();
 
-        fprintf(stderr, "%s", *xml); /* FIXME: temp */
-
         return 0;
 }
 

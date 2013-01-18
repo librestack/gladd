@@ -24,7 +24,7 @@ CC=gcc
 # -D_NPG  => compile without postgres support
 # -D_NMY  => compile without mysql support
 # -D_NXML => compile without xml support
-CFLAGS=-g -Wall -Werror -D_NPG -D_NMY
+CFLAGS=-g -Wall -Werror -D_NPG
 
 INCLUDES=-I/usr/include/libxml2 -I/usr/include/postgresql
 MYSQLFLAGS=`mysql_config --cflags --libs`
