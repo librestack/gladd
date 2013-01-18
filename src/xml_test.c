@@ -32,8 +32,6 @@
 
 char *test_xml_doc()
 {
-        db_t *db;
-        char *sql;
         char *xmldoc;
 
         mu_assert("Beginning test_xml_doc", buildxml(&xmldoc) == 0);
@@ -42,12 +40,15 @@ char *test_xml_doc()
                 "<?xml version=\"1.0\"?>\n<resources/>\n") == 0);
         free(xmldoc);
 
+#ifndef _NPG /* skip the following tests that require postgres */
+        db_t *db;
+        char *sql;
         db = config->dbs->next;
         asprintf(&sql, "SELECT * FROM test;");
         mu_assert("sqltoxml()", sqltoxml(db, sql, &xmldoc) == 0);
         fprintf(stderr, "%s", xmldoc);
         free(sql);
-        free(xmldoc);
+#endif /* _NPG */
 
         return 0;
 }

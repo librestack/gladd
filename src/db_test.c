@@ -31,9 +31,11 @@ char *test_dbs()
         db_t *db;
         db = config->dbs;
 
+#ifndef _NPG /* skip postgres tests */
         mu_assert("Ensure db_connect() fails when db doesn't exist",
                 db_connect(db) == 1);
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
+#endif /* _NPG */
 
         mu_assert("Get first test database from config", db = db->next);
         while (db != NULL) {
@@ -49,6 +51,20 @@ char *test_db(db_t *db)
         row_t *r;
         int rowc;
         field_t *f;
+
+#ifdef _NPG /* skip postgres tests */
+        if (strcmp(db->type, "pg") == 0) {
+                mu_assert("*** Skipping postgresql tests ***", 0 == 0);
+                return 0;
+        }
+#endif /* _NPG */
+#ifdef _NMY /* skip mysql tests */
+        if (strcmp(db->type, "my") == 0) {
+                mu_assert("*** Skipping mysql tests ***", 0 == 0);
+                return 0;
+        }
+#endif /* _NMY */
+
 
         mu_assert("db_connect()", db_connect(db) == 0);
         mu_assert("Test database connection", db->conn != NULL);

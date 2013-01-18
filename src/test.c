@@ -63,7 +63,9 @@ static char * all_tests()
         mu_run_test(test_config_acl_allow_all);
         mu_run_test(test_config_db);
         mu_run_test(test_dbs);
+#ifndef _NXML /* skip xml tests */
         mu_run_test(test_xml_doc);
+#endif /* _NXML */
         mu_run_test(test_string_trimstr);
         free_acls();
         free_dbs();
