@@ -71,13 +71,7 @@ char *test_db(db_t *db)
                 "INSERT INTO test(id, name) VALUES (5, 'ivan')") == 0);
         mu_assert("db_exec_sql() COMMIT",
                 db_exec_sql(db, "COMMIT") == 0);
-        /*
-        mu_assert("db_exec_sql() BEGIN",
-                db_exec_sql(db, "BEGIN") == 0);
-        */
 
-        mu_assert("db_disconnect()", db_disconnect(db) == 0);
-        mu_assert("db_connect()", db_connect(db) == 0);
         mu_assert("db_fetch_all() SELECT",
                 db_fetch_all(db, "SELECT * FROM test", &r, &rowc) == 0);
 
@@ -99,11 +93,6 @@ char *test_db(db_t *db)
         mu_assert("Ensure last field->next == NULL", f->next == NULL);
 
         free_rows(r);
-
-        /*
-        mu_assert("db_exec_sql() ROLLBACK",
-                db_exec_sql(db, "ROLLBACK") == 0);
-        */
 
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
 
