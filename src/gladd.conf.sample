@@ -18,8 +18,9 @@
 # along with this program (see the file COPYING in the distribution).
 # If not, see <http://www.gnu.org/licenses/>.
 
-debug	1
-port	3000
+debug		1
+port		3000
+encoding	UTF-8
 
 ###############################################################################
 ## databases
