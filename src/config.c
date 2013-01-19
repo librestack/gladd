@@ -31,7 +31,8 @@
 /* set config defaults */
 config_t config_default = {
         .debug          = 0,
-        .port           = 8080
+        .port           = 8080,
+        .xmlenc         = "UTF-8"
 };
 
 config_t *config;

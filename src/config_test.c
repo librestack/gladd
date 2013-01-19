@@ -78,37 +78,28 @@ char *test_config_defaults()
         mu_assert("Ensure default port=8080", config->port == 8080);
         mu_assert("Ensure default authrealm=gladd", 
                 strncmp(config->authrealm, "gladd", 5) == 0);
+        mu_assert("Ensure default xmlenc=UTF-8", 
+                strncmp(config->xmlenc, "UTF-8", 5) == 0);
         return 0;
 }
 
-/* ensure value of debug is set from config */
-char *test_config_set_debug_value()
+/* ensure config values are read from file */ 
+char *test_config_set()
 {
         read_config("test.conf");
         mu_assert("Ensure debug is set from config", config->debug == 1);
-        return 0;
-}
-
-/* ensure value of port is set from config */
-char *test_config_set_port_value()
-{
         mu_assert("Ensure port is set from config", config->port == 3000);
         return 0;
 }
 
-/* read url directive from config file */
-char *test_config_read_url_static()
+/* test successive reads of url->next */
+char *test_config_read_url()
 {
+        url_t *u;
+
         mu_assert("Ensure urls are read from config", config->urls != NULL);
         mu_assert("Ensure urls are read from config", 
                         strncmp(config->urls->type, "static", 6) == 0);
-        return 0;
-}
-
-/* test successive reads of url->next */
-char *test_config_read_url_static_next()
-{
-        url_t *u;
 
         mu_assert("Reading 1st url from config", u = config->urls);
         mu_assert("Checking 1st url from config", 

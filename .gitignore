@@ -3,4 +3,5 @@ gladd_test
 *.o
 *.lock
 *.swp
+core
 /static/

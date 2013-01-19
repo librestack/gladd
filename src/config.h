@@ -46,6 +46,7 @@ typedef struct config_t {
         long debug;
         long port;
         char *authrealm;
+        char *xmlenc;           /* xml encoding to use - default UTF-8 */
         struct url_t *urls;
         struct acl_t *acls;
         struct db_t *dbs;

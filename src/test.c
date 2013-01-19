@@ -51,10 +51,8 @@ static char * all_tests()
         mu_run_test(test_config_defaults);
         mu_run_test(test_config_open_fail);
         mu_run_test(test_config_open_success);
-        mu_run_test(test_config_set_debug_value);
-        mu_run_test(test_config_set_port_value);
-        mu_run_test(test_config_read_url_static);
-        mu_run_test(test_config_read_url_static_next);
+        mu_run_test(test_config_set);
+        mu_run_test(test_config_read_url);
         mu_run_test(test_args_invalid);
         mu_run_test(test_auth_default);
         mu_run_test(test_auth_deny);
