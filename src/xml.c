@@ -22,6 +22,7 @@
 
 #define _GNU_SOURCE
 #include <libxml/parser.h>
+#include <string.h>
 #include <syslog.h>
 #include "config.h"
 #include "string.h"
@@ -49,7 +50,10 @@ int sqltoxml(db_t *db, char *sql, char **xml)
 {
         int rowc;
         row_t *rows;
-        xmlNodePtr n;
+        row_t *r;
+        xmlNodePtr n = NULL;
+        xmlNodePtr nfld = NULL;
+        xmlNodePtr nval = NULL;
         xmlDocPtr doc;
         field_t *f;
 
@@ -68,20 +72,42 @@ int sqltoxml(db_t *db, char *sql, char **xml)
         /* insert query results */
         syslog(LOG_DEBUG, "Rows returned: %i\n", rowc);
         if (rowc > 0) {
-                f = rows->fields;
-                while (f != NULL) {
-                        xmlNewTextChild(n, NULL,
-                                (xmlChar*) f->fname,
-                                (xmlChar*) strip(f->fvalue));
-                        f = f->next;
+                r = rows;
+                while (r != NULL) {
+                        f = rows->fields;
+                        while (f != NULL) {
+                                syslog(LOG_DEBUG, "F: %s", f->fname);
+                                syslog(LOG_DEBUG, "V: %s", f->fvalue);
+
+                                char *fname;
+                                char *fvalue;
+
+                                asprintf(&fname, "%s", f->fname);
+                                asprintf(&fvalue, "%s", f->fvalue);
+
+                                /* TODO: ensure strings are UTF-8 encoded */
+
+                                nfld = xmlNewNode(NULL, BAD_CAST fname);
+                                nval = xmlNewText(BAD_CAST fvalue);
+                                xmlAddChild(nfld, nval);
+                                xmlAddChild(n, nfld);
+
+                                free(fname);
+                                free(fvalue);
+
+                                /* TODO: test nodes are correct here */
+
+                                f = f->next;
+                        }
+                        r = r->next;
                 }
         }
-        syslog(LOG_DEBUG, "sqltoxml() 1"); /* FIXME: temp */
-        //free_rows(rows);
-        syslog(LOG_DEBUG, "sqltoxml() 2"); /* FIXME: temp */
+        free_rows(rows);
 
         flattenxml(doc, xml);
+
         xmlFreeDoc(doc);
+        xmlCleanupParser();
 
         db_disconnect(db);
 
@@ -93,7 +119,8 @@ int flattenxml(xmlDocPtr doc, char **xml)
         xmlChar *xmlbuff;
         int buffersize;
 
-        xmlDocDumpFormatMemoryEnc(doc, &xmlbuff, &buffersize, "UTF-8", 1);
+        xmlDocDumpFormatMemoryEnc(doc, &xmlbuff, &buffersize, 
+                                                        config->encoding, 1);
         *xml = malloc(snprintf(NULL, 0, "%s", (char *) xmlbuff) + 1);
         sprintf(*xml, "%s", (char *) xmlbuff);
 
@@ -101,3 +128,14 @@ int flattenxml(xmlDocPtr doc, char **xml)
         
         return 0;
 }
+
+/* convert latin1 (ISO-8859-1) to UTF-8 */
+char *toutf8(char *str)
+{
+        int inlen, outlen;
+        inlen = outlen = strlen(str);
+        isolat1ToUTF8((unsigned char *) str, &outlen, 
+                      (unsigned char *) str, &inlen);
+        return str;
+}
+

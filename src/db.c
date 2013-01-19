@@ -267,6 +267,7 @@ int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
         }
         res = mysql_store_result(db->conn);
         *rowc = mysql_num_rows(res);
+
         /* populate rows and fields */
         fields = mysql_fetch_fields(res);
         nFields = mysql_num_fields(res);
@@ -276,8 +277,8 @@ int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
                 r->next = NULL;
                 for (i = 0; i < nFields; i++) {
                         f = malloc(sizeof(field_t));
-                        f->fname = fields[i].name;
-                        f->fvalue = row[i] ? row[i] : "NULL";
+                        asprintf(&f->fname, "%s", fields[i].name);
+                        asprintf(&f->fvalue, "%s", row[i]);
                         f->next = NULL;
                         if (r->fields == NULL) {
                                 r->fields = f;
@@ -375,6 +376,7 @@ void free_rows(row_t *r)
 {
         row_t *next_r = NULL;
         while (r != NULL) {
+                /* FIXME: free_fields() is busted */
                 //free_fields(r->fields);
                 next_r = r->next;
                 free(r);

@@ -37,7 +37,7 @@ char *test_xml_doc()
         mu_assert("Beginning test_xml_doc", buildxml(&xmldoc) == 0);
         mu_assert("Verify XML content", 
                 strcmp(xmldoc,
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<resources/>\n")
+                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<resources/>\n")
                 == 0);
         free(xmldoc);
 
@@ -48,6 +48,7 @@ char *test_xml_doc()
         asprintf(&sql, "SELECT * FROM test;");
         mu_assert("sqltoxml()", sqltoxml(db, sql, &xmldoc) == 0);
         free(sql);
+        free(xmldoc);
 #endif /* _NPG */
 
         return 0;
