@@ -78,8 +78,8 @@ char *test_config_defaults()
         mu_assert("Ensure default port=8080", config->port == 8080);
         mu_assert("Ensure default authrealm=gladd", 
                 strncmp(config->authrealm, "gladd", 5) == 0);
-        mu_assert("Ensure default xmlenc=UTF-8", 
-                strncmp(config->xmlenc, "UTF-8", 5) == 0);
+        mu_assert("Ensure default encoding=UTF-8", 
+                strncmp(config->encoding, "UTF-8", 5) == 0);
         return 0;
 }
 
@@ -89,6 +89,8 @@ char *test_config_set()
         read_config("test.conf");
         mu_assert("Ensure debug is set from config", config->debug == 1);
         mu_assert("Ensure port is set from config", config->port == 3000);
+        mu_assert("Ensure encoding is set from config", 
+                strcmp(config->encoding, "ISO-8859-1") == 0);
         return 0;
 }
 

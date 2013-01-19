@@ -46,7 +46,7 @@ typedef struct config_t {
         long debug;
         long port;
         char *authrealm;
-        char *xmlenc;           /* xml encoding to use - default UTF-8 */
+        char *encoding;           /* encoding to use - default UTF-8 */
         struct url_t *urls;
         struct acl_t *acls;
         struct db_t *dbs;
@@ -79,6 +79,7 @@ int process_config_line(char *line);
 int read_config(char *configfile);
 int set_config_defaults();
 int set_config_long(long *confset, char *keyname, long i, long min, long max);
+int set_encoding(char *value);
 int add_acl (char *value);
 int add_db (char *value);
 db_t *getdb(char *alias);

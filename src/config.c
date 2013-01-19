@@ -20,6 +20,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -32,7 +33,7 @@
 config_t config_default = {
         .debug          = 0,
         .port           = 8080,
-        .xmlenc         = "UTF-8"
+        .encoding       = "UTF-8"
 };
 
 config_t *config;
@@ -371,6 +372,9 @@ int process_config_line(char *line)
                 }
         }
         else if (sscanf(line, "%s %[^\n]", key, value) == 2) {
+                if (strcmp(key, "encoding") == 0) {
+                        return set_encoding(value);
+                }
                 if (strcmp(key, "url") == 0) {
                         return add_url_handler(value);
                 }
@@ -440,3 +444,14 @@ int read_config(char *configfile)
         return retval;
 }
 
+int set_encoding(char *value)
+{
+        if (strcmp(value, "UTF-8") == 0 || (strcmp(value, "ISO-8859-1") == 0)){
+                asprintf(&config->encoding, "%s", value);
+                return 0;
+        }
+        else {
+                fprintf(stderr, "Ignoring invalid encoding '%s'\n", value);
+                return -1;
+        }
+}
