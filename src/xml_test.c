@@ -37,7 +37,8 @@ char *test_xml_doc()
         mu_assert("Beginning test_xml_doc", buildxml(&xmldoc) == 0);
         mu_assert("Verify XML content", 
                 strcmp(xmldoc,
-                "<?xml version=\"1.0\"?>\n<resources/>\n") == 0);
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<resources/>\n")
+                == 0);
         free(xmldoc);
 
 #ifndef _NPG /* skip the following tests that require postgres */
