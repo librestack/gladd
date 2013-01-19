@@ -53,7 +53,12 @@ int sqltoxml(db_t *db, char *sql, char **xml)
         xmlDocPtr doc;
         field_t *f;
 
-        db_connect(db);
+        if (db_connect(db) != 0) {
+                syslog(LOG_ERR, "Failed to connect to db on %s", db->host);
+                return -1;
+        }
+        syslog(LOG_DEBUG, "sqltoxml()");
+
         db_fetch_all(db, sql, &rows, &rowc);
 
         doc = xmlNewDoc(BAD_CAST "1.0");
@@ -71,7 +76,9 @@ int sqltoxml(db_t *db, char *sql, char **xml)
                         f = f->next;
                 }
         }
-        free_rows(rows);
+        syslog(LOG_DEBUG, "sqltoxml() 1");
+        //free_rows(rows);
+        syslog(LOG_DEBUG, "sqltoxml() 2");
 
         flattenxml(doc, xml);
         xmlFreeDoc(doc);

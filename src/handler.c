@@ -139,6 +139,9 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                         /* handle sqlview */
                                         db_t *db;
                                         if (!(db = getdb(u->db))) {
+                                                syslog(LOG_ERR,
+                                                "db '%s' not in config",
+                                                u->db);
                                                 http_response(sock, 500);
                                         }
                                         asprintf(&sql, "SELECT * FROM %s;",
