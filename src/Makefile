@@ -98,7 +98,7 @@ xml_test.o: minunit.h xml_test.c xml_test.h
 .PHONY: clean test leakcheck install
 
 clean:
-	rm ${PROGRAM} ${PROGRAM}_test ${OBJECTFILES} ${TESTFILES} core
+	rm ${PROGRAM} ${PROGRAM}_test main.o ${OBJECTFILES} ${TESTFILES} core
 
 test:
 	make clean || true
