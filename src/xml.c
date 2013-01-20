@@ -61,7 +61,6 @@ int sqltoxml(db_t *db, char *sql, char **xml)
                 syslog(LOG_ERR, "Failed to connect to db on %s", db->host);
                 return -1;
         }
-        syslog(LOG_DEBUG, "sqltoxml()"); /* FIXME: temp */
 
         db_fetch_all(db, sql, &rows, &rowc);
 
@@ -100,7 +99,7 @@ int sqltoxml(db_t *db, char *sql, char **xml)
                         r = r->next;
                 }
         }
-        //free_rows(rows);
+        liberate_rows(rows);
 
         flattenxml(doc, xml);
 

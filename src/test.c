@@ -65,9 +65,7 @@ static char * all_tests()
         mu_run_test(test_xml_doc);
 #endif /* _NXML */
         mu_run_test(test_string_trimstr);
-        free_acls();
-        free_dbs();
-        free_urls();
+        free_config();
         printline("*", 80);
         return 0;
 }

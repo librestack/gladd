@@ -79,7 +79,6 @@ int db_connect_my(db_t *db)
 }
 
 /* connect to a postgresql database */
-/* FIXME: memory leak in here, despite PQfinish() */
 int db_connect_pg(db_t *db)
 {
         char *conninfo;

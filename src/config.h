@@ -85,6 +85,7 @@ int add_acl (char *value);
 int add_db (char *value);
 db_t *getdb(char *alias);
 void free_acls();
+void free_config();
 void free_dbs();
 void free_urls();
 

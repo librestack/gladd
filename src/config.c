@@ -90,6 +90,16 @@ void free_acls()
         }
 }
 
+/* free config memory */
+void free_config()
+{
+        free(config->encoding);
+        free_acls();
+        free_dbs();
+        free_urls();
+}
+
+/* free database struct */
 void free_dbs()
 {
         db_t *d;
@@ -437,7 +447,6 @@ int read_config(char *configfile)
         fclose(fd);
 
         /* if config parsed okay, make active */
-        /* FIXME: config reload is happening, even if it "failed" */
         if (retval == 0)
                 config = config_new;
 
