@@ -1,3 +1,6 @@
+FEATURE: sql config and tokens
+FEATURE: ldap url support
+FEATURE: domains (VirtualHost)
 FEATURE: add more acl syntax tests
 FEATURE: enable acl checks
 FEATURE: add stop restart and reload command line options
@@ -13,7 +16,7 @@ FEATURE: send Allow header with 405 Method Not Allowed
 FEATURE: set config->authrealm from config file
 FEATURE: acl allow / deny by IP
 FEATURE: verify dbs in sqlurls are defined somewhere in config
-BUG: memory leak in db_connect_pg()
+FEATURE: differentiate between files and directories for static url paths
 BUG: config reload is happening, even if it "failed"
 BUG: config reload isn't working for acls
-BUG: ipv6 listening not working by default
+BUG: ipv6 listening not working by default (enable dual stack)
