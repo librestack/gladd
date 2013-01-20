@@ -51,6 +51,6 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc);
 int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc);
 int db_fetch_all_pg(db_t *db, char *sql, row_t **rows, int *rowc);
 void free_fields(field_t *f);
-void free_rows(row_t *r);
+void liberate_rows(row_t *r);
 
 #endif /* __GLADD_DB_H__ */

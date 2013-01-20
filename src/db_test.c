@@ -108,10 +108,9 @@ char *test_db(db_t *db)
         mu_assert("Check 2nd field name", strcmp(f->fname, "name") == 0);
         mu_assert("Check 2nd field value", strncmp(f->fvalue, "ivan", 4) == 0);
         mu_assert("Ensure last field->next == NULL", f->next == NULL);
-
-        free_rows(r);
-
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
+
+        liberate_rows(r);
 
         return 0;
 }

@@ -277,8 +277,8 @@ int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
                 r->next = NULL;
                 for (i = 0; i < nFields; i++) {
                         f = malloc(sizeof(field_t));
-                        asprintf(&f->fname, "%s", fields[i].name);
-                        asprintf(&f->fvalue, "%s", row[i]);
+                        f->fname = strdup(fields[i].name);
+                        f->fvalue = strdup(row[i]);
                         f->next = NULL;
                         if (r->fields == NULL) {
                                 r->fields = f;
@@ -372,12 +372,11 @@ void free_fields(field_t *f)
 }
 
 /* free row_t struct */
-void free_rows(row_t *r)
+void liberate_rows(row_t *r)
 {
         row_t *next_r = NULL;
         while (r != NULL) {
-                /* FIXME: free_fields() is busted */
-                //free_fields(r->fields);
+                free_fields(r->fields);
                 next_r = r->next;
                 free(r);
                 r = next_r;

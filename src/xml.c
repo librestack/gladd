@@ -95,14 +95,12 @@ int sqltoxml(db_t *db, char *sql, char **xml)
                                 free(fname);
                                 free(fvalue);
 
-                                /* TODO: test nodes are correct here */
-
                                 f = f->next;
                         }
                         r = r->next;
                 }
         }
-        free_rows(rows);
+        //free_rows(rows);
 
         flattenxml(doc, xml);
 
