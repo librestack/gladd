@@ -105,7 +105,7 @@ test:
 	make && ./${PROGRAM}_test || true
 
 leakcheck:
-	valgrind -v --leak-check=full --suppressions=.valgrind.suppressions ./gladd_test
+	valgrind -v  --leak-check=full --show-reachable=yes --suppressions=.valgrind.suppressions ./gladd_test
 
 install:
 	cp ${PROGRAM} ${INSTALLDIR}

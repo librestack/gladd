@@ -158,6 +158,7 @@ int db_disconnect(db_t *db)
 int db_disconnect_my(db_t *db)
 {
         mysql_close(db->conn);
+        mysql_library_end();
 
         return 0;
 }
