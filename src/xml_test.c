@@ -44,10 +44,14 @@ char *test_xml_doc()
 #ifndef _NPG /* skip the following tests that require postgres */
         db_t *db;
         char *sql;
+        char *xmltst = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<resources><row><id>0</id><name>boris</name></row><row><id>5</id><name>ivan</name></row></resources>\n";
+
         db = config->dbs->next;
         asprintf(&sql, "SELECT * FROM test;");
-        mu_assert("sqltoxml()", sqltoxml(db, sql, &xmldoc) == 0);
+        mu_assert("sqltoxml()", sqltoxml(db, sql, &xmldoc, 0) == 0);
         free(sql);
+        fprintf(stderr, "%s\n", xmldoc);
+        mu_assert("sqltoxml() - check xml", strcmp(xmldoc, xmltst) == 0);
         free(xmldoc);
 #endif /* _NPG */
 

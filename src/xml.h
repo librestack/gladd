@@ -26,6 +26,6 @@
 #include "db.h"
 
 int buildxml(char **xmldoc);
-int sqltoxml(db_t *db, char *sql, char **xml);
+int sqltoxml(db_t *db, char *sql, char **xml, int pretty);
 
 #endif /* __GLADD_XML_H__ */

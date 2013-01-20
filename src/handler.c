@@ -146,7 +146,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                         }
                                         asprintf(&sql, "SELECT * FROM %s;",
                                                         u->view);
-                                        if (sqltoxml(db, sql, &xml) != 0) {
+                                        if (sqltoxml(db, sql, &xml, 1) != 0) {
                                                 free(sql);
                                                 http_response(sock, 500);
                                         }

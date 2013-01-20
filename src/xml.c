@@ -28,7 +28,7 @@
 #include "string.h"
 #include "xml.h"
 
-int flattenxml(xmlDocPtr doc, char **xml);
+int flattenxml(xmlDocPtr doc, char **xml, int pretty);
 
 int buildxml(char **xml)
 {
@@ -39,23 +39,26 @@ int buildxml(char **xml)
         n = xmlNewNode(NULL, BAD_CAST "resources");
         xmlDocSetRootElement(doc, n);
 
-        flattenxml(doc, xml);
+        flattenxml(doc, xml, 1);
         xmlFreeDoc(doc);
         xmlCleanupParser();
 
         return 0;
 }
 
-int sqltoxml(db_t *db, char *sql, char **xml)
+int sqltoxml(db_t *db, char *sql, char **xml, int pretty)
 {
         int rowc;
         row_t *rows;
         row_t *r;
         xmlNodePtr n = NULL;
+        xmlNodePtr nrow = NULL;
         xmlNodePtr nfld = NULL;
         xmlNodePtr nval = NULL;
         xmlDocPtr doc;
         field_t *f;
+        char *fname;
+        char *fvalue;
 
         if (db_connect(db) != 0) {
                 syslog(LOG_ERR, "Failed to connect to db on %s", db->host);
@@ -73,35 +76,31 @@ int sqltoxml(db_t *db, char *sql, char **xml)
         if (rowc > 0) {
                 r = rows;
                 while (r != NULL) {
-                        f = rows->fields;
+                        f = r->fields;
+                        nrow = xmlNewNode(NULL, BAD_CAST "row");
                         while (f != NULL) {
-                                syslog(LOG_DEBUG, "F: %s", f->fname);
-                                syslog(LOG_DEBUG, "V: %s", f->fvalue);
-
-                                char *fname;
-                                char *fvalue;
-
                                 asprintf(&fname, "%s", f->fname);
-                                asprintf(&fvalue, "%s", f->fvalue);
+                                asprintf(&fvalue, "%s", strip(f->fvalue));
 
                                 /* TODO: ensure strings are UTF-8 encoded */
 
                                 nfld = xmlNewNode(NULL, BAD_CAST fname);
                                 nval = xmlNewText(BAD_CAST fvalue);
                                 xmlAddChild(nfld, nval);
-                                xmlAddChild(n, nfld);
+                                xmlAddChild(nrow, nfld);
 
                                 free(fname);
                                 free(fvalue);
 
                                 f = f->next;
                         }
+                        xmlAddChild(n, nrow);
                         r = r->next;
                 }
         }
         liberate_rows(rows);
 
-        flattenxml(doc, xml);
+        flattenxml(doc, xml, pretty);
 
         xmlFreeDoc(doc);
         xmlCleanupParser();
@@ -111,13 +110,13 @@ int sqltoxml(db_t *db, char *sql, char **xml)
         return 0;
 }
 
-int flattenxml(xmlDocPtr doc, char **xml)
+int flattenxml(xmlDocPtr doc, char **xml, int pretty)
 {
         xmlChar *xmlbuff;
         int buffersize;
 
         xmlDocDumpFormatMemoryEnc(doc, &xmlbuff, &buffersize, 
-                                                        config->encoding, 1);
+                                        config->encoding, pretty);
         *xml = malloc(snprintf(NULL, 0, "%s", (char *) xmlbuff) + 1);
         sprintf(*xml, "%s", (char *) xmlbuff);
 
