@@ -129,11 +129,13 @@ int main (int argc, char **argv)
         addr_size = sizeof their_addr;
 
         /* daemonize */
-        if (daemon(0, 0) == -1) {
-                errsv = errno;
-                fprintf(stderr, "ERROR: %s\n", strerror(errsv));
-                syslog(LOG_ERR, "Failed to daemonize. Exiting.");
-                exit(EXIT_FAILURE);
+        if (config->daemon == 0) {
+                if (daemon(0, 0) == -1) {
+                        errsv = errno;
+                        fprintf(stderr, "ERROR: %s\n", strerror(errsv));
+                        syslog(LOG_ERR, "Failed to daemonize. Exiting.");
+                        exit(EXIT_FAILURE);
+                }
         }
 
         /* write pid to lockfile */
@@ -143,6 +145,9 @@ int main (int argc, char **argv)
 
         /* set up child signal handler */
         signal(SIGCHLD, sigchld_handler);
+
+        /* catch SIGINT for cleanup */
+        signal(SIGINT, sigint_handler);
 
         /* catch SIGTERM for cleanup */
         signal(SIGTERM, sigterm_handler);

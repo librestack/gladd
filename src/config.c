@@ -33,6 +33,7 @@
 config_t config_default = {
         .debug          = 0,
         .port           = 8080,
+        .daemon         = 0,
         .encoding       = "UTF-8"
 };
 
@@ -372,13 +373,17 @@ int process_config_line(char *line)
         }
         else if (sscanf(line, "%s %li", key, &i) == 2) {
                 /* process long integer config values */
-                if (strncmp(key, "debug", 5) == 0) {
+                if (strcmp(key, "debug") == 0) {
                         return set_config_long(&config_new->debug,
                                                 "debug", i, 0, 1);
                 }
-                else if (strncmp(key, "port", 4) == 0) {
+                else if (strcmp(key, "port") == 0) {
                         return set_config_long(&config_new->port, 
                                                 "port", i, 1, 65535);
+                }
+                else if (strcmp(key, "daemon") == 0) {
+                        return set_config_long(&config_new->daemon, 
+                                                "port", i, 0, 1);
                 }
         }
         else if (sscanf(line, "%s %[^\n]", key, value) == 2) {

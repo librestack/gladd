@@ -24,6 +24,7 @@
 #define __GLADD_SIGNALS_H__ 1
 
 void sigchld_handler (int signo);
+void sigint_handler (int signo);
 void sigterm_handler (int signo);
 void sighup_handler (int signo);
 

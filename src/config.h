@@ -45,8 +45,9 @@ typedef struct acl_t {
 typedef struct config_t {
         long debug;
         long port;
+        long daemon;         /* 0 = daemonise (default), 1 = don't detach */
         char *authrealm;
-        char *encoding;           /* encoding to use - default UTF-8 */
+        char *encoding;      /* encoding to use - default UTF-8 */
         struct url_t *urls;
         struct acl_t *acls;
         struct db_t *dbs;

@@ -35,6 +35,12 @@ void sigchld_handler (int signo)
         wait(&status);
 }
 
+/* catch SIGINT and clean up */
+void sigint_handler (int signo)
+{
+        sigterm_handler(signo);
+}
+
 /* catch SIGTERM and clean up */
 void sigterm_handler (int signo)
 {
