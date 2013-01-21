@@ -210,20 +210,11 @@ int db_exec_sql(db_t *db, char *sql)
         else if (strcmp(db->type, "my") == 0) {
                 return db_exec_sql_my(db, sql);
         }
-        else if (strcmp(db->type, "ldap") == 0) {
-                return db_exec_query_ldap(db, sql);
-        }
         else {
                 fprintf(stderr, 
                     "Invalid database type '%s' passed to db_exec_sql()\n",
                     db->type);
         }
-        return 0;
-}
-
-/* execute ldap query */
-int db_exec_query_ldap(db_t *db, char *query)
-{
         return 0;
 }
 

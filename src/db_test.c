@@ -73,6 +73,8 @@ char *test_db(db_t *db)
         mu_assert("db_connect()", db_connect(db) == 0);
         mu_assert("Test database connection", db->conn != NULL);
 
+        if (strcmp(db->type, "ldap") != 0) {
+
         mu_assert("db_exec_sql() invalid sql returns failure",
                 db_exec_sql(db, "invalidsql") != 0);
         mu_assert("db_exec_sql() BEGIN",
@@ -113,6 +115,8 @@ char *test_db(db_t *db)
         mu_assert("Check 2nd field name", strcmp(f->fname, "name") == 0);
         mu_assert("Check 2nd field value", strncmp(f->fvalue, "ivan", 4) == 0);
         mu_assert("Ensure last field->next == NULL", f->next == NULL);
+
+        }
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
 
         liberate_rows(r);
