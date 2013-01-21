@@ -94,6 +94,7 @@ int add_acl (char *value);
 int add_db (char *value);
 int add_sql (char *value);
 db_t *getdb(char *alias);
+char *getsql(char *alias);
 void free_acls();
 void free_config();
 void free_dbs();

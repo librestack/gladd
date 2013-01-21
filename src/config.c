@@ -402,6 +402,21 @@ db_t *getdb(char *alias)
         return NULL; /* db not found */
 }
 
+/* fetch sql from config by alias */
+char *getsql(char *alias)
+{
+        sql_t *s;
+
+        s = config->sql;
+        while (s != NULL) {
+                if (strcmp(alias, s->alias) == 0)
+                        return s->sql;
+                s = s->next;
+        }
+
+        return NULL;
+}
+
 /* check config line and handle appropriately */
 int process_config_line(char *line)
 {
