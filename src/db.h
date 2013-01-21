@@ -46,6 +46,7 @@ int db_disconnect(db_t *db);
 int db_disconnect_my(db_t *db);
 int db_disconnect_pg(db_t *db);
 int db_exec_sql(db_t *db, char *sql);
+int db_exec_query_ldap(db_t *db, char *query);
 int db_exec_sql_my(db_t *db, char *sql);
 int db_exec_sql_pg(db_t *db, char *sql);
 int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc);
