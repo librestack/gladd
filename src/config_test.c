@@ -227,6 +227,28 @@ char *test_config_db()
         mu_assert("Check 2nd db->type", strcmp(db->type, "my") == 0);
         mu_assert("Check 2nd db->host", strcmp(db->host, "localhost") == 0);
         mu_assert("Check 2nd db->db", strcmp(db->db, "gladd_test") == 0);
+        mu_assert("Check 2nd db->user", strcmp(db->user, "myuser") == 0);
+        mu_assert("Check 2nd db->pass", strcmp(db->pass, "mypass") == 0);
+
+        /* check next (ldap) db */
+        mu_assert("Test reading ldap db from config", db = db->next);
+        mu_assert("Check 3rd db->alias", strcmp(db->alias, "ldap1") == 0);
+        mu_assert("Check 3rd db->type", strcmp(db->type, "ldap") == 0);
+        mu_assert("Check 3rd db->host",
+                                strcmp(db->host, "ldap.gladserv.com") == 0);
+        mu_assert("Check 3rd db->db",
+                                strcmp(db->db, "dc=gladserv,dc=com") == 0);
+
+        /* check next (ldap with username and password) db */
+        mu_assert("Test reading next ldap db from config", db = db->next);
+        mu_assert("Check 4th db->alias", strcmp(db->alias, "ldap2") == 0);
+        mu_assert("Check 4th db->type", strcmp(db->type, "ldap") == 0);
+        mu_assert("Check 4th db->host",
+                                strcmp(db->host, "ldap.example.com") == 0);
+        mu_assert("Check 4th db->db",
+                                strcmp(db->db, "dc=example,dc=com") == 0);
+        mu_assert("Check 4th db->user", strcmp(db->user, "myuser") == 0);
+        mu_assert("Check 4th db->pass", strcmp(db->pass, "mypass") == 0);
 
         /* ensure no more dbs */
         mu_assert("Ensure final db->next returns NULL", db->next == NULL);

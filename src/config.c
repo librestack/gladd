@@ -310,7 +310,7 @@ int add_db (char *value)
         char user[LINE_MAX] = "";
         char pass[LINE_MAX] = "";
 
-        /* mysql config line have 6 args, postgres has 4 */
+        /* mysql/ldap config lines may have 6 args, postgres has 4 */
         if (sscanf(value, "%s %s %s %s %s %s", alias, type, host, db,
                                                             user, pass) != 6)
         {
@@ -339,6 +339,16 @@ int add_db (char *value)
                 newdb->db = strndup(db, LINE_MAX);
                 newdb->user = strndup(user, LINE_MAX);
                 newdb->pass = strndup(pass, LINE_MAX);
+                newdb->conn=NULL;
+                newdb->next=NULL;
+        }
+        else if (strcmp(type, "ldap") == 0) {
+                newdb->alias = strndup(alias, LINE_MAX);
+                newdb->type = strndup(type, LINE_MAX);
+                newdb->host = strndup(host, LINE_MAX);
+                newdb->db = strndup(db, LINE_MAX);
+                newdb->user = strlen(user) == 0 ? NULL:strndup(user,LINE_MAX);
+                newdb->pass = strlen(pass) == 0 ? NULL:strndup(pass,LINE_MAX);
                 newdb->conn=NULL;
                 newdb->next=NULL;
         }

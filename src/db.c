@@ -21,13 +21,15 @@
  */
 
 #define _GNU_SOURCE
+#define LDAP_DEPRECATED 1
+#include "db.h"
+#include <ldap.h>
 #include <libpq-fe.h>
 #include <mysql.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
-#include "db.h"
 
 /* connect to specified database 
  * pointer to the connection is stored in db_t struct 
@@ -45,12 +47,21 @@ int db_connect(db_t *db)
         else if (strcmp(db->type, "my") == 0) {
                 return db_connect_my(db);
         }
+        else if (strcmp(db->type, "ldap") == 0) {
+                return db_connect_ldap(db);
+        }
         else {
                 syslog(LOG_ERR, 
                         "Invalid database type '%s' passed to db_connect()\n", 
                         db->type);
                 return -1;
         }
+        return 0;
+}
+
+/* connect to ldap */
+int db_connect_ldap(db_t *db)
+{
         return 0;
 }
 

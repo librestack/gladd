@@ -63,7 +63,12 @@ char *test_db(db_t *db)
                 return 0;
         }
 #endif /* _NMY */
-
+#ifdef _NLDAP
+        if (strcmp(db->type, "ldap") == 0) {
+                mu_assert("*** Skipping ldap tests ***", 0 == 0);
+                return 0;
+        }
+#endif /* _NLDAP */
 
         mu_assert("db_connect()", db_connect(db) == 0);
         mu_assert("Test database connection", db->conn != NULL);

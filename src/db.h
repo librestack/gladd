@@ -37,6 +37,7 @@ typedef struct row_t {
 } row_t;
 
 int db_connect(db_t *db);
+int db_connect_ldap(db_t *db);
 int db_connect_my(db_t *db);
 int db_connect_pg(db_t *db);
 int db_create(db_t *db);
