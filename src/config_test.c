@@ -235,7 +235,7 @@ char *test_config_db()
         mu_assert("Check 3rd db->alias", strcmp(db->alias, "ldap1") == 0);
         mu_assert("Check 3rd db->type", strcmp(db->type, "ldap") == 0);
         mu_assert("Check 3rd db->host",
-                                strcmp(db->host, "ldap.gladserv.com") == 0);
+                        strcmp(db->host, "ldap://ldap.gladserv.com") == 0);
         mu_assert("Check 3rd db->db",
                                 strcmp(db->db, "dc=gladserv,dc=com") == 0);
 
@@ -244,7 +244,7 @@ char *test_config_db()
         mu_assert("Check 4th db->alias", strcmp(db->alias, "ldap2") == 0);
         mu_assert("Check 4th db->type", strcmp(db->type, "ldap") == 0);
         mu_assert("Check 4th db->host",
-                                strcmp(db->host, "ldap.example.com") == 0);
+                        strcmp(db->host, "ldap://ldap.example.com") == 0);
         mu_assert("Check 4th db->db",
                                 strcmp(db->db, "dc=example,dc=com") == 0);
         mu_assert("Check 4th db->user", strcmp(db->user, "myuser") == 0);

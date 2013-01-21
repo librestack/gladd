@@ -62,6 +62,19 @@ int db_connect(db_t *db)
 /* connect to ldap */
 int db_connect_ldap(db_t *db)
 {
+        LDAP *l;
+        int rc;
+
+        rc = ldap_initialize(&l, db->host);
+        if (rc != LDAP_SUCCESS) {
+                syslog(LOG_DEBUG,
+                  "Could not create LDAP session handle for URI=%s (%d): %s\n",
+                  db->host, rc, ldap_err2string(rc));
+                return -1;
+        }
+        syslog(LOG_DEBUG, "ldap_initialise() successful");
+        db->conn = l;
+
         return 0;
 }
 
