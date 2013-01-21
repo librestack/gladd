@@ -20,26 +20,21 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include "args.h"
 #include "args_test.h"
 #include "minunit.h"
+#include <string.h>
+#include <stdlib.h>
 
-/* ensure process_args() returns -1 when args invalid */
-char *test_args_invalid()
+char *test_args()
 {
         char *argv[] = {"invalid"};
-        int argc = sizeof(argv) / sizeof(int);
         mu_assert("Ensure process_args() returns -1 when args invalid", 
-                process_args(argc , argv) == -1);
-        return 0;
-}
+                process_args(2 , argv) == -1);
+        mu_assert("Ensure argue() accepts reload", argue(2, "reload") == 0);
+        mu_assert("Ensure argue() only accepts reload as a solo argument",
+                argue(3, "reload") != 0);
 
-/* TODO: complete this test & invoke from test.c */
-char *test_args_config()
-{
-        char *argv[] = {"--config", "blah.conf"};
-        int argc = sizeof(argv) / sizeof(int);
-        mu_assert("Ensure process_args() accepts --config", 
-                process_args(argc , argv) == 0);
         return 0;
 }

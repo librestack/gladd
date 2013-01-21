@@ -20,14 +20,36 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
 #include <stdio.h>
+#include <string.h>
+
+int g_reload = 0;
+
+int argue(int argc, char *arg)
+{
+
+        if (argc == 2) {
+                if (strcmp(arg, "reload") == 0) {
+                        g_reload = 1;
+                        return 0;
+                }
+        }
+        else {
+                fprintf(stderr, "%s must be a solo argument\n", arg);
+        }
+        return -1;
+}
 
 int process_args(int argc, char **argv)
 {
         int i;
 
         for (i = 1; i < argc; i++) {
+                if (argue(argc, argv[i]) != 0) {
+                        return -1;
+                }
         }
 
-        return -1;
+        return 0;
 }

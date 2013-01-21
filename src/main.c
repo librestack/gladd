@@ -49,9 +49,9 @@ int main (int argc, char **argv)
         int errsv;
         int lockfd;
         int new_fd;
-        FILE *fd;
         int status;
         int yes=1;
+        long lpid;
         pid_t pid;
         socklen_t addr_size;
         struct addrinfo *servinfo;
@@ -59,6 +59,7 @@ int main (int argc, char **argv)
         struct sockaddr_storage their_addr;
         char tcpport[5];
         char *errmsg;
+        char buf[sizeof(long)];
 
         /* check commandline args */
         if (argc > 1) {
@@ -66,12 +67,27 @@ int main (int argc, char **argv)
         }
 
         /* obtain lockfile */
-        lockfd = creat(LOCKFILE, 0644);
+        //lockfd = creat(LOCKFILE, 0644);
+        lockfd = open(LOCKFILE, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         if (lockfd == -1) {
                 printf("Failed to open lockfile %s\n", LOCKFILE);
                 exit(EXIT_FAILURE);
         }
         if (flock(lockfd, LOCK_EX|LOCK_NB) != 0) {
+                if (g_reload == 1) {
+                        /* reload requested */
+                        if (read(lockfd, &buf, sizeof(buf)) == -1) {
+                                fprintf(stderr, "Failed to read pid\n");
+                                exit(EXIT_FAILURE);
+                        }
+                        if (sscanf(buf, "%li", &lpid) == 1) {
+                                exit(kill(lpid, SIGHUP));
+                        }
+                        else {
+                                fprintf(stderr, "Invalid pid\n");
+                                exit(EXIT_FAILURE);
+                        }
+                }
                 printf("%s already running\n", PROGRAM);
                 exit(EXIT_FAILURE);
         }
@@ -139,9 +155,11 @@ int main (int argc, char **argv)
         }
 
         /* write pid to lockfile */
-        fd = fdopen(lockfd, "w");
-        fprintf(fd, "%i", getpid());
-        fclose(fd);
+        snprintf(buf, sizeof(long), "%ld\n", (long) getpid());
+        if (write(lockfd, buf, strlen(buf)) != strlen(buf)) {
+                fprintf(stderr, "Error writing to pidfile\n");
+                exit(EXIT_FAILURE);
+        }
 
         /* set up child signal handler */
         signal(SIGCHLD, sigchld_handler);

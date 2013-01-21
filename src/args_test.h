@@ -23,7 +23,6 @@
 #ifndef __GLADD_ARGS_TEST_H__
 #define __GLADD_ARGS_TEST_H__ 1
 
-char *test_args_invalid();
-char *test_args_config();
+char *test_args();
 
 #endif /* __GLADD_ARGS_TEST_H__ */

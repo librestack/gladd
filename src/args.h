@@ -23,6 +23,7 @@
 #ifndef __GLADD_ARGS_H__
 #define __GLADD_ARGS_H__ 1
 
+int argue(int argc, char *arg);
 int process_args(int argc, char **argv);
 
 #endif /* __GLADD_ARGS_H__ */
