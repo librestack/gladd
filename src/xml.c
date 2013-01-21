@@ -65,7 +65,9 @@ int sqltoxml(db_t *db, char *sql, char **xml, int pretty)
                 return -1;
         }
 
-        db_fetch_all(db, sql, &rows, &rowc);
+        if (db_fetch_all(db, sql, &rows, &rowc) < 0) {
+                syslog(LOG_ERR, "Error in db_fetch_all()");
+        }
 
         doc = xmlNewDoc(BAD_CAST "1.0");
         n = xmlNewNode(NULL, BAD_CAST "resources");

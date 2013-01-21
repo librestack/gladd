@@ -144,22 +144,24 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                                 u->db);
                                                 http_response(sock, 500);
                                         }
-                                        asprintf(&sql, "SELECT * FROM %s;",
-                                                        u->view);
+                                        if (asprintf(&sql, "%s", 
+                                                getsql(u->view)) == -1) 
+                                        {
+                                                http_response(sock, 500);
+                                        }
                                         if (sqltoxml(db, sql, &xml, 1) != 0) {
                                                 free(sql);
                                                 http_response(sock, 500);
                                         }
+                                        free(sql);
                                         if (asprintf(&r, RESPONSE_200,
                                                 MIME_XML, xml) == -1)
                                         {
-                                                syslog(LOG_ERR,
-                                                        "Malloc failed");
-                                                exit(EXIT_FAILURE);
+                                                free(xml);
+                                                http_response(sock, 500);
                                         }
                                         respond(sock, r);
                                         free(r);
-                                        free(sql);
                                         free(xml);
                                         break;
                                 }

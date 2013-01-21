@@ -36,7 +36,7 @@
 int db_connect(db_t *db)
 {
         if (db == NULL) {
-                fprintf(stderr, "No database info supplied to db_connect()\n");
+                syslog(LOG_ERR, "No database info supplied to db_connect()\n");
                 return -1;
         }
         if (strcmp(db->type, "pg") == 0) {
@@ -46,7 +46,7 @@ int db_connect(db_t *db)
                 return db_connect_my(db);
         }
         else {
-                fprintf(stderr, 
+                syslog(LOG_ERR, 
                         "Invalid database type '%s' passed to db_connect()\n", 
                         db->type);
                 return -1;
@@ -61,7 +61,7 @@ int db_connect_my(db_t *db)
 
         conn = mysql_init(NULL);
         if (conn == NULL) {
-                fprintf(stderr, "%u: %s\n", mysql_errno(conn),
+                syslog(LOG_ERR, "%u: %s\n", mysql_errno(conn),
                                             mysql_error(conn));
                 return -1;
         }
@@ -69,7 +69,7 @@ int db_connect_my(db_t *db)
         if (mysql_real_connect(conn, db->host, db->user, db->pass, db->db,
                                                         0, NULL, 0) == NULL)
         {
-                fprintf(stderr, "%u: %s\n", mysql_errno(conn),
+                syslog(LOG_ERR, "%u: %s\n", mysql_errno(conn),
                                             mysql_error(conn));
                 return -1;
         }
@@ -227,7 +227,7 @@ int db_exec_sql_pg(db_t *db, char *sql)
 int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
 {
         if (db == NULL) {
-                fprintf(stderr, 
+                syslog(LOG_ERR, 
                         "No database info supplied to db_fetch_all()\n");
                 return -1;
         }
@@ -238,7 +238,7 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
                 return db_fetch_all_my(db, sql, rows, rowc);
         }
         else {
-                fprintf(stderr, 
+                syslog(LOG_ERR, 
                     "Invalid database type '%s' passed to db_fetch_all()\n",
                     db->type);
         }
@@ -261,10 +261,11 @@ int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
         *rowc = 0;
 
         if (mysql_query(db->conn, sql) != 0) {
-                fprintf(stderr, "%u: %s\n", mysql_errno(db->conn), 
+                syslog(LOG_ERR, "%u: %s\n", mysql_errno(db->conn), 
                                             mysql_error(db->conn));
                 return -1;
         }
+
         res = mysql_store_result(db->conn);
         *rowc = mysql_num_rows(res);
 
@@ -278,7 +279,7 @@ int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
                 for (i = 0; i < nFields; i++) {
                         f = malloc(sizeof(field_t));
                         f->fname = strdup(fields[i].name);
-                        f->fvalue = strdup(row[i]);
+                        asprintf(&f->fvalue, "%s", row[i] ? row[i] : "NULL");
                         f->next = NULL;
                         if (r->fields == NULL) {
                                 r->fields = f;
@@ -297,7 +298,6 @@ int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
                 }
                 ftmp = NULL;
                 rtmp = r;
-                rowc++;
         }
         mysql_free_result(res);
 
@@ -317,7 +317,7 @@ int db_fetch_all_pg(db_t *db, char *sql, row_t **rows, int *rowc)
 
         res = PQexec(db->conn, sql);
         if (PQresultStatus(res) != PGRES_TUPLES_OK) {
-                fprintf(stderr, "query failed: %s", 
+                syslog(LOG_ERR, "query failed: %s", 
                         PQerrorMessage(db->conn));
                 return -1;
         }
