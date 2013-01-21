@@ -29,7 +29,8 @@
 
 char *test_args()
 {
-        char *argv[] = {"invalid"};
+        char *argv[2] = {"invalid", "junk"};
+        
         mu_assert("Ensure process_args() returns -1 when args invalid", 
                 process_args(2 , argv) == -1);
         mu_assert("Ensure argue() accepts reload", argue(2, "reload") == 0);
