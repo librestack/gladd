@@ -21,17 +21,22 @@
  */
 
 #include "config.h"
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 
-int g_reload = 0;
+int g_signal = 0;
 
 int argue(int argc, char *arg)
 {
 
         if (argc == 2) {
                 if (strcmp(arg, "reload") == 0) {
-                        g_reload = 1;
+                        g_signal = SIGHUP;
+                        return 0;
+                }
+                if (strcmp(arg, "shutdown") == 0) {
+                        g_signal = SIGTERM;
                         return 0;
                 }
         }

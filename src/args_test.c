@@ -35,6 +35,9 @@ char *test_args()
         mu_assert("Ensure argue() accepts reload", argue(2, "reload") == 0);
         mu_assert("Ensure argue() only accepts reload as a solo argument",
                 argue(3, "reload") != 0);
+        mu_assert("Ensure argue() accepts shutdown",argue(2, "shutdown") == 0);
+        mu_assert("Ensure argue() only accepts shutdown as a solo argument",
+                argue(3, "shutdown") != 0);
 
         return 0;
 }

@@ -51,7 +51,6 @@ int main (int argc, char **argv)
         int new_fd;
         int status;
         int yes=1;
-        long lpid;
         pid_t pid;
         socklen_t addr_size;
         struct addrinfo *servinfo;
@@ -74,19 +73,9 @@ int main (int argc, char **argv)
                 exit(EXIT_FAILURE);
         }
         if (flock(lockfd, LOCK_EX|LOCK_NB) != 0) {
-                if (g_reload == 1) {
-                        /* reload requested */
-                        if (read(lockfd, &buf, sizeof(buf)) == -1) {
-                                fprintf(stderr, "Failed to read pid\n");
-                                exit(EXIT_FAILURE);
-                        }
-                        if (sscanf(buf, "%li", &lpid) == 1) {
-                                exit(kill(lpid, SIGHUP));
-                        }
-                        else {
-                                fprintf(stderr, "Invalid pid\n");
-                                exit(EXIT_FAILURE);
-                        }
+                if (g_signal != 0) {
+                        /* signal (SIGHUP, SIGTERM etc.) requested */
+                        exit(signal_gladd(lockfd));
                 }
                 printf("%s already running\n", PROGRAM);
                 exit(EXIT_FAILURE);

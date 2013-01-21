@@ -27,5 +27,6 @@ void sigchld_handler (int signo);
 void sigint_handler (int signo);
 void sigterm_handler (int signo);
 void sighup_handler (int signo);
+int signal_gladd (int lockfd);
 
 #endif /* __GLADD_SIGNALS_H__ */

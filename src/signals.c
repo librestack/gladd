@@ -60,3 +60,22 @@ void sighup_handler (int signo)
                 syslog(LOG_ERR, "Config reload failed.");
         }
 }
+
+/* send signal to running gladd process */
+int signal_gladd (int lockfd)
+{
+        char buf[sizeof(long)];
+        long lpid;
+
+        if (read(lockfd, &buf, sizeof(buf)) == -1) {
+                fprintf(stderr, "Failed to read pid\n");
+                return EXIT_FAILURE;
+        }
+        if (sscanf(buf, "%li", &lpid) == 1) {
+                return (kill(lpid, g_signal));
+        }
+        else {
+                fprintf(stderr, "Invalid pid\n");
+                return(EXIT_FAILURE);
+        }
+}

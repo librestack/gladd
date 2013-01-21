@@ -74,7 +74,7 @@ typedef struct url_t {
 } url_t;
 
 extern config_t *config;
-extern int g_reload;
+extern int g_signal;
 
 FILE *open_config(char *configfile);
 int process_config_line(char *line);
