@@ -41,7 +41,8 @@ config_t *config;
 config_t *config_new;
 
 acl_t *prevacl;         /* pointer to last acl */
-db_t  *prevdb;          /* pointer to last db */
+db_t  *prevdb;          /* pointer to last db  */
+sql_t *prevsql;         /* pointer to last sql */
 url_t *prevurl;         /* pointer to last url */
 
 /* set config defaults if they haven't been set already */
@@ -97,6 +98,7 @@ void free_config()
         free(config->encoding);
         free_acls();
         free_dbs();
+        free_sql();
         free_urls();
 }
 
@@ -116,6 +118,22 @@ void free_dbs()
                 free(d->pass);
                 tmp = d;
                 d = d->next;
+                free(tmp);
+        }
+}
+
+/* free sql structs */
+void free_sql()
+{
+        sql_t *s;
+        sql_t *tmp;
+
+        s = config->sql;
+        while (s != NULL) {
+                free(s->alias);
+                free(s->sql);
+                tmp = s;
+                s = s->next;
                 free(tmp);
         }
 }
@@ -343,6 +361,32 @@ int add_db (char *value)
         return 0;
 }
 
+/* store sql in config */
+int add_sql(char *value)
+{
+        sql_t *newsql;
+        char alias[LINE_MAX] = "";
+        char sql[LINE_MAX] = "";
+
+        if (sscanf(value, "%s %[^\n]", alias, sql) != 2) {
+                return -1;
+        }
+
+        newsql = malloc(sizeof(struct sql_t));
+
+        newsql->alias = strndup(alias, LINE_MAX);
+        newsql->sql = strndup(sql, LINE_MAX);
+        newsql->next = NULL;
+
+        if (prevsql != NULL)
+                prevsql->next = newsql;
+        else
+                config_new->sql = newsql;
+        prevsql = newsql;
+
+        return 0;
+}
+
 /* return the db_t pointer for this db alias */
 db_t *getdb(char *alias)
 {
@@ -398,6 +442,9 @@ int process_config_line(char *line)
                 }
                 else if (strcmp(key, "db") == 0) {
                         return add_db(value);
+                }
+                else if (strcmp(key, "sql") == 0) {
+                        return add_sql(value);
                 }
                 else {
                         fprintf(stderr, "unknown config directive '%s'\n", 

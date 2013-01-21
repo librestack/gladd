@@ -51,6 +51,7 @@ typedef struct config_t {
         struct url_t *urls;
         struct acl_t *acls;
         struct db_t *dbs;
+        struct sql_t *sql;
 } config_t;
 
 typedef struct db_t {
@@ -63,6 +64,12 @@ typedef struct db_t {
         void *conn;  /* pointer to open db connection */
         struct db_t *next; /* pointer to next db so we can loop through them */
 } db_t;
+
+typedef struct sql_t {
+        char *alias;
+        char *sql;
+        struct sql_t *next;
+} sql_t;
 
 typedef struct url_t {
         char *type;
@@ -85,10 +92,12 @@ int set_encoding(char *value);
 char *toutf8(char *str);
 int add_acl (char *value);
 int add_db (char *value);
+int add_sql (char *value);
 db_t *getdb(char *alias);
 void free_acls();
 void free_config();
 void free_dbs();
+void free_sql();
 void free_urls();
 
 #endif /* __GLADD_CONFIG_H__ */

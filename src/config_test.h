@@ -33,6 +33,7 @@ char *test_config_open_fail();
 char *test_config_defaults();
 char *test_config_set();
 char *test_config_read_url();
+char *test_config_read_sql();
 char *test_config_add_acl_invalid();
 char *test_config_acl_allow_all();
 char *test_config_db();

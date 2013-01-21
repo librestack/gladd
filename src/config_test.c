@@ -118,10 +118,30 @@ char *test_config_read_url()
         mu_assert("Checking 4th url from config ... url", 
                         strncmp(u->url, "/sqlview/", strlen(u->url)) == 0);
         mu_assert("... db", strcmp(u->db, "db1") == 0);
-        mu_assert("... view", strcmp(u->view, "someview") == 0);
+        mu_assert("... view", strcmp(u->view, "sql1") == 0);
 
         mu_assert("Ensure final url->next returns NULL", u->next == NULL);
 
+        return 0;
+}
+
+/* test reading sql from config */
+char *test_config_read_sql()
+{
+        sql_t *s;
+
+        mu_assert("Ensure sql statements are read from config", 
+                config->sql !=NULL);
+
+        mu_assert("Reading 1st sql from config", s = config->sql);
+        mu_assert("Check 1st sql alias", strcmp(s->alias, "sql1") == 0);
+        mu_assert("Check 1st sql statement",
+                strcmp(s->sql, "SELECT * FROM test") == 0);
+        mu_assert("Reading 2nd sql from config", s = s->next);
+        mu_assert("Check 2nd sql alias", strcmp(s->alias, "sql2") == 0);
+        mu_assert("Check 2nd sql statement",
+                strcmp(s->sql, "SELECT * FROM test ORDER BY name DESC") == 0);
+        mu_assert("Ensure final sql->next returns NULL", s->next == NULL);
         return 0;
 }
 
