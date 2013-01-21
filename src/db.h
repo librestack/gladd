@@ -49,6 +49,7 @@ int db_exec_sql(db_t *db, char *sql);
 int db_exec_sql_my(db_t *db, char *sql);
 int db_exec_sql_pg(db_t *db, char *sql);
 int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc);
+int db_fetch_all_ldap(db_t *db, char *query, row_t **rows, int *rowc);
 int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc);
 int db_fetch_all_pg(db_t *db, char *sql, row_t **rows, int *rowc);
 void free_fields(field_t *f);

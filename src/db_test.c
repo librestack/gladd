@@ -48,7 +48,7 @@ char *test_dbs()
 
 char *test_db(db_t *db)
 {
-        row_t *r;
+        row_t *r = NULL;
         int rowc;
 
 #ifdef _NPG /* skip postgres tests */
@@ -73,7 +73,7 @@ char *test_db(db_t *db)
         mu_assert("db_connect()", db_connect(db) == 0);
         mu_assert("Test database connection", db->conn != NULL);
 
-        if (strcmp(db->type, "ldap") != 0)
+        if (strcmp(db->type, "ldap") == 0)
                 goto skipsql;
 
         mu_assert("db_exec_sql() invalid sql returns failure",
@@ -95,14 +95,33 @@ char *test_db(db_t *db)
         mu_assert("db_exec_sql() COMMIT",
                 db_exec_sql(db, "COMMIT") == 0);
 skipsql:
-        mu_assert("db_fetch_all() SELECT",
-                db_fetch_all(db, "SELECT * FROM test", &r, &rowc) == 0);
+        mu_assert("db_fetch_all() search",
+                db_fetch_all(db, getsql(db->type), &r, &rowc) == 0);
 
         field_t *f;
 
         mu_assert("Check rows are populated", r != NULL);
         mu_assert("Got results", rowc != 0);
         mu_assert("Get 1st row", f = r->fields);
+
+        if (strcmp(db->type, "ldap") == 0) {
+                fprintf(stderr, "%s: %s\n", f->fname, f->fvalue);
+                mu_assert("Check 1st field name",
+                        strcmp(f->fname, "ou") == 0);
+                mu_assert("Check 1st field value",
+                        strcmp(f->fvalue, "Group") == 0);
+                mu_assert("Get next field", f = f->next);
+                fprintf(stderr, "%s: %s\n", f->fname, f->fvalue);
+                mu_assert("Get next field", f = f->next);
+                fprintf(stderr, "%s: %s\n", f->fname, f->fvalue);
+                mu_assert("Get next field", f = f->next);
+                fprintf(stderr, "%s: %s\n", f->fname, f->fvalue);
+                mu_assert("Get next field", f = f->next);
+                fprintf(stderr, "%s: %s\n", f->fname, f->fvalue);
+
+                goto skipsqltests;
+        }
+
         mu_assert("Check 1st field name", strcmp(f->fname, "id") == 0);
         mu_assert("Check 1st field value", strcmp(f->fvalue, "0") == 0);
         mu_assert("Get next field", f = f->next);
@@ -115,6 +134,7 @@ skipsql:
         mu_assert("Get next field", f = f->next);
         mu_assert("Check 2nd field name", strcmp(f->fname, "name") == 0);
         mu_assert("Check 2nd field value", strncmp(f->fvalue, "ivan", 4) == 0);
+skipsqltests:
         mu_assert("Ensure last field->next == NULL", f->next == NULL);
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
 

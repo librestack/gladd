@@ -261,10 +261,89 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
         else if (strcmp(db->type, "my") == 0) {
                 return db_fetch_all_my(db, sql, rows, rowc);
         }
+        else if (strcmp(db->type, "ldap") == 0) {
+                return db_fetch_all_ldap(db, sql, rows, rowc);
+        }
         else {
                 syslog(LOG_ERR, 
                     "Invalid database type '%s' passed to db_fetch_all()\n",
                     db->type);
+                return -1;
+        }
+        return 0;
+}
+
+int db_fetch_all_ldap(db_t *db, char *query, row_t **rows, int *rowc)
+{
+        BerElement *ber;
+        LDAPMessage *msg;
+        LDAPMessage *res = NULL;
+        char *a;
+        char *filter = NULL;
+        char *search;
+        char **vals;
+        int i;
+        int rc;
+        field_t *f;
+        field_t *ftmp = NULL;
+        row_t *r;
+        row_t *rtmp = NULL;
+
+        asprintf(&search, "%s,%s", query, db->db);
+        rc = ldap_search_ext_s(db->conn, search, LDAP_SCOPE_SUBTREE,
+                filter, NULL, 0, NULL, NULL, LDAP_NO_LIMIT,
+                LDAP_NO_LIMIT, &res);
+
+        if (rc != LDAP_SUCCESS) {
+                syslog(LOG_DEBUG, "search error: %s (%d)",
+                                ldap_err2string(rc), rc);
+                return -1;
+        }
+        syslog(LOG_DEBUG, "ldap_search_ext_s successful");
+
+        *rowc = ldap_count_messages(db->conn, res);
+        syslog(LOG_DEBUG, "Messages: %i", *rowc);
+
+        /* populate rows and fields */
+        for (msg = ldap_first_entry(db->conn, res); msg != NULL;
+        msg = ldap_next_entry(db->conn, msg))
+        {
+                r = malloc(sizeof(row_t));
+                r->fields = NULL;
+                r->next = NULL;
+                for (a = ldap_first_attribute(db->conn, msg, &ber); a != NULL;
+                a = ldap_next_attribute(db->conn, msg, ber))
+                {
+                        /* attributes may have more than one value - here
+                           we list them all as separate fields */
+                        if ((vals = ldap_get_values(db->conn, msg, a)) != NULL)
+                        {
+                                for (i = 0; vals[i] != NULL; i++) {
+                                        f = malloc(sizeof(field_t));
+                                        f->fname = strdup(a);
+                                        f->fvalue = strdup(vals[i]);
+                                        f->next = NULL;
+                                        if (r->fields == NULL) {
+                                                r->fields = f;
+                                        }
+                                        if (ftmp != NULL) {
+                                                ftmp->next = f;
+                                        }
+                                        ftmp = f;
+                                }
+                                ldap_value_free(vals);
+                        }
+                        ldap_memfree(a);
+                }
+                if (rtmp == NULL) {
+                        /* as this is our first row, update the ptr */
+                        *rows = r;
+                }
+                else {
+                        rtmp->next = r;
+                }
+                ftmp = NULL;
+                rtmp = r;
         }
         return 0;
 }

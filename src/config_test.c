@@ -141,6 +141,12 @@ char *test_config_read_sql()
         mu_assert("Check 2nd sql alias", strcmp(s->alias, "sql2") == 0);
         mu_assert("Check 2nd sql statement",
                 strcmp(s->sql, "SELECT * FROM test ORDER BY name DESC") == 0);
+
+        /* skip a few */
+        mu_assert("Reading 3rd sql from config", s = s->next);
+        mu_assert("Reading 4th sql from config", s = s->next);
+        mu_assert("Reading 5th sql from config", s = s->next);
+        
         mu_assert("Ensure final sql->next returns NULL", s->next == NULL);
 
         mu_assert("Get sql from config", strcmp(getsql("sql2"), 
