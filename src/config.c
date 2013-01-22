@@ -40,10 +40,11 @@ config_t config_default = {
 config_t *config;
 config_t *config_new;
 
-acl_t *prevacl;         /* pointer to last acl */
-db_t  *prevdb;          /* pointer to last db  */
-sql_t *prevsql;         /* pointer to last sql */
-url_t *prevurl;         /* pointer to last url */
+acl_t  *prevacl;        /* pointer to last acl */
+auth_t *prevauth;       /* pointer to last auth */
+db_t   *prevdb;         /* pointer to last db  */
+sql_t  *prevsql;        /* pointer to last sql */
+url_t  *prevurl;        /* pointer to last url */
 
 /* set config defaults if they haven't been set already */
 int set_config_defaults()
@@ -92,11 +93,30 @@ void free_acls()
         }
 }
 
+/* free auth structs */
+void free_auth()
+{
+        auth_t *a;
+        auth_t *tmp;
+
+        a = config->auth;
+        while (a != NULL) {
+                free(a->type);
+                free(a->db);
+                free(a->sql);
+                free(a->bind);
+                tmp = a;
+                a = a->next;
+                free(tmp);
+        }
+}
+
 /* free config memory */
 void free_config()
 {
         free(config->encoding);
         free_acls();
+        free_auth();
         free_dbs();
         free_sql();
         free_urls();
@@ -299,6 +319,44 @@ int add_acl (char *value)
         return 0;
 }
 
+int add_auth (char *value)
+{
+        auth_t *newauth;
+        char type[LINE_MAX] = "";
+        char db[LINE_MAX] = "";
+        char sql[LINE_MAX] = "";
+        char bind[LINE_MAX] = "";
+
+        if (sscanf(value, "%s %s %s %s", type, db, sql, bind) != 4) {
+                /* config line didn't match expected patterns */
+                return -1;
+        }
+        newauth = malloc(sizeof(struct auth_t));
+        if (strcmp(type, "ldap") == 0) {
+                newauth->type = strdup(type);
+                newauth->db = strdup(db);
+                newauth->sql = strdup(sql);
+                newauth->bind = strdup(bind);
+                newauth->next = NULL;
+        }
+        else {
+                fprintf(stderr, "Invalid auth type\n");
+                return -1;
+        }
+        if (prevauth != NULL) {
+                /* update ->next ptr in previous auth
+                 * to point to new */
+                prevauth->next = newauth;
+        }
+        else {
+                /* no previous auth, 
+                 * so set first ptr in config */
+                config_new->auth = newauth;
+        }
+        prevauth = newauth;
+        return 0;
+}
+
 /* store database config */
 int add_db (char *value)
 {
@@ -464,6 +522,9 @@ int process_config_line(char *line)
                 }
                 else if (strcmp(key, "acl") == 0) {
                         return add_acl(value);
+                }
+                else if (strcmp(key, "auth") == 0) {
+                        return add_auth(value);
                 }
                 else if (strcmp(key, "db") == 0) {
                         return add_db(value);

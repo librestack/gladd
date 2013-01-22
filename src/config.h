@@ -42,16 +42,25 @@ typedef struct acl_t {
         struct acl_t *next;
 } acl_t;
 
+typedef struct auth_t {
+        char *type;
+        char *db;
+        char *sql;
+        char *bind;     /* field to bind as */
+        struct auth_t *next;
+} auth_t;
+
 typedef struct config_t {
-        long debug;
-        long port;
-        long daemon;         /* 0 = daemonise (default), 1 = don't detach */
         char *authrealm;
+        long daemon;         /* 0 = daemonise (default), 1 = don't detach */
+        long debug;
         char *encoding;      /* encoding to use - default UTF-8 */
-        struct url_t *urls;
+        long port;
         struct acl_t *acls;
+        struct auth_t *auth;
         struct db_t *dbs;
         struct sql_t *sql;
+        struct url_t *urls;
 } config_t;
 
 typedef struct db_t {
@@ -91,11 +100,13 @@ int set_config_long(long *confset, char *keyname, long i, long min, long max);
 int set_encoding(char *value);
 char *toutf8(char *str);
 int add_acl (char *value);
+int add_auth (char *value);
 int add_db (char *value);
 int add_sql (char *value);
 db_t *getdb(char *alias);
 char *getsql(char *alias);
 void free_acls();
+void free_auth();
 void free_config();
 void free_dbs();
 void free_sql();

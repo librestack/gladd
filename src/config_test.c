@@ -96,6 +96,23 @@ char *test_config_set()
         return 0;
 }
 
+/* tests for reading auth lines in config */
+char *test_config_read_auth()
+{
+        auth_t *a;
+
+        mu_assert("Ensure auth lines are read from config",
+                config->auth != NULL);
+        mu_assert("Reading 1st auth from config", a = config->auth);
+        mu_assert("Check 1st auth->type", strcmp(a->type, "ldap") == 0);
+        mu_assert("Check 1st auth->db", strcmp(a->db, "ldap1") == 0);
+        mu_assert("Check 1st auth->sql", strcmp(a->sql, "ld_auth") == 0);
+        mu_assert("Check 1st auth->bind", strcmp(a->bind, "uid") == 0);
+        mu_assert("Ensure final auth->next returns NULL", a->next == NULL);
+
+        return 0;
+}
+
 /* test successive reads of url->next */
 char *test_config_read_url()
 {
@@ -146,6 +163,7 @@ char *test_config_read_sql()
         mu_assert("Reading 3rd sql from config", s = s->next);
         mu_assert("Reading 4th sql from config", s = s->next);
         mu_assert("Reading 5th sql from config", s = s->next);
+        mu_assert("Reading 6th sql from config", s = s->next);
         
         mu_assert("Ensure final sql->next returns NULL", s->next == NULL);
 

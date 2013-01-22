@@ -37,5 +37,6 @@ char *test_config_read_sql();
 char *test_config_add_acl_invalid();
 char *test_config_acl_allow_all();
 char *test_config_db();
+char *test_config_read_auth();
 
 #endif /* __GLADD_CONFIG_TEST_H__ */
