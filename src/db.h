@@ -43,6 +43,7 @@ int db_connect_pg(db_t *db);
 int db_create(db_t *db);
 int db_create_pg(db_t *db);
 int db_disconnect(db_t *db);
+int db_disconnect_ldap(db_t *db);
 int db_disconnect_my(db_t *db);
 int db_disconnect_pg(db_t *db);
 int db_exec_sql(db_t *db, char *sql);

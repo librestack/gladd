@@ -64,6 +64,7 @@ int db_connect_ldap(db_t *db)
 {
         LDAP *l;
         int rc;
+        int protocol = LDAP_VERSION3;
 
         rc = ldap_initialize(&l, db->host);
         if (rc != LDAP_SUCCESS) {
@@ -73,6 +74,10 @@ int db_connect_ldap(db_t *db)
                 return -1;
         }
         syslog(LOG_DEBUG, "ldap_initialise() successful");
+
+        /* Ensure we use LDAP v3 */
+        rc = ldap_set_option(l, LDAP_OPT_PROTOCOL_VERSION, &protocol);
+
         db->conn = l;
 
         return 0;
@@ -170,11 +175,21 @@ int db_disconnect(db_t *db)
         else if (strcmp(db->type, "my") == 0) {
                 return db_disconnect_my(db);
         }
+        else if (strcmp(db->type, "ldap") == 0) {
+                return db_disconnect_ldap(db);
+        }
         else {
                 fprintf(stderr, 
                     "Invalid database type '%s' passed to db_disconnect()\n",
                     db->type);
+                return -1;
         }
+        return 0;
+}
+
+/* disconnect from a mysql db */
+int db_disconnect_ldap(db_t *db)
+{
         return 0;
 }
 

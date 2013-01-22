@@ -70,31 +70,42 @@ char *test_db(db_t *db)
         }
 #endif /* _NLDAP */
 
+        if (strcmp(db->alias, "ldap2") == 0) {
+                /* ldap2 is fake, skip it */
+                fprintf(stderr, "Skipping ldap2\n");
+                return 0;
+        }
+
         mu_assert("db_connect()", db_connect(db) == 0);
         mu_assert("Test database connection", db->conn != NULL);
 
-        if (strcmp(db->type, "ldap") == 0)
-                goto skipsql;
+        if (strcmp(db->type, "ldap") != 0) {
+                /* sql databases only */
 
-        mu_assert("db_exec_sql() invalid sql returns failure",
-                db_exec_sql(db, "invalidsql") != 0);
-        mu_assert("db_exec_sql() BEGIN",
-                db_exec_sql(db, "BEGIN") == 0);
-        mu_assert("db_exec_sql() DROP TABLE",
-                db_exec_sql(db, "DROP TABLE IF EXISTS test") == 0);
-        mu_assert("db_exec_sql() CREATE TABLE",
+                mu_assert("db_exec_sql() invalid sql returns failure",
+                        db_exec_sql(db, "invalidsql") != 0);
+                mu_assert("db_exec_sql() BEGIN",
+                        db_exec_sql(db, "BEGIN") == 0);
+                mu_assert("db_exec_sql() DROP TABLE",
+                        db_exec_sql(db, "DROP TABLE IF EXISTS test") == 0);
+
+                mu_assert("db_exec_sql() CREATE TABLE",
                 db_exec_sql(db,
                 "CREATE TABLE IF NOT EXISTS test(id integer, name char(32))")
                 == 0);
-        mu_assert("db_exec_sql() INSERT",
+
+                mu_assert("db_exec_sql() INSERT",
                 db_exec_sql(db,
                 "INSERT INTO test(id, name) VALUES (0, 'boris')") == 0);
-        mu_assert("db_exec_sql() INSERT",
+
+                mu_assert("db_exec_sql() INSERT",
                 db_exec_sql(db,
                 "INSERT INTO test(id, name) VALUES (5, 'ivan')") == 0);
-        mu_assert("db_exec_sql() COMMIT",
-                db_exec_sql(db, "COMMIT") == 0);
-skipsql:
+
+                mu_assert("db_exec_sql() COMMIT",
+                        db_exec_sql(db, "COMMIT") == 0);
+        }
+
         mu_assert("db_fetch_all() search",
                 db_fetch_all(db, getsql(db->type), &r, &rowc) == 0);
 
@@ -110,7 +121,7 @@ skipsql:
                         strcmp(f->fname, "ou") == 0);
                 mu_assert("Check 1st field value",
                         strcmp(f->fvalue, "Group") == 0);
-                mu_assert("Get next field", f = f->next);
+                mu_assert("Get 2nd row", f = r->next->fields);
                 fprintf(stderr, "%s: %s\n", f->fname, f->fvalue);
                 mu_assert("Get next field", f = f->next);
                 fprintf(stderr, "%s: %s\n", f->fname, f->fvalue);
@@ -118,23 +129,28 @@ skipsql:
                 fprintf(stderr, "%s: %s\n", f->fname, f->fvalue);
                 mu_assert("Get next field", f = f->next);
                 fprintf(stderr, "%s: %s\n", f->fname, f->fvalue);
-
-                goto skipsqltests;
         }
+        else {
 
-        mu_assert("Check 1st field name", strcmp(f->fname, "id") == 0);
-        mu_assert("Check 1st field value", strcmp(f->fvalue, "0") == 0);
-        mu_assert("Get next field", f = f->next);
-        mu_assert("Check 2nd field name", strcmp(f->fname, "name") == 0);
-        mu_assert("Check 2nd field value", strncmp(f->fvalue, "boris",5) == 0);
-        mu_assert("Ensure last field->next == NULL", f->next == NULL);
-        mu_assert("Get 2nd row", f = r->next->fields);
-        mu_assert("Check 1st field name", strcmp(f->fname, "id") == 0);
-        mu_assert("Check 1st field value", strcmp(f->fvalue, "5") == 0);
-        mu_assert("Get next field", f = f->next);
-        mu_assert("Check 2nd field name", strcmp(f->fname, "name") == 0);
-        mu_assert("Check 2nd field value", strncmp(f->fvalue, "ivan", 4) == 0);
-skipsqltests:
+                mu_assert("Check 1st field name",
+                        strcmp(f->fname, "id") == 0);
+                mu_assert("Check 1st field value",
+                        strcmp(f->fvalue, "0") == 0);
+                mu_assert("Get next field", f = f->next);
+                mu_assert("Check 2nd field name",
+                        strcmp(f->fname, "name") == 0);
+                mu_assert("Check 2nd field value",
+                        strncmp(f->fvalue, "boris",5) == 0);
+                mu_assert("Ensure last field->next == NULL", f->next == NULL);
+                mu_assert("Get 2nd row", f = r->next->fields);
+                mu_assert("Check 1st field name", strcmp(f->fname, "id") == 0);
+                mu_assert("Check 1st field value",strcmp(f->fvalue, "5") == 0);
+                mu_assert("Get next field", f = f->next);
+                mu_assert("Check 2nd field name",
+                        strcmp(f->fname, "name") == 0);
+                mu_assert("Check 2nd field value",
+                        strncmp(f->fvalue, "ivan", 4) == 0);
+        }
         mu_assert("Ensure last field->next == NULL", f->next == NULL);
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
 
