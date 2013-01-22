@@ -22,6 +22,7 @@
 
 #define _GNU_SOURCE
 #include <assert.h>
+#include <b64/cdecode.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -70,6 +71,22 @@ struct http_status httpcode[] = {
         { 500, "Internal Server Error" },
         { 505, "HTTP Version Not Supported" }
 };
+
+char *decode64(char *str)
+{
+        int r;
+        char *plain;
+
+        plain = malloc(sizeof(str));
+
+        base64_decodestate *d;
+        d = malloc(sizeof(base64_decodestate));
+        base64_init_decodestate(d);
+
+        r = base64_decode_block(str, strlen(str), plain, d);
+
+        return plain;
+}
 
 char *http_get_header(http_header_t *h, char *key)
 {

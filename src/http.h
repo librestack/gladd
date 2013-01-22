@@ -38,6 +38,7 @@ typedef struct http_header_t {
         struct http_header_t *next;
 } http_header_t;
 
+char *decode64(char *str);
 struct http_status get_status(int code);
 void http_response(int sock, int code);
 char *http_get_header(http_header_t *h, char *key);
