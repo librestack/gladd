@@ -74,7 +74,8 @@ int check_auth_require(char *alias, char *authuser, char *authpass)
 
         if (! (a = getauth(alias))) {
                 syslog(LOG_ERR, 
-                        "Invalid alias supplied to check_auth_require()");
+                        "Invalid alias '%s' supplied to check_auth_require()",
+                        alias);
                 return 500;
         }
 
