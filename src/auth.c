@@ -21,6 +21,7 @@
  */
 
 #include "auth.h"
+#include "db.h"
 #include "config.h"
 #include <string.h>
 #include <syslog.h>
@@ -58,4 +59,27 @@ int check_auth(char *method, char *url)
 
         syslog(LOG_DEBUG, "no acl matched");
         return 403; /* default is to deny access */
+}
+
+/* verify auth requirements met */
+int check_auth_require(char *alias, char *authuser, char *authpass)
+{
+        auth_t *a;
+
+        if (! (a = getauth(alias))) {
+                return -1;
+        }
+
+        if (strcmp(a->type, "ldap") == 0) {
+                return db_test_bind(getdb(a->db), getsql(a->sql), a->bind,
+                        authuser, authpass);
+        }
+        else {
+                syslog(LOG_DEBUG,
+                        "Invalid auth type '%s' in check_auth_require()",
+                        a->type);
+                return -1;
+        }
+
+        return 0;
 }

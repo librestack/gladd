@@ -53,6 +53,8 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc);
 int db_fetch_all_ldap(db_t *db, char *query, row_t **rows, int *rowc);
 int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc);
 int db_fetch_all_pg(db_t *db, char *sql, row_t **rows, int *rowc);
+int db_test_bind(db_t *db, char *bindstr, char *bindattr,
+        char *user, char *pass);
 void free_fields(field_t *f);
 void liberate_rows(row_t *r);
 

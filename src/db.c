@@ -481,6 +481,27 @@ int db_fetch_all_pg(db_t *db, char *sql, row_t **rows, int *rowc)
         return 0;
 }
 
+int db_test_bind(db_t *db, char *bindstr, char *bindattr,
+        char *user, char *pass)
+{
+        char *binddn;
+        int rc;
+        
+        db_connect_ldap(db);
+        asprintf(&binddn, "%s=%s,%s,%s", bindattr, user, bindstr, db->db);
+        fprintf(stderr, "%s\n", binddn);
+        rc = ldap_simple_bind_s(db->conn, binddn, pass);
+        free(binddn);
+        if (rc != LDAP_SUCCESS) {
+                syslog(LOG_DEBUG, "Bind error: %s (%d)",
+                        ldap_err2string(rc), rc);
+                return 1;
+        }
+        db_disconnect_ldap(db);
+
+        return 0;
+}
+
 /* free field_t struct */
 void free_fields(field_t *f)
 {

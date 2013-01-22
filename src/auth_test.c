@@ -51,3 +51,15 @@ char *test_auth_allow()
                 check_auth("GET", "/static/index.html") == 0);
         return 0;
 }
+
+char *test_auth_require()
+{
+        mu_assert("check_auth_require() - fail on invalid alias",
+                check_auth_require("invalid", NULL, NULL) != 0);
+        mu_assert("check_auth_require() - fail with invalid credentials",
+                check_auth_require("ldap", "betty", "false") != 0);
+        mu_assert("check_auth_require() - successful ldap bind",
+                check_auth_require("ldap", "betty", "ie5a8P40") == 0);
+
+        return 0;
+}

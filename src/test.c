@@ -60,6 +60,7 @@ static char * all_tests()
         mu_run_test(test_args);
         mu_run_test(test_auth_default);
         mu_run_test(test_auth_deny);
+        mu_run_test(test_auth_require);
         mu_run_test(test_auth_allow);
         mu_run_test(test_config_add_acl_invalid);
         mu_run_test(test_config_acl_allow_all);

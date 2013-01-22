@@ -56,6 +56,8 @@ int set_config_defaults()
 
         config = &config_default;
         config->authrealm = "gladd";
+        config->authuser = NULL;
+        config->authpass = NULL;
 
         defaults_set = 1;
         return 0;
@@ -101,6 +103,7 @@ void free_auth()
 
         a = config->auth;
         while (a != NULL) {
+                free(a->alias);
                 free(a->type);
                 free(a->db);
                 free(a->sql);
@@ -322,17 +325,19 @@ int add_acl (char *value)
 int add_auth (char *value)
 {
         auth_t *newauth;
+        char alias[LINE_MAX] = "";
         char type[LINE_MAX] = "";
         char db[LINE_MAX] = "";
         char sql[LINE_MAX] = "";
         char bind[LINE_MAX] = "";
 
-        if (sscanf(value, "%s %s %s %s", type, db, sql, bind) != 4) {
+        if (sscanf(value, "%s %s %s %s %s", alias, type, db, sql, bind) != 5) {
                 /* config line didn't match expected patterns */
                 return -1;
         }
         newauth = malloc(sizeof(struct auth_t));
         if (strcmp(type, "ldap") == 0) {
+                newauth->alias = strdup(alias);
                 newauth->type = strdup(type);
                 newauth->db = strdup(db);
                 newauth->sql = strdup(sql);
@@ -453,6 +458,21 @@ int add_sql(char *value)
         prevsql = newsql;
 
         return 0;
+}
+
+/* return the auth_t pointer for this alias */
+auth_t *getauth(char *alias)
+{
+        auth_t *a;
+
+        a = config->auth;
+        while (a != NULL) {
+                if (strcmp(alias, a->alias) == 0)
+                        return a;
+                a = a->next;
+        }
+
+        return NULL; /* not found */
 }
 
 /* return the db_t pointer for this db alias */

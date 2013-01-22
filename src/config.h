@@ -43,6 +43,7 @@ typedef struct acl_t {
 } acl_t;
 
 typedef struct auth_t {
+        char *alias;
         char *type;
         char *db;
         char *sql;
@@ -52,6 +53,8 @@ typedef struct auth_t {
 
 typedef struct config_t {
         char *authrealm;
+        char *authuser;
+        char *authpass;
         long daemon;         /* 0 = daemonise (default), 1 = don't detach */
         long debug;
         char *encoding;      /* encoding to use - default UTF-8 */
@@ -103,6 +106,7 @@ int add_acl (char *value);
 int add_auth (char *value);
 int add_db (char *value);
 int add_sql (char *value);
+auth_t *getauth(char *alias);
 db_t *getdb(char *alias);
 char *getsql(char *alias);
 void free_acls();
