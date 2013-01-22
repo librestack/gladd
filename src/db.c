@@ -190,6 +190,8 @@ int db_disconnect(db_t *db)
 /* disconnect from a mysql db */
 int db_disconnect_ldap(db_t *db)
 {
+        int rc;
+        rc = ldap_unbind(db->conn);
         return 0;
 }
 
@@ -308,6 +310,7 @@ int db_fetch_all_ldap(db_t *db, char *query, row_t **rows, int *rowc)
         rc = ldap_search_ext_s(db->conn, search, LDAP_SCOPE_SUBTREE,
                 filter, NULL, 0, NULL, NULL, LDAP_NO_LIMIT,
                 LDAP_NO_LIMIT, &res);
+        free(search);
 
         if (rc != LDAP_SUCCESS) {
                 syslog(LOG_DEBUG, "search error: %s (%d)",
@@ -350,6 +353,7 @@ int db_fetch_all_ldap(db_t *db, char *query, row_t **rows, int *rowc)
                         }
                         ldap_memfree(a);
                 }
+                ldap_memfree(ber);
                 if (rtmp == NULL) {
                         /* as this is our first row, update the ptr */
                         *rows = r;
@@ -360,6 +364,7 @@ int db_fetch_all_ldap(db_t *db, char *query, row_t **rows, int *rowc)
                 ftmp = NULL;
                 rtmp = r;
         }
+        ldap_msgfree(res);
         return 0;
 }
 
