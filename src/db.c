@@ -495,7 +495,7 @@ int db_test_bind(db_t *db, char *bindstr, char *bindattr,
         if (rc != LDAP_SUCCESS) {
                 syslog(LOG_DEBUG, "Bind error: %s (%d)",
                         ldap_err2string(rc), rc);
-                return 1;
+                return 401;
         }
         db_disconnect_ldap(db);
 

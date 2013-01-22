@@ -195,7 +195,7 @@ char *test_config_acl_allow_all()
                     strncmp(acl->url, "/static/secret.html",
                                                 strlen(acl->url)) == 0);
         mu_assert("test 1st acl->type is read from config", 
-                    strncmp(acl->type, "deny", strlen(acl->type)) == 0);
+                    strncmp(acl->type, "require", strlen(acl->type)) == 0);
         mu_assert("test 1st acl->auth is read from config", 
                     strncmp(acl->auth, "*", strlen(acl->auth)) == 0);
         /* check second acl */

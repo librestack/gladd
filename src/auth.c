@@ -46,6 +46,12 @@ int check_auth(char *method, char *url)
                 {
                         if (strncmp(a->auth, "*", strlen(a->auth)) == 0) {
                                 syslog(LOG_DEBUG, "acl matches");
+                                if (strcmp(a->type, "require") == 0) {
+                                        /* auth require - needs more checks */
+                                        return check_auth_require("ldap",
+                                                config->authuser, 
+                                                config->authpass);
+                                }
                                 /* acl matches, return 0 if allow, else 403 */
                                 return 
                                     strncmp(a->type, "allow", 5) == 0 ? 0:403;
@@ -67,7 +73,9 @@ int check_auth_require(char *alias, char *authuser, char *authpass)
         auth_t *a;
 
         if (! (a = getauth(alias))) {
-                return -1;
+                syslog(LOG_ERR, 
+                        "Invalid alias supplied to check_auth_require()");
+                return 500;
         }
 
         if (strcmp(a->type, "ldap") == 0) {
@@ -75,10 +83,10 @@ int check_auth_require(char *alias, char *authuser, char *authpass)
                         authuser, authpass);
         }
         else {
-                syslog(LOG_DEBUG,
+                syslog(LOG_ERR,
                         "Invalid auth type '%s' in check_auth_require()",
                         a->type);
-                return -1;
+                return 500;
         }
 
         return 0;
