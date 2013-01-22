@@ -1,5 +1,5 @@
 /* 
- * http.h
+ * http_test.h - unit tests for http.c
  *
  * this file is part of GLADD
  *
@@ -20,28 +20,11 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GLADD_HTTP_H__
-#define __GLADD_HTTP_H__ 1
+#ifndef __GLADD_HTTP_TEST__H__
+#define __GLADD_HTTP_TEST__H__ 1
 
-#define HTTPKEYS (sizeof httpcode / sizeof (struct http_status))
-#define HTTP_RESPONSE "HTTP/1.1 %1$i %2$s\nServer: gladd\nConnection: close\nContent-Type: %3$s%4$s\n\n<html><body><h1>%1$i %2$s</h1>\n</body>\n</html>\n"
-#define MAX_RESOURCE_LEN 256
+#include "http.h"
 
-struct http_status {
-        int code;
-        char *status;
-};
+char *test_http_read_headers();
 
-typedef struct http_header_t {
-        char *key;
-        char *value;
-        struct http_header_t *next;
-} http_header_t;
-
-struct http_status get_status(int code);
-void http_response(int sock, int code);
-char *http_get_header(http_header_t *h, char *key);
-int http_read_headers(char *buf, char **method, char **res, char **httpv,
-        http_header_t **headers);
-
-#endif /* __GLADD_HTTP_H__ */
+#endif /* __GLADD_HTTP_TEST__H__ */

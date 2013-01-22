@@ -33,7 +33,7 @@ LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq ${MYSQLFLAGS} -lmysqlclient -lldap
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
 OBJECTFILES=args.o auth.o db.o config.o handler.o http.o mime.o signals.o string.o xml.o
-TESTFILES=test.o args_test.o auth_test.o db_test.o config_test.o string_test.o xml_test.o
+TESTFILES=test.o args_test.o auth_test.o db_test.o config_test.o http_test.o string_test.o xml_test.o
 
 ${PROGRAM}: ${PROGRAM}_test main.o
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} main.o ${LIBS}
@@ -71,6 +71,9 @@ handler.o: handler.c handler.h http.h main.h mime.h config.h
 http.o: http.c http.h main.h
 	${CC} ${CFLAGS} -c http.c
 
+http_test.o: http_test.c http_test.h
+	${CC} ${CFLAGS} -c http_test.c
+
 main.o: main.c main.h handler.h config.h
 	${CC} ${CFLAGS} -c main.c
 
@@ -86,7 +89,7 @@ string.o: string.c string.h
 string_test.o: string_test.c string_test.h
 	${CC} ${CFLAGS} -c string_test.c
 
-test.o: minunit.h test.c test.h db_test.h config_test.h args_test.h auth_test.h
+test.o: minunit.h test.c test.h db_test.h config_test.h args_test.h auth_test.h http_test.h
 	${CC} ${CFLAGS} -c test.c
 
 xml.o: xml.h xml.c

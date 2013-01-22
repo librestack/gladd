@@ -23,7 +23,6 @@
 #define _GNU_SOURCE
 
 #define BUFSIZE 8096
-#define MAX_RESOURCE_LEN 256
 
 #include "auth.h"
 #include "config.h"
@@ -71,21 +70,19 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         char *basefile;
         char buf[BUFSIZE];
         char *filename;
-
-        char httpv[8];
-        char method[8];
-        char res[MAX_RESOURCE_LEN];
-
+        char *httpv = NULL;
+        char *method = NULL;
+        char *res = NULL;
         char s[INET6_ADDRSTRLEN];
         int byte_count;
         int state;
         int auth = -1;
-        
         url_t *u;
-
         char *r;
         char *sql;
         char *xml;
+        http_header_t *client_headers = NULL;
+        int hcount = 0;
 
         inet_ntop(their_addr.ss_family,
                         get_in_addr((struct sockaddr *)&their_addr),
@@ -97,12 +94,15 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         byte_count = recv(sock, buf, sizeof buf, 0);
         syslog(LOG_DEBUG, "recv()'d %d bytes of data in buf\n", byte_count);
 
-        if (sscanf(buf, "%s %s HTTP/%s", method, res, httpv) != 3) {
+        /* read http client headers */
+        hcount = http_read_headers(buf, &method, &res, &httpv,&client_headers);
+        if (hcount == -1) {
                 syslog(LOG_INFO, "Bad Request");
                 http_response(sock, 400);
                 exit(EXIT_FAILURE);
         }
 
+        syslog(LOG_DEBUG, "Client header count: %i", hcount);
         syslog(LOG_DEBUG, "Method: %s", method);
         syslog(LOG_DEBUG, "Resource: %s", res);
         syslog(LOG_DEBUG, "HTTP Version: %s", httpv);
@@ -185,6 +185,12 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
         /* close client connection */
         close(sock);
+
+        free(method);
+        free(httpv);
+        free(res);
+        free(client_headers);
+        free(method);
 
         /* child process can exit */
         exit (EXIT_SUCCESS);

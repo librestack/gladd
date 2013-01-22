@@ -21,8 +21,10 @@
  */
 
 #define _GNU_SOURCE
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <syslog.h>
 #include "config.h"
 #include "handler.h"
@@ -68,6 +70,68 @@ struct http_status httpcode[] = {
         { 500, "Internal Server Error" },
         { 505, "HTTP Version Not Supported" }
 };
+
+char *http_get_header(http_header_t *h, char *key)
+{
+        while (h != NULL) {
+                if (strcmp(h->key, key) == 0)
+                        return h->value;
+                h = h->next;
+        }
+        return NULL;
+}
+
+/* check & store http headers from client */
+int http_read_headers(char *buf, char **method, char **res, char **httpv,
+        http_header_t **headers)
+{
+        int c = 0;
+        int hcount = 0;
+        char key[256];
+        char value[256];
+        http_header_t *h;
+        http_header_t *hlast = NULL;
+        char m[16];
+        char r[MAX_RESOURCE_LEN];
+        char v[16];
+        FILE *in;
+
+        fprintf(stderr, "%s\n", buf);
+
+        in = fmemopen(buf, strlen(buf), "r");
+        assert (in != NULL);
+
+        if (fscanf(in, "%s %s HTTP/%s", m, r, v) != 3) {
+                /* Bad request */
+                return -1;
+        }
+        asprintf(method, "%s", m);
+        asprintf(res, "%s", r);
+        asprintf(httpv, "%s", v);
+
+        for (;;) {
+                c = fscanf(in, "%s %[^\n]", key, value);
+                if (c <= 0)
+                        break;
+                h = malloc(sizeof(http_header_t));
+                h->key = strdup(key);
+                *(h->key + strlen(h->key) - 1) = '\0';
+                h->value = strdup(value);
+                h->next = NULL;
+                if (hlast != NULL) {
+                        hlast->next = h;
+                }
+                else {
+                        *headers = h;
+                }
+                hlast = h;
+                hcount++;
+        }
+
+        fclose(in);
+
+        return hcount;
+}
 
 void http_response(int sock, int code)
 {
