@@ -77,9 +77,9 @@ http_request_t *request;
 char *decode64(char *str)
 {
         int r;
-        char *plain;
+        char *plain = NULL;
 
-        plain = malloc(sizeof(str));
+        plain = malloc(sizeof(str) * 2);
 
         base64_decodestate *d;
         d = malloc(sizeof(base64_decodestate));
@@ -244,7 +244,7 @@ void free_headers(http_header_t *h)
                 free(h->key);
                 free(h->value);
                 tmp = h;
-                free(tmp);
                 h = h->next;
+                free(tmp);
         }
 }
