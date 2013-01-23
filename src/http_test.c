@@ -83,7 +83,6 @@ char *test_http_read_headers()
                 strcmp(request->authpass, "nobby") == 0);
 
         free(headers);
-        free(h);
 
         return 0;
 }

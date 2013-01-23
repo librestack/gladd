@@ -87,6 +87,8 @@ char *decode64(char *str)
 
         r = base64_decode_block(str, strlen(str), plain, d);
 
+        free(d);
+
         return plain;
 }
 
