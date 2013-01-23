@@ -21,8 +21,9 @@
  */
 
 #include "auth.h"
-#include "db.h"
 #include "config.h"
+#include "db.h"
+#include "http.h"
 #include <string.h>
 #include <syslog.h>
 
@@ -49,8 +50,8 @@ int check_auth(char *method, char *url)
                                 if (strcmp(a->type, "require") == 0) {
                                         /* auth require - needs more checks */
                                         return check_auth_require("ldap",
-                                                config->authuser, 
-                                                config->authpass);
+                                                request->authuser, 
+                                                request->authpass);
                                 }
                                 /* acl matches, return 0 if allow, else 403 */
                                 return 

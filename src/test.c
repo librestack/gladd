@@ -59,6 +59,7 @@ static char * all_tests()
         mu_run_test(test_config_read_sql);
         mu_run_test(test_config_read_auth);
         mu_run_test(test_args);
+        mu_run_test(test_http_read_headers);
         mu_run_test(test_auth_default);
         mu_run_test(test_auth_deny);
         mu_run_test(test_auth_require);
@@ -71,7 +72,6 @@ static char * all_tests()
         mu_run_test(test_xml_doc);
 #endif /* _NXML */
         mu_run_test(test_string_trimstr);
-        mu_run_test(test_http_read_headers);
         free_config();
         printline("*", 80);
         return 0;

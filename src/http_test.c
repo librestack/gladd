@@ -21,6 +21,7 @@
  */
 
 #define _GNU_SOURCE
+#include "config.h"
 #include "http_test.h"
 #include "minunit.h"
 #include <stdio.h>
@@ -31,20 +32,22 @@ char *test_http_read_headers()
 {
         int hcount = 0;
         char *headers;
-        char *httpv = NULL;
-        char *method = NULL;
-        char *res = NULL;
 
         http_header_t *h;
+        http_request_t *r;
 
         asprintf(&headers, "GET /index.html HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
 
-        hcount = http_read_headers(headers, &method, &res, &httpv, &h);
-        mu_assert("Check request method = GET", strcmp(method, "GET") == 0);
-        mu_assert("Check HTTP version = 1.1", strcmp(httpv, "1.1") == 0);
-        mu_assert("Check request url = /index.html",
-                strcmp(res, "/index.html") == 0);
+        hcount = http_read_headers(headers, sizeof(headers));
+
+        r = request;
+        h = request->headers;
+
         mu_assert("Check client header count", hcount == 4);
+        mu_assert("Check request method = GET", strcmp(r->method, "GET") == 0);
+        mu_assert("Check HTTP version = 1.1", strcmp(r->httpv, "1.1") == 0);
+        mu_assert("Check request url = /index.html",
+                strcmp(r->res, "/index.html") == 0);
         fprintf(stderr, "Headers: %i\n", hcount);
         fprintf(stderr, "%s\n", h->key);
         fprintf(stderr, "%s\n", h->value);
@@ -63,10 +66,18 @@ char *test_http_read_headers()
         mu_assert("Test 4th header key", strcmp(h->key, "Accept") == 0);
         mu_assert("Ensure final header->next is NULL", !(h = h->next));
 
+        mu_assert("http_validate_headers()",
+                http_validate_headers(request->headers) == 0);
+        mu_assert("http_validate_headers() - request->authuser != NULL", 
+                request->authuser != NULL);
+        mu_assert("http_validate_headers() - request->authuser (check value)",
+                strcmp(request->authuser, "betty") == 0);
+        mu_assert("http_validate_headers() - request->authpass != NULL", 
+                request->authpass != NULL);
+        mu_assert("http_validate_headers() - request->authpass (check value)",
+                strcmp(request->authpass, "nobby") == 0);
+
         free(headers);
-        free(method);
-        free(httpv);
-        free(res);
         free(h);
 
         return 0;

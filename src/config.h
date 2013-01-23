@@ -53,8 +53,6 @@ typedef struct auth_t {
 
 typedef struct config_t {
         char *authrealm;
-        char *authuser;
-        char *authpass;
         long daemon;         /* 0 = daemonise (default), 1 = don't detach */
         long debug;
         char *encoding;      /* encoding to use - default UTF-8 */

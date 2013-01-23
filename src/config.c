@@ -56,8 +56,6 @@ int set_config_defaults()
 
         config = &config_default;
         config->authrealm = "gladd";
-        config->authuser = NULL;
-        config->authpass = NULL;
 
         defaults_set = 1;
         return 0;

@@ -70,11 +70,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         char *basefile;
         char buf[BUFSIZE];
         char *filename;
-        char *httpv = NULL;
-        char *method = NULL;
-        char *res = NULL;
         char s[INET6_ADDRSTRLEN];
-        int byte_count;
+        ssize_t byte_count;
         int state;
         int auth = -1;
         url_t *u;
@@ -92,20 +89,25 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
         /* What are we being asked to do? */
         byte_count = recv(sock, buf, sizeof buf, 0);
-        syslog(LOG_DEBUG, "recv()'d %d bytes of data in buf\n", byte_count);
+        //syslog(LOG_DEBUG, "recv()'d %d bytes of data in buf\n", byte_count);
 
         /* read http client headers */
-        hcount = http_read_headers(buf, &method, &res, &httpv,&client_headers);
+        hcount = http_read_headers(buf, byte_count);
         if (hcount == -1) {
                 syslog(LOG_INFO, "Bad Request");
                 http_response(sock, 400);
                 exit(EXIT_FAILURE);
         }
+        if (http_validate_headers(client_headers) != 0) {
+                syslog(LOG_INFO, "Bad Request - invalid request headers");
+                http_response(sock, 400);
+                exit(EXIT_FAILURE);
+        }
 
         syslog(LOG_DEBUG, "Client header count: %i", hcount);
-        syslog(LOG_DEBUG, "Method: %s", method);
-        syslog(LOG_DEBUG, "Resource: %s", res);
-        syslog(LOG_DEBUG, "HTTP Version: %s", httpv);
+        syslog(LOG_DEBUG, "Method: %s", request->method);
+        syslog(LOG_DEBUG, "Resource: %s", request->res);
+        syslog(LOG_DEBUG, "HTTP Version: %s", request->httpv);
 
         /* Return HTTP response */
 
@@ -114,19 +116,20 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         setsockopt(sockme, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
 
         /* check auth & auth */
-        auth = check_auth(method, res);
+        auth = check_auth(request->method, request->res);
         if (auth != 0) {
                 http_response(sock, auth);
         }
-        else if (strncmp(method, "GET", 3) == 0) {
+        else if (strncmp(request->method, "GET", 3) == 0) {
 
                 u = config->urls;
                 while (u != NULL) {
                         syslog(LOG_DEBUG, "url matching... Trying %s", u->url);
-                        if (strncmp(res, u->url, strlen(u->url)) == 0) {
+                        if (strncmp(request->res, u->url, strlen(u->url))==0) {
                                 if (strncmp(u->type, "static", 6) == 0) {
                                         /* serve static files */
-                                        basefile = strndup(res+8, sizeof(res));
+                                        basefile = strndup(request->res+8,
+                                                sizeof(request->res));
                                         asprintf(&filename, "%s%s", u->path,
                                                                     basefile);
                                         free(basefile);
@@ -186,11 +189,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         /* close client connection */
         close(sock);
 
-        free(method);
-        free(httpv);
-        free(res);
         free(client_headers);
-        free(method);
 
         /* child process can exit */
         exit (EXIT_SUCCESS);

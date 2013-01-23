@@ -38,11 +38,23 @@ typedef struct http_header_t {
         struct http_header_t *next;
 } http_header_t;
 
+typedef struct http_request_t {
+        char *httpv;            /* HTTP version                          */
+        char *method;           /* HTTP request method (GET, POST etc.)  */
+        char *res;              /* resource (url) requested              */
+        ssize_t bytes;          /* bytes recv()'d                        */
+        char *authuser;         /* username supplied for http basic auth */
+        char *authpass;         /* password    "      "   "     "    "   */
+        http_header_t *headers; /* client request headers                */
+} http_request_t;
+
+extern http_request_t *request;
+
 char *decode64(char *str);
 struct http_status get_status(int code);
 void http_response(int sock, int code);
 char *http_get_header(http_header_t *h, char *key);
-int http_read_headers(char *buf, char **method, char **res, char **httpv,
-        http_header_t **headers);
+int http_read_headers(char *buf, ssize_t bytes);
+int http_validate_headers(http_header_t *h);
 
 #endif /* __GLADD_HTTP_H__ */

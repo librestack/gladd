@@ -72,6 +72,8 @@ struct http_status httpcode[] = {
         { 505, "HTTP Version Not Supported" }
 };
 
+http_request_t *request;
+
 char *decode64(char *str)
 {
         int r;
@@ -99,8 +101,7 @@ char *http_get_header(http_header_t *h, char *key)
 }
 
 /* check & store http headers from client */
-int http_read_headers(char *buf, char **method, char **res, char **httpv,
-        http_header_t **headers)
+int http_read_headers(char *buf, ssize_t bytes)
 {
         int c = 0;
         int hcount = 0;
@@ -113,7 +114,11 @@ int http_read_headers(char *buf, char **method, char **res, char **httpv,
         char v[16];
         FILE *in;
 
-        fprintf(stderr, "%s\n", buf);
+        request = malloc(sizeof(http_request_t));
+        request->bytes = bytes;
+        request->authuser = NULL;
+        request->authpass = NULL;
+        request->headers = NULL;
 
         in = fmemopen(buf, strlen(buf), "r");
         assert (in != NULL);
@@ -122,9 +127,9 @@ int http_read_headers(char *buf, char **method, char **res, char **httpv,
                 /* Bad request */
                 return -1;
         }
-        asprintf(method, "%s", m);
-        asprintf(res, "%s", r);
-        asprintf(httpv, "%s", v);
+        request->httpv = strdup(v);
+        request->method = strdup(m);
+        request->res = strdup(r);
 
         for (;;) {
                 c = fscanf(in, "%s %[^\n]", key, value);
@@ -134,12 +139,19 @@ int http_read_headers(char *buf, char **method, char **res, char **httpv,
                 h->key = strdup(key);
                 *(h->key + strlen(h->key) - 1) = '\0';
                 h->value = strdup(value);
+                /*
+                if (strcmp(h->key), "Authorization") {
+                        if (sscanf(h->value, "%s %s") == 2) {
+                                // TODO: plonk into config->authpass
+                        }
+                }
+                */
                 h->next = NULL;
                 if (hlast != NULL) {
                         hlast->next = h;
                 }
                 else {
-                        *headers = h;
+                        request->headers = h;
                 }
                 hlast = h;
                 hcount++;
@@ -183,3 +195,35 @@ struct http_status get_status(int code)
         return hcode;
 }
 
+/* process the headers from the client http request */
+int http_validate_headers(http_header_t *h)
+{
+        char user[64] = "";
+        char pass[64] = "";
+        char cryptauth[128] = "";
+        char *clearauth;
+
+        while (h != NULL) {
+                if (strcmp(h->key, "Authorization") == 0) {
+                        if (sscanf(h->value, "Basic %s", cryptauth) == 1) {
+                                clearauth = decode64(cryptauth);
+                                if (sscanf(clearauth, "%[^:]:%[^:]",
+                                        user, pass) == 2)
+                                {
+                                        request->authuser = strdup(user);
+                                        request->authpass = strdup(pass);
+                                }
+                                else {
+                                      fprintf(stderr,"Invalid auth details\n");
+                                      return -1;
+                                }
+                        }
+                        else {
+                                fprintf(stderr,"Invalid Authorization header");
+                                return -1;
+                        }
+                }
+                h = h->next;
+        }
+        return 0;
+}
