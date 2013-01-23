@@ -139,13 +139,6 @@ int http_read_headers(char *buf, ssize_t bytes)
                 h->key = strdup(key);
                 *(h->key + strlen(h->key) - 1) = '\0';
                 h->value = strdup(value);
-                /*
-                if (strcmp(h->key), "Authorization") {
-                        if (sscanf(h->value, "%s %s") == 2) {
-                                // TODO: plonk into config->authpass
-                        }
-                }
-                */
                 h->next = NULL;
                 if (hlast != NULL) {
                         hlast->next = h;
@@ -212,10 +205,13 @@ int http_validate_headers(http_header_t *h)
                                 {
                                         request->authuser = strdup(user);
                                         request->authpass = strdup(pass);
+                                        free(clearauth);
                                 }
                                 else {
-                                      fprintf(stderr,"Invalid auth details\n");
-                                      return -1;
+                                        fprintf(stderr,
+                                                "Invalid auth details\n");
+                                        free(clearauth);
+                                        return -1;
                                 }
                         }
                         else {
@@ -226,4 +222,29 @@ int http_validate_headers(http_header_t *h)
                 h = h->next;
         }
         return 0;
+}
+
+/* free request info */
+void free_request()
+{
+        free_headers(request->headers);
+        free(request->httpv);
+        free(request->method);
+        free(request->res);
+        free(request->authuser);
+        free(request->authpass);
+}
+
+/* free request headers */
+void free_headers(http_header_t *h)
+{
+        http_header_t *tmp;
+
+        while (h != NULL) {
+                free(h->key);
+                free(h->value);
+                tmp = h;
+                free(tmp);
+                h = h->next;
+        }
 }

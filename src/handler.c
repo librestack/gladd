@@ -78,7 +78,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         char *r;
         char *sql;
         char *xml;
-        http_header_t *client_headers = NULL;
         int hcount = 0;
 
         inet_ntop(their_addr.ss_family,
@@ -89,7 +88,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
         /* What are we being asked to do? */
         byte_count = recv(sock, buf, sizeof buf, 0);
-        //syslog(LOG_DEBUG, "recv()'d %d bytes of data in buf\n", byte_count);
 
         /* read http client headers */
         hcount = http_read_headers(buf, byte_count);
@@ -98,7 +96,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 http_response(sock, 400);
                 exit(EXIT_FAILURE);
         }
-        if (http_validate_headers(client_headers) != 0) {
+        if (http_validate_headers(request->headers) != 0) {
                 syslog(LOG_INFO, "Bad Request - invalid request headers");
                 http_response(sock, 400);
                 exit(EXIT_FAILURE);
@@ -108,6 +106,10 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         syslog(LOG_DEBUG, "Method: %s", request->method);
         syslog(LOG_DEBUG, "Resource: %s", request->res);
         syslog(LOG_DEBUG, "HTTP Version: %s", request->httpv);
+
+        /* FIXME: temp */
+        syslog(LOG_DEBUG, "Username: %s", request->authuser);
+        syslog(LOG_DEBUG, "Password: %s", request->authuser);
 
         /* Return HTTP response */
 
@@ -189,7 +191,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         /* close client connection */
         close(sock);
 
-        free(client_headers);
+        /* free memory */
+        free_request();
 
         /* child process can exit */
         exit (EXIT_SUCCESS);

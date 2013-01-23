@@ -50,6 +50,8 @@ typedef struct http_request_t {
 
 extern http_request_t *request;
 
+void free_headers(http_header_t *h);
+void free_request();
 char *decode64(char *str);
 struct http_status get_status(int code);
 void http_response(int sock, int code);

@@ -56,8 +56,13 @@ char *test_http_read_headers()
         mu_assert("http_get_header()",
                 strcmp(http_get_header(h, "Authorization"),
                 "Basic YmV0dHk6bm9iYnk=") == 0);
-        mu_assert("Decode base64", 
-                strcmp(decode64("YmV0dHk6bm9iYnk="), "betty:nobby") == 0);
+
+        char *clear;
+        clear = decode64("YmV0dHk6bm9iYnk=");
+        mu_assert("Decode base64", strncmp(clear, "betty:nobby",
+                strlen("betty:nobby")) == 0);
+        free(clear);
+
         mu_assert("Fetch next header", h = h->next);
         mu_assert("Test 2nd header key", strcmp(h->key, "User-Agent") == 0);
         mu_assert("Fetch next header", h = h->next);
