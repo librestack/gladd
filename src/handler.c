@@ -36,6 +36,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <libxml/parser.h>
+#include <limits.h>
 #include <netinet/tcp.h>
 #include <signal.h>
 #include <stdio.h>
@@ -180,7 +181,37 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         http_response(sock, 404);
                 }
         }
+        else if (strncmp(request->method, "POST", 3) == 0) {
+                long len;
+                char *clength;
+                FILE *fd;
+                
+                clength = http_get_header("Content-Length");
+                //if ((clength == NULL) || (len = atol(clength))) {
+                if (clength == NULL) {
+                        /* 411 - Length Required */
+                        http_response(sock, 411);
+                }
+                errno = 0;
+                len = strtol(clength, NULL, 10);
+                if ((errno == ERANGE && (len == LONG_MAX || len == LONG_MIN))
+                        || (errno != 0 && len == 0))
+                {
+                        /* Invalid length - return 400 Bad Request */
+                        http_response(sock, 400);
+                        
+                }
+                syslog(LOG_DEBUG, "Content-Length: %li", len);
+                
+                /* FIXME: temp */
+                /* write POST data out to file for testing */
+                fd = fopen("/tmp/mypost", "w");
+                fprintf(fd, "Where are my trousers?\n");
+                fprintf(fd, "%s", buf);
+                fclose(fd);
+        }
         else {
+                /* Method Not Allowed */
                 http_response(sock, 405);
         }
 

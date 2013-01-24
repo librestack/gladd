@@ -54,7 +54,7 @@ char *test_http_read_headers()
         mu_assert("Test 1st header key",
                 (strcmp(h->key, "Authorization") == 0));
         mu_assert("http_get_header()",
-                strcmp(http_get_header(h, "Authorization"),
+                strcmp(http_get_header("Authorization"),
                 "Basic YmV0dHk6bm9iYnk=") == 0);
 
         char *clear;

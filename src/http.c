@@ -92,8 +92,9 @@ char *decode64(char *str)
         return plain;
 }
 
-char *http_get_header(http_header_t *h, char *key)
+char *http_get_header(char *key)
 {
+        http_header_t *h = request->headers;
         while (h != NULL) {
                 if (strcmp(h->key, key) == 0)
                         return h->value;

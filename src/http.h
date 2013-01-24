@@ -55,7 +55,7 @@ void free_request();
 char *decode64(char *str);
 struct http_status get_status(int code);
 void http_response(int sock, int code);
-char *http_get_header(http_header_t *h, char *key);
+char *http_get_header(char *key);
 int http_read_headers(char *buf, ssize_t bytes);
 int http_validate_headers(http_header_t *h);
 
