@@ -32,7 +32,8 @@
 
 void *get_in_addr(struct sockaddr *sa);
 void handle_connection(int sock, struct sockaddr_storage their_addr);
-int send_file(int sock, char *path, http_status_code_t *err);
 void respond (int fd, char *response);
+int send_file(int sock, char *path, http_status_code_t *err);
+http_status_code_t static_response(int sock, url_t *u);
 
 #endif /* __GLADD_HANDLER_H__ */

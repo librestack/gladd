@@ -67,9 +67,7 @@ void *get_in_addr(struct sockaddr *sa)
  */
 void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
-        char *basefile;
         char buf[BUFSIZE];
-        char *filename;
         char s[INET6_ADDRSTRLEN];
         ssize_t byte_count;
         int state;
@@ -127,15 +125,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         if (strncmp(request->res, u->url, strlen(u->url))==0) {
                                 if (strncmp(u->type, "static", 6) == 0) {
                                         /* serve static files */
-                                        basefile = strndup(request->res+8,
-                                                sizeof(request->res));
-                                        asprintf(&filename, "%s%s", u->path,
-                                                                    basefile);
-                                        free(basefile);
-                                        send_file(sock, filename, &err);
-                                        if (err != 0)
+                                        if (static_response(sock, u) != 0)
                                                 http_response(sock, err);
-                                        free(filename);
                                         break;
                                 }
                                 else if (strcmp(u->type, "sqlview") == 0) {
@@ -291,3 +282,18 @@ void respond (int fd, char *response)
         send(fd, response, strlen(response), 0);
 }
 
+/* serve static files */
+http_status_code_t static_response(int sock, url_t *u)
+{
+        char *filename;
+        char *basefile;
+        http_status_code_t err = 0;
+
+        basefile = strndup(request->res+8, sizeof(request->res));
+        asprintf(&filename, "%s%s", u->path, basefile);
+        free(basefile);
+        send_file(sock, filename, &err);
+        free(filename);
+
+        return err;
+}
