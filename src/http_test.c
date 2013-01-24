@@ -31,14 +31,18 @@
 char *test_http_read_headers()
 {
         int hcount = 0;
+        char *clear;
         char *headers;
+        http_status_code_t err;
 
         http_header_t *h;
         http_request_t *r;
 
         asprintf(&headers, "GET /index.html HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
 
-        hcount = http_read_headers(headers, sizeof(headers));
+        hcount = http_read_headers(headers, sizeof(headers), &err);
+
+        mu_assert("Check http_read_headers() error code", err == 0);
 
         r = request;
         h = request->headers;
@@ -57,7 +61,6 @@ char *test_http_read_headers()
                 strcmp(http_get_header("Authorization"),
                 "Basic YmV0dHk6bm9iYnk=") == 0);
 
-        char *clear;
         clear = decode64("YmV0dHk6bm9iYnk=");
         mu_assert("Decode base64", strncmp(clear, "betty:nobby",
                 strlen("betty:nobby")) == 0);
@@ -72,7 +75,7 @@ char *test_http_read_headers()
         mu_assert("Ensure final header->next is NULL", !(h = h->next));
 
         mu_assert("http_validate_headers()",
-                http_validate_headers(request->headers) == 0);
+                http_validate_headers(request->headers, &err) == 0);
         mu_assert("http_validate_headers() - request->authuser != NULL", 
                 request->authuser != NULL);
         mu_assert("http_validate_headers() - request->authuser (check value)",

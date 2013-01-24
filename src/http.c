@@ -122,6 +122,7 @@ int check_content_length(http_status_code_t *err)
         return len;
 }
 
+/* key -> value lookup for client request headers */
 char *http_get_header(char *key)
 {
         http_header_t *h = request->headers;
@@ -134,7 +135,7 @@ char *http_get_header(char *key)
 }
 
 /* check & store http headers from client */
-int http_read_headers(char *buf, ssize_t bytes)
+int http_read_headers(char *buf, ssize_t bytes, http_status_code_t *err)
 {
         int c = 0;
         int hcount = 0;
@@ -147,6 +148,8 @@ int http_read_headers(char *buf, ssize_t bytes)
         char v[16];
         FILE *in;
 
+        *err = 0;
+
         request = malloc(sizeof(http_request_t));
         request->bytes = bytes;
         request->authuser = NULL;
@@ -157,7 +160,8 @@ int http_read_headers(char *buf, ssize_t bytes)
         assert (in != NULL);
 
         if (fscanf(in, "%s %s HTTP/%s", m, r, v) != 3) {
-                return HTTP_BAD_REQUEST;
+                *err = HTTP_BAD_REQUEST;
+                return -1;
         }
         request->httpv = strdup(v);
         request->method = strdup(m);
@@ -221,12 +225,14 @@ struct http_status get_status(int code)
 }
 
 /* process the headers from the client http request */
-int http_validate_headers(http_header_t *h)
+int http_validate_headers(http_header_t *h, http_status_code_t *err)
 {
         char user[64] = "";
         char pass[64] = "";
         char cryptauth[128] = "";
         char *clearauth;
+
+        *err = 0;
 
         while (h != NULL) {
                 if (strcmp(h->key, "Authorization") == 0) {
@@ -243,11 +249,13 @@ int http_validate_headers(http_header_t *h)
                                         fprintf(stderr,
                                                 "Invalid auth details\n");
                                         free(clearauth);
+                                        *err = HTTP_BAD_REQUEST;
                                         return -1;
                                 }
                         }
                         else {
                                 fprintf(stderr,"Invalid Authorization header");
+                                *err = HTTP_BAD_REQUEST;
                                 return -1;
                         }
                 }

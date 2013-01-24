@@ -28,7 +28,6 @@
 #include "config.h"
 #include "db.h"
 #include "handler.h"
-#include "http.h"
 #include "main.h"
 #include "mime.h"
 #include "xml.h"
@@ -75,6 +74,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         ssize_t byte_count;
         int state;
         int auth = -1;
+        http_status_code_t err;
         url_t *u;
         char *r;
         char *sql;
@@ -91,15 +91,15 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         byte_count = recv(sock, buf, sizeof buf, 0);
 
         /* read http client headers */
-        hcount = http_read_headers(buf, byte_count);
-        if (hcount == HTTP_BAD_REQUEST) {
-                syslog(LOG_INFO, "Bad Request");
-                http_response(sock, 400);
+        hcount = http_read_headers(buf, byte_count, &err);
+        if (err != 0) {
+                http_response(sock, err);
                 exit(EXIT_FAILURE);
         }
-        if (http_validate_headers(request->headers) != 0) {
+        http_validate_headers(request->headers, &err);
+        if (err != 0) {
                 syslog(LOG_INFO, "Bad Request - invalid request headers");
-                http_response(sock, 400);
+                http_response(sock, err);
                 exit(EXIT_FAILURE);
         }
 
@@ -132,8 +132,9 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                         asprintf(&filename, "%s%s", u->path,
                                                                     basefile);
                                         free(basefile);
-                                        if (send_file(sock, filename) == 1)
-                                                http_response(sock, 404);
+                                        send_file(sock, filename, &err);
+                                        if (err != 0)
+                                                http_response(sock, err);
                                         free(filename);
                                         break;
                                 }
@@ -178,7 +179,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
                 if (u == NULL) {
                         /* Not found */
-                        http_response(sock, 404);
+                        http_response(sock, HTTP_NOT_FOUND);
                 }
         }
         else if (strncmp(request->method, "POST", 3) == 0) {
@@ -216,7 +217,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         exit (EXIT_SUCCESS);
 }
 
-int send_file(int sock, char *path)
+int send_file(int sock, char *path, http_status_code_t *err)
 {
         char *r;
         char *mimetype;
@@ -226,11 +227,14 @@ int send_file(int sock, char *path)
         int state;
         struct stat stat_buf;
 
+        *err = 0;
+
         f = open(path, O_RDONLY);
         if (f == -1) {
                 syslog(LOG_ERR, "unable to open '%s': %s\n", path,
                                 strerror(errno));
-                return 1;
+                *err = HTTP_NOT_FOUND;
+                return -1;
         }
 
         /* get size of file */
@@ -239,7 +243,8 @@ int send_file(int sock, char *path)
         /* ensure file is a regular file */
         if (! S_ISREG(stat_buf.st_mode)) {
                 syslog(LOG_ERR, "'%s' is not a regular file\n", path);
-                return 1;
+                *err = HTTP_NOT_FOUND;
+                return -1;
         }
 
         syslog(LOG_DEBUG, "Sending %i bytes", (int)stat_buf.st_size);
@@ -249,8 +254,9 @@ int send_file(int sock, char *path)
         get_mime_type(mimetype, path);
         syslog(LOG_DEBUG, "Content-Type: %s", mimetype);
         if (asprintf(&r, RESPONSE_200, mimetype, "") == -1) {
-                syslog(LOG_ERR, "Malloc failed");
-                exit(EXIT_FAILURE);
+                syslog(LOG_ERR, "send_file(): malloc failed");
+                *err = HTTP_INTERNAL_SERVER_ERROR;
+                return -1;
         }
         free(mimetype);
         respond(sock, r);

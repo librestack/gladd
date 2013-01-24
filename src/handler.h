@@ -28,10 +28,11 @@
 #define RESPONSE_200 "HTTP/1.1 200 OK\nServer: gladd\nConnection: close\nContent-Type: %s\n\n%s"
 
 #include <sys/socket.h>
+#include "http.h"
 
 void *get_in_addr(struct sockaddr *sa);
 void handle_connection(int sock, struct sockaddr_storage their_addr);
-int send_file(int sock, char *path);
+int send_file(int sock, char *path, http_status_code_t *err);
 void respond (int fd, char *response);
 
 #endif /* __GLADD_HANDLER_H__ */

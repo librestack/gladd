@@ -28,8 +28,10 @@
 #define MAX_RESOURCE_LEN 256
 
 typedef enum {
-        HTTP_BAD_REQUEST        = 400,
-        HTTP_LENGTH_REQUIRED    = 411
+        HTTP_BAD_REQUEST                = 400,
+        HTTP_NOT_FOUND                  = 404,
+        HTTP_LENGTH_REQUIRED            = 411,
+        HTTP_INTERNAL_SERVER_ERROR      = 500
 } http_status_code_t;
 
 struct http_status {
@@ -62,7 +64,7 @@ char *decode64(char *str);
 struct http_status get_status(int code);
 void http_response(int sock, int code);
 char *http_get_header(char *key);
-int http_read_headers(char *buf, ssize_t bytes);
-int http_validate_headers(http_header_t *h);
+int http_read_headers(char *buf, ssize_t bytes, http_status_code_t *err);
+int http_validate_headers(http_header_t *h, http_status_code_t *err);
 
 #endif /* __GLADD_HTTP_H__ */
