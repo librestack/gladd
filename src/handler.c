@@ -69,15 +69,12 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
         char buf[BUFSIZE];
         char s[INET6_ADDRSTRLEN];
-        ssize_t byte_count;
-        int state;
-        int auth = -1;
         http_status_code_t err;
-        url_t *u;
-        char *r;
-        char *sql;
-        char *xml;
+        int auth = -1;
         int hcount = 0;
+        int state;
+        ssize_t byte_count;
+        url_t *u;
 
         inet_ntop(their_addr.ss_family,
                         get_in_addr((struct sockaddr *)&their_addr),
@@ -125,38 +122,16 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         if (strncmp(request->res, u->url, strlen(u->url))==0) {
                                 if (strncmp(u->type, "static", 6) == 0) {
                                         /* serve static files */
-                                        if (static_response(sock, u) != 0)
+                                        err = response_static(sock, u);
+                                        if (err != 0)
                                                 http_response(sock, err);
                                         break;
                                 }
                                 else if (strcmp(u->type, "sqlview") == 0) {
                                         /* handle sqlview */
-                                        db_t *db;
-                                        if (!(db = getdb(u->db))) {
-                                                syslog(LOG_ERR,
-                                                "db '%s' not in config",
-                                                u->db);
-                                                http_response(sock, 500);
-                                        }
-                                        if (asprintf(&sql, "%s", 
-                                                getsql(u->view)) == -1) 
-                                        {
-                                                http_response(sock, 500);
-                                        }
-                                        if (sqltoxml(db, sql, &xml, 1) != 0) {
-                                                free(sql);
-                                                http_response(sock, 500);
-                                        }
-                                        free(sql);
-                                        if (asprintf(&r, RESPONSE_200,
-                                                MIME_XML, xml) == -1)
-                                        {
-                                                free(xml);
-                                                http_response(sock, 500);
-                                        }
-                                        respond(sock, r);
-                                        free(r);
-                                        free(xml);
+                                        err = response_sqlview(sock, u);
+                                        if (err != 0)
+                                                http_response(sock, err);
                                         break;
                                 }
                                 else {
@@ -208,6 +183,61 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         exit (EXIT_SUCCESS);
 }
 
+void respond (int fd, char *response)
+{
+        send(fd, response, strlen(response), 0);
+}
+
+/* handle sqlview */
+http_status_code_t response_sqlview(int sock, url_t *u)
+{
+        char *r;
+        char *sql;
+        char *xml;
+        db_t *db;
+
+        if (!(db = getdb(u->db))) {
+                syslog(LOG_ERR, "db '%s' not in config", u->db);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        if (asprintf(&sql, "%s", getsql(u->view)) == -1)
+        {
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        if (sqltoxml(db, sql, &xml, 1) != 0) {
+                free(sql);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        free(sql);
+        if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1)
+        {
+                free(xml);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        respond(sock, r);
+        free(r);
+        free(xml);
+
+        return 0;
+}
+
+/* serve static files */
+http_status_code_t response_static(int sock, url_t *u)
+{
+        char *filename;
+        char *basefile;
+        http_status_code_t err = 0;
+
+        basefile = strndup(request->res+8, sizeof(request->res));
+        asprintf(&filename, "%s%s", u->path, basefile);
+        free(basefile);
+        send_file(sock, filename, &err);
+        free(filename);
+
+        return err;
+}
+
+/* send a static file */
 int send_file(int sock, char *path, http_status_code_t *err)
 {
         char *r;
@@ -277,23 +307,3 @@ int send_file(int sock, char *path, http_status_code_t *err)
         return 0;
 }
 
-void respond (int fd, char *response)
-{
-        send(fd, response, strlen(response), 0);
-}
-
-/* serve static files */
-http_status_code_t static_response(int sock, url_t *u)
-{
-        char *filename;
-        char *basefile;
-        http_status_code_t err = 0;
-
-        basefile = strndup(request->res+8, sizeof(request->res));
-        asprintf(&filename, "%s%s", u->path, basefile);
-        free(basefile);
-        send_file(sock, filename, &err);
-        free(filename);
-
-        return err;
-}
