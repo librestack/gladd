@@ -76,24 +76,6 @@ struct http_status httpcode[] = {
 
 http_request_t *request;
 
-char *decode64(char *str)
-{
-        int r;
-        char *plain = NULL;
-
-        plain = malloc(sizeof(str) * 2);
-
-        base64_decodestate *d;
-        d = malloc(sizeof(base64_decodestate));
-        base64_init_decodestate(d);
-
-        r = base64_decode_block(str, strlen(str), plain, d);
-
-        free(d);
-
-        return plain;
-}
-
 /* Check we received a valid Content-Length header
  * returns either the length or -1 on error
  * err is set to the appropriate http status code on error
@@ -120,6 +102,25 @@ int check_content_length(http_status_code_t *err)
         }
 
         return len;
+}
+
+/* return decoded base64 string */
+char *decode64(char *str)
+{
+        int r;
+        char *plain = NULL;
+
+        plain = malloc(sizeof(str) * 2);
+
+        base64_decodestate *d;
+        d = malloc(sizeof(base64_decodestate));
+        base64_init_decodestate(d);
+
+        r = base64_decode_block(str, strlen(str), plain, d);
+
+        free(d);
+
+        return plain;
 }
 
 /* key -> value lookup for client request headers */
@@ -191,6 +192,7 @@ int http_read_headers(char *buf, ssize_t bytes, http_status_code_t *err)
         return hcount;
 }
 
+/* Output http status code response to the socket */
 void http_response(int sock, int code)
 {
         char *response;
@@ -211,6 +213,7 @@ void http_response(int sock, int code)
         free(headers);
 }
 
+/* find http status by numerical code */
 struct http_status get_status(int code)
 {
         int x;
