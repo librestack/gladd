@@ -107,10 +107,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         syslog(LOG_DEBUG, "Resource: %s", request->res);
         syslog(LOG_DEBUG, "HTTP Version: %s", request->httpv);
 
-        /* FIXME: temp */
-        syslog(LOG_DEBUG, "Username: %s", request->authuser);
-        syslog(LOG_DEBUG, "Password: %s", request->authuser);
-
         /* Return HTTP response */
 
         /* put a cork in it */

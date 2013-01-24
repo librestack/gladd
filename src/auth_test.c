@@ -42,6 +42,8 @@ char *test_auth_deny()
 
         mu_assert("ensure POST /static/index.html returns 403 Forbidden", 
                 check_auth("POST", "/static/index.html") == 403);
+        mu_assert("ensure DELETE /sqlview/ returns 403 Forbidden", 
+                check_auth("DELETE", "/sqlview/") == 403);
         return 0;
 }
 
@@ -49,6 +51,10 @@ char *test_auth_allow()
 {
         mu_assert("ensure GET /static/index.html allowed", 
                 check_auth("GET", "/static/index.html") == 0);
+        mu_assert("ensure GET /sqlview/ allowed", 
+                check_auth("GET", "/sqlview/") == 0);
+        mu_assert("ensure POST /sqlview/ allowed", 
+                check_auth("POST", "/sqlview/") == 0);
         return 0;
 }
 
