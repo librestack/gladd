@@ -27,6 +27,11 @@
 #define HTTP_RESPONSE "HTTP/1.1 %1$i %2$s\nServer: gladd\nConnection: close\nContent-Type: %3$s%4$s\n\n<html><body><h1>%1$i %2$s</h1>\n</body>\n</html>\n"
 #define MAX_RESOURCE_LEN 256
 
+typedef enum {
+        HTTP_BAD_REQUEST        = 400,
+        HTTP_LENGTH_REQUIRED    = 411
+} http_status_code_t;
+
 struct http_status {
         int code;
         char *status;
@@ -50,6 +55,7 @@ typedef struct http_request_t {
 
 extern http_request_t *request;
 
+int check_content_length(http_status_code_t *err);
 void free_headers(http_header_t *h);
 void free_request();
 char *decode64(char *str);

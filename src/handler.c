@@ -92,7 +92,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
         /* read http client headers */
         hcount = http_read_headers(buf, byte_count);
-        if (hcount == -1) {
+        if (hcount == HTTP_BAD_REQUEST) {
                 syslog(LOG_INFO, "Bad Request");
                 http_response(sock, 400);
                 exit(EXIT_FAILURE);
@@ -183,32 +183,23 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         }
         else if (strncmp(request->method, "POST", 3) == 0) {
                 long len;
-                char *clength;
+                http_status_code_t err;
                 FILE *fd;
-                
-                clength = http_get_header("Content-Length");
-                //if ((clength == NULL) || (len = atol(clength))) {
-                if (clength == NULL) {
-                        /* 411 - Length Required */
-                        http_response(sock, 411);
+
+                len = check_content_length(&err);
+                if (err != 0) {
+                        http_response(sock, err);
                 }
-                errno = 0;
-                len = strtol(clength, NULL, 10);
-                if ((errno == ERANGE && (len == LONG_MAX || len == LONG_MIN))
-                        || (errno != 0 && len == 0))
-                {
-                        /* Invalid length - return 400 Bad Request */
-                        http_response(sock, 400);
+                else {
+                        syslog(LOG_DEBUG, "Content-Length: %li", len);
                         
+                        /* FIXME: temp */
+                        /* write POST data out to file for testing */
+                        fd = fopen("/tmp/mypost", "w");
+                        fprintf(fd, "Where are my trousers?\n");
+                        fprintf(fd, "%s", buf);
+                        fclose(fd);
                 }
-                syslog(LOG_DEBUG, "Content-Length: %li", len);
-                
-                /* FIXME: temp */
-                /* write POST data out to file for testing */
-                fd = fopen("/tmp/mypost", "w");
-                fprintf(fd, "Where are my trousers?\n");
-                fprintf(fd, "%s", buf);
-                fclose(fd);
         }
         else {
                 /* Method Not Allowed */

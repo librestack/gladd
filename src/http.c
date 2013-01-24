@@ -23,6 +23,8 @@
 #define _GNU_SOURCE
 #include <assert.h>
 #include <b64/cdecode.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -92,6 +94,34 @@ char *decode64(char *str)
         return plain;
 }
 
+/* Check we received a valid Content-Length header
+ * returns either the length or -1 on error
+ * err is set to the appropriate http status code on error
+ */
+int check_content_length(http_status_code_t *err)
+{
+        long len;
+        char *clength;
+
+        clength = http_get_header("Content-Length");
+        if (clength == NULL) {
+                /* 411 - Length Required */
+                *err = HTTP_LENGTH_REQUIRED;
+                return -1;
+        }
+        errno = 0;
+        len = strtol(clength, NULL, 10);
+        if ((errno == ERANGE && (len == LONG_MAX || len == LONG_MIN))
+                || (errno != 0 && len == 0))
+        {
+                /* Invalid length - return 400 Bad Request */
+                *err = HTTP_BAD_REQUEST;
+                return -1;
+        }
+
+        return len;
+}
+
 char *http_get_header(char *key)
 {
         http_header_t *h = request->headers;
@@ -127,8 +157,7 @@ int http_read_headers(char *buf, ssize_t bytes)
         assert (in != NULL);
 
         if (fscanf(in, "%s %s HTTP/%s", m, r, v) != 3) {
-                /* Bad request */
-                return -1;
+                return HTTP_BAD_REQUEST;
         }
         request->httpv = strdup(v);
         request->method = strdup(m);
