@@ -66,6 +66,7 @@ void free_request(http_request_t *r);
 char *decode64(char *str);
 struct http_status get_status(int code);
 http_request_t *http_init_request();
+http_keyval_t *http_set_keyval (char *key, char *value);
 void http_response(int sock, int code);
 char *http_get_header(http_request_t *r, char *key);
 http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,

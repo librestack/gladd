@@ -152,6 +152,19 @@ http_request_t *http_init_request()
         return r;
 }
 
+/* return a http_keyval_t with the key and value set */
+http_keyval_t *http_set_keyval (char *key, char *value)
+{
+        http_keyval_t *h;
+
+        h = malloc(sizeof(http_keyval_t));
+        h->key = strdup(key);
+        h->value = strdup(value);
+        h->next = NULL;
+
+        return h;
+}
+
 /* set http_request_t->method to new value, reallocating memory if needed */
 void http_set_request_method(http_request_t *r, char *method)
 {
@@ -213,10 +226,7 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
                 if (fscanf(in, "\n%[^:]: %[^\n]", key, value) != 2) {
                         break;
                 }
-                h = malloc(sizeof(http_keyval_t));
-                h->key = strdup(key);
-                h->value = strdup(value);
-                h->next = NULL;
+                h = http_set_keyval(key, value);
                 if (hlast != NULL) {
                         hlast->next = h;
                 }
