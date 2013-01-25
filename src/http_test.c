@@ -53,8 +53,8 @@ char *test_http_read_request()
         mu_assert("Check request url = /index.html",
                 strcmp(r->res, "/index.html") == 0);
         fprintf(stderr, "Headers: %i\n", hcount);
-        fprintf(stderr, "%s\n", h->key);
-        fprintf(stderr, "%s\n", h->value);
+        fprintf(stderr, "'%s'\n", h->key);
+        fprintf(stderr, "'%s'\n", h->value);
         mu_assert("Test 1st header key",
                 (strcmp(h->key, "Authorization") == 0));
         mu_assert("http_get_header()",
@@ -84,6 +84,7 @@ char *test_http_read_request()
                 request->authpass != NULL);
         mu_assert("http_validate_headers() - request->authpass (check value)",
                 strcmp(request->authpass, "nobby") == 0);
+
 
         free(headers);
 

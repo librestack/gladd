@@ -138,7 +138,6 @@ char *http_get_header(char *key)
 /* check & store http headers from client */
 int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
 {
-        int c = 0;
         int hcount = 0;
         char key[256];
         char value[256];
@@ -169,13 +168,13 @@ int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
         request->method = strdup(m);
         request->res = strdup(r);
 
+        /* read headers */
         for (;;) {
-                c = fscanf(in, "%s %[^\n]", key, value);
-                if (c <= 0)
+                if (fscanf(in, "\n%[^:]: %[^\n]", key, value) != 2) {
                         break;
+                }
                 h = malloc(sizeof(http_keyval_t));
                 h->key = strdup(key);
-                *(h->key + strlen(h->key) - 1) = '\0';
                 h->value = strdup(value);
                 h->next = NULL;
                 if (hlast != NULL) {
@@ -186,6 +185,11 @@ int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
                 }
                 hlast = h;
                 hcount++;
+        }
+        for (;;) {
+                if (fscanf(in, "%s", value) != 1)
+                        break;
+                fprintf(stderr, "%s\n", value);
         }
 
         fclose(in);
