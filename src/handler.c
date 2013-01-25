@@ -163,7 +163,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         /* FIXME: temp */
                         /* write POST data out to file for testing */
                         fd = fopen("/tmp/mypost", "w");
-                        fprintf(fd, "Where are my trousers?\n");
                         fprintf(fd, "%s", buf);
                         fclose(fd);
                 }
