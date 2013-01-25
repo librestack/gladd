@@ -80,12 +80,12 @@ http_request_t *request;
  * returns either the length or -1 on error
  * err is set to the appropriate http status code on error
  */
-int check_content_length(http_status_code_t *err)
+int check_content_length(http_request_t *r, http_status_code_t *err)
 {
         long len;
         char *clength;
 
-        clength = http_get_header("Content-Length");
+        clength = http_get_header(r, "Content-Length");
         if (clength == NULL) {
                 /* 411 - Length Required */
                 *err = HTTP_LENGTH_REQUIRED;
@@ -124,9 +124,9 @@ char *decode64(char *str)
 }
 
 /* key -> value lookup for client request headers */
-char *http_get_header(char *key)
+char *http_get_header(http_request_t *r, char *key)
 {
-        http_keyval_t *h = request->headers;
+        http_keyval_t *h = r->headers;
         while (h != NULL) {
                 if (strcmp(h->key, key) == 0)
                         return h->value;
@@ -135,38 +135,78 @@ char *http_get_header(char *key)
         return NULL;
 }
 
-/* check & store http headers from client */
-int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
+/* return an initialized http request struct */
+http_request_t *http_init_request()
 {
-        int hcount = 0;
+        http_request_t *r;
+
+        r = malloc(sizeof(http_request_t));
+        r->httpv = NULL;
+        r->method = NULL;
+        r->res = NULL;
+        r->authuser = NULL;
+        r->authpass = NULL;
+        r->headers = NULL;
+        r->data = NULL;
+        
+        return r;
+}
+
+/* set http_request_t->method to new value, reallocating memory if needed */
+void http_set_request_method(http_request_t *r, char *method)
+{
+        int i;
+
+        if (r->method != NULL) {
+                free(r->method);
+        }
+        i = asprintf(&r->method, "%s", method);
+        assert(i != -1);
+                
+}
+
+/* set http_request_t->res to new value, reallocating memory if needed */
+void http_set_request_resource(http_request_t *r, char *res)
+{
+        int i;
+
+        if (r->res != NULL) {
+                free(r->res);
+        }
+        i = asprintf(&r->res, "%s", res);
+        assert(i != -1);
+                
+}
+
+/* check & store http headers from client */
+http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
+        http_status_code_t *err)
+{
+        http_request_t *r;
         char key[256];
         char value[256];
         http_keyval_t *h;
         http_keyval_t *hlast = NULL;
-        char m[16];
-        char r[MAX_RESOURCE_LEN];
-        char v[16];
+        char method[16];
+        char resource[MAX_RESOURCE_LEN];
+        char httpv[16];
         FILE *in;
 
         *err = 0;
 
-        request = malloc(sizeof(http_request_t));
-        request->bytes = bytes;
-        request->authuser = NULL;
-        request->authpass = NULL;
-        request->headers = NULL;
-        request->data = NULL;
+        r = http_init_request();
+        r->bytes = bytes;
 
         in = fmemopen(buf, strlen(buf), "r");
         assert (in != NULL);
 
-        if (fscanf(in, "%s %s HTTP/%s", m, r, v) != 3) {
+        if (fscanf(in, "%s %s HTTP/%s", method, resource, httpv) != 3) {
                 *err = HTTP_BAD_REQUEST;
-                return -1;
+                return NULL;
         }
-        request->httpv = strdup(v);
-        request->method = strdup(m);
-        request->res = strdup(r);
+        r->httpv = strdup(httpv);
+        http_set_request_method(r, method);
+        http_set_request_resource(r, resource);
 
         /* read headers */
         for (;;) {
@@ -181,10 +221,10 @@ int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
                         hlast->next = h;
                 }
                 else {
-                        request->headers = h;
+                        r->headers = h;
                 }
                 hlast = h;
-                hcount++;
+                (*hcount)++;
         }
         for (;;) {
                 if (fscanf(in, "%s", value) != 1)
@@ -194,7 +234,7 @@ int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
 
         fclose(in);
 
-        return hcount;
+        return r;
 }
 
 /* Output http status code response to the socket */
@@ -233,15 +273,17 @@ struct http_status get_status(int code)
 }
 
 /* process the headers from the client http request */
-int http_validate_headers(http_keyval_t *h, http_status_code_t *err)
+int http_validate_headers(http_request_t *r, http_status_code_t *err)
 {
         char user[64] = "";
         char pass[64] = "";
         char cryptauth[128] = "";
         char *clearauth;
+        http_keyval_t *h;
 
         *err = 0;
 
+        h = r->headers;
         while (h != NULL) {
                 if (strcmp(h->key, "Authorization") == 0) {
                         if (sscanf(h->value, "Basic %s", cryptauth) == 1) {
@@ -249,8 +291,8 @@ int http_validate_headers(http_keyval_t *h, http_status_code_t *err)
                                 if (sscanf(clearauth, "%[^:]:%[^:]",
                                         user, pass) == 2)
                                 {
-                                        request->authuser = strdup(user);
-                                        request->authpass = strdup(pass);
+                                        r->authuser = strdup(user);
+                                        r->authpass = strdup(pass);
                                         free(clearauth);
                                 }
                                 else {
@@ -273,15 +315,16 @@ int http_validate_headers(http_keyval_t *h, http_status_code_t *err)
 }
 
 /* free request info */
-void free_request()
+void free_request(http_request_t *r)
 {
-        free_keyval(request->headers);
-        free_keyval(request->data);
-        free(request->httpv);
-        free(request->method);
-        free(request->res);
-        free(request->authuser);
-        free(request->authpass);
+        free_keyval(r->headers);
+        free_keyval(r->data);
+        free(r->httpv);
+        free(r->method);
+        free(r->res);
+        free(r->authuser);
+        free(r->authpass);
+        free(r);
 }
 
 /* free keyvalue struct */

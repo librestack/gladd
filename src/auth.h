@@ -23,7 +23,9 @@
 #ifndef __GLADD_AUTH_H__
 #define __GLADD_AUTH_H__ 1
 
-int check_auth(char *method, char *url);
+#include "http.h"
+
+int check_auth(http_request_t *r);
 int check_auth_require(char *alias, char *authuser, char *authpass);
 
 #endif /* __GLADD_AUTH_H__ */

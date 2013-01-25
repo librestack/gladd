@@ -73,7 +73,6 @@ static char * all_tests()
 #endif /* _NXML */
         mu_run_test(test_string_trimstr);
         free_config();
-        free_request();
         printline("*", 80);
         return 0;
 }

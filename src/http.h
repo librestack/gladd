@@ -27,6 +27,8 @@
 #define HTTP_RESPONSE "HTTP/1.1 %1$i %2$s\nServer: gladd\nConnection: close\nContent-Type: %3$s%4$s\n\n<html><body><h1>%1$i %2$s</h1>\n</body>\n</html>\n"
 #define MAX_RESOURCE_LEN 256
 
+#include <sys/types.h>
+
 typedef enum {
         HTTP_BAD_REQUEST                = 400,
         HTTP_NOT_FOUND                  = 404,
@@ -58,14 +60,18 @@ typedef struct http_request_t {
 
 extern http_request_t *request;
 
-int check_content_length(http_status_code_t *err);
+int check_content_length(http_request_t *r, http_status_code_t *err);
 void free_keyval(http_keyval_t *h);
-void free_request();
+void free_request(http_request_t *r);
 char *decode64(char *str);
 struct http_status get_status(int code);
+http_request_t *http_init_request();
 void http_response(int sock, int code);
-char *http_get_header(char *key);
-int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err);
-int http_validate_headers(http_keyval_t *h, http_status_code_t *err);
+char *http_get_header(http_request_t *r, char *key);
+http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
+        http_status_code_t *err);
+void http_set_request_method(http_request_t *r, char *method);
+void http_set_request_resource(http_request_t *r, char *res);
+int http_validate_headers(http_request_t *r, http_status_code_t *err);
 
 #endif /* __GLADD_HTTP_H__ */

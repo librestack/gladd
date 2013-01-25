@@ -20,41 +20,81 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include "auth.h"
 #include "auth_test.h"
 #include "minunit.h"
+#include <stdlib.h>
 
 /* ensure check_auth() returns 403 by default */
 char *test_auth_default()
 {
+        http_request_t *r;
+
+        r = http_init_request();
+
+        http_set_request_method(r, "POST");
+        http_set_request_resource(r, "/blah/");
         mu_assert("ensure check_auth() returns 403 Forbidden by default", 
-                check_auth("POST", "/blah/") == 403);
+                check_auth(r) == 403);
+
+        free_request(r);
+
         return 0;
 }
 
 char *test_auth_deny()
 {
+        http_request_t *r;
+
+        r = http_init_request();
+
+        http_set_request_method(r, "GET");
+        http_set_request_resource(r, "/static/secret.html");
         mu_assert("ensure GET /static/secret.html returns 401 Unauthorized", 
-                check_auth("GET", "/static/secret.html") == 401);
+                check_auth(r) == 401);
 
+
+        http_set_request_resource(r, "/denyme.html");
         mu_assert("ensure GET /denyme.html returns 403 Forbidden", 
-                check_auth("GET", "/denyme.html") == 403);
+                check_auth(r) == 403);
 
+        http_set_request_method(r, "POST");
+        http_set_request_resource(r, "/static/index.html");
         mu_assert("ensure POST /static/index.html returns 403 Forbidden", 
-                check_auth("POST", "/static/index.html") == 403);
+                check_auth(r) == 403);
+
+        http_set_request_method(r, "DELETE");
+        http_set_request_resource(r, "/sqlview/");
         mu_assert("ensure DELETE /sqlview/ returns 403 Forbidden", 
-                check_auth("DELETE", "/sqlview/") == 403);
+                check_auth(r) == 403);
+
+        free_request(r);
+
         return 0;
 }
 
 char *test_auth_allow()
 {
+        http_request_t *r;
+
+        r = http_init_request();
+
+        http_set_request_method(r, "GET");
+        http_set_request_resource(r, "/static/index.html");
         mu_assert("ensure GET /static/index.html allowed", 
-                check_auth("GET", "/static/index.html") == 0);
+                check_auth(r) == 0);
+
+        http_set_request_resource(r, "/sqlview/");
         mu_assert("ensure GET /sqlview/ allowed", 
-                check_auth("GET", "/sqlview/") == 0);
+                check_auth(r) == 0);
+
+        http_set_request_method(r, "POST");
         mu_assert("ensure POST /sqlview/ allowed", 
-                check_auth("POST", "/sqlview/") == 0);
+                check_auth(r) == 0);
+
+        free_request(r);
+
         return 0;
 }
 

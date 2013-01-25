@@ -23,7 +23,6 @@
 #include "auth.h"
 #include "config.h"
 #include "db.h"
-#include "http.h"
 #include <string.h>
 #include <syslog.h>
 
@@ -32,7 +31,7 @@
  * default is to return 403 Forbidden
  * a return value of 0 is allow.
  */
-int check_auth(char *method, char *url)
+int check_auth(http_request_t *r)
 {
         acl_t *a;
 
@@ -40,18 +39,18 @@ int check_auth(char *method, char *url)
         while (a != NULL) {
                 syslog(LOG_DEBUG, 
                         "Checking acls for %s %s ... trying %s %s", 
-                        method, url, a->method, a->url);
+                        r->method, r->res, a->method, a->url);
                 /* ensure method and url matches */
-                if ((strncmp(url, a->url, strlen(a->url)) == 0) &&
-                    (strncmp(method, a->method, strlen(method)) == 0))
+                if ((strncmp(r->res, a->url, strlen(a->url)) == 0) &&
+                    (strncmp(r->method, a->method, strlen(r->method)) == 0))
                 {
                         if (strncmp(a->auth, "*", strlen(a->auth)) == 0) {
                                 syslog(LOG_DEBUG, "acl matches");
                                 if (strcmp(a->type, "require") == 0) {
                                         /* auth require - needs more checks */
                                         return check_auth_require("ldap",
-                                                request->authuser, 
-                                                request->authpass);
+                                                r->authuser, 
+                                                r->authpass);
                                 }
                                 /* acl matches, return 0 if allow, else 403 */
                                 return 

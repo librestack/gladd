@@ -35,17 +35,17 @@ char *test_http_read_request()
         char *headers;
         http_status_code_t err;
 
-        http_keyval_t *h;
-        http_request_t *r;
+        http_keyval_t *h = NULL;
+        http_request_t *r = NULL;
 
         asprintf(&headers, "GET /index.html HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
 
-        hcount = http_read_request(headers, sizeof(headers), &err);
+        r = http_read_request(headers, sizeof(headers), &hcount, &err);
+        free(headers);
 
         mu_assert("Check http_read_headers() error code", err == 0);
 
-        r = request;
-        h = request->headers;
+        h = r->headers;
 
         mu_assert("Check client header count", hcount == 4);
         mu_assert("Check request method = GET", strcmp(r->method, "GET") == 0);
@@ -58,7 +58,7 @@ char *test_http_read_request()
         mu_assert("Test 1st header key",
                 (strcmp(h->key, "Authorization") == 0));
         mu_assert("http_get_header()",
-                strcmp(http_get_header("Authorization"),
+                strcmp(http_get_header(r, "Authorization"),
                 "Basic YmV0dHk6bm9iYnk=") == 0);
 
         clear = decode64("YmV0dHk6bm9iYnk=");
@@ -75,18 +75,17 @@ char *test_http_read_request()
         mu_assert("Ensure final header->next is NULL", !(h = h->next));
 
         mu_assert("http_validate_headers()",
-                http_validate_headers(request->headers, &err) == 0);
-        mu_assert("http_validate_headers() - request->authuser != NULL", 
-                request->authuser != NULL);
-        mu_assert("http_validate_headers() - request->authuser (check value)",
-                strcmp(request->authuser, "betty") == 0);
-        mu_assert("http_validate_headers() - request->authpass != NULL", 
-                request->authpass != NULL);
-        mu_assert("http_validate_headers() - request->authpass (check value)",
-                strcmp(request->authpass, "nobby") == 0);
+                http_validate_headers(r, &err) == 0);
+        mu_assert("http_validate_headers() - r->authuser != NULL", 
+                r->authuser != NULL);
+        mu_assert("http_validate_headers() - r->authuser (check value)",
+                strcmp(r->authuser, "betty") == 0);
+        mu_assert("http_validate_headers() - r->authpass != NULL", 
+                r->authpass != NULL);
+        mu_assert("http_validate_headers() - r->authpass (check value)",
+                strcmp(r->authpass, "nobby") == 0);
 
-
-        free(headers);
+        free_request(r);
 
         return 0;
 }

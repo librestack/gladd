@@ -86,12 +86,12 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         byte_count = recv(sock, buf, sizeof buf, 0);
 
         /* read http client request */
-        hcount = http_read_request(buf, byte_count, &err);
+        request = http_read_request(buf, byte_count, &hcount, &err);
         if (err != 0) {
                 http_response(sock, err);
                 exit(EXIT_FAILURE);
         }
-        http_validate_headers(request->headers, &err);
+        http_validate_headers(request, &err);
         if (err != 0) {
                 syslog(LOG_INFO, "Bad Request - invalid request headers");
                 http_response(sock, err);
@@ -110,7 +110,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         setsockopt(sockme, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
 
         /* check auth & auth */
-        auth = check_auth(request->method, request->res);
+        auth = check_auth(request);
         if (auth != 0) {
                 http_response(sock, auth);
         }
@@ -153,7 +153,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 http_status_code_t err;
                 FILE *fd;
 
-                len = check_content_length(&err);
+                len = check_content_length(request, &err);
                 if (err != 0) {
                         http_response(sock, err);
                 }
@@ -176,7 +176,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         close(sock);
 
         /* free memory */
-        free_request();
+        free_request(request);
 
         /* child process can exit */
         exit (EXIT_SUCCESS);
