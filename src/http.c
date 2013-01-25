@@ -86,10 +86,10 @@ void bodyline(http_request_t *r, char *line)
 {
         CURL *handle;
         char *clear;
-        char dtok[LINE_MAX];
-        char key[LINE_MAX];
-        char value[LINE_MAX];
-        int l;
+        char dtok[LINE_MAX] = "";
+        char key[LINE_MAX] = "";
+        char value[LINE_MAX] = "";
+        int l = 0;
         FILE *fd;
 
         handle = curl_easy_init();
