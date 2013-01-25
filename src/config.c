@@ -31,10 +31,11 @@
 
 /* set config defaults */
 config_t config_default = {
-        .debug          = 0,
-        .port           = 8080,
+        .authrealm      = "gladd",
         .daemon         = 0,
-        .encoding       = "UTF-8"
+        .debug          = 0,
+        .encoding       = "UTF-8",
+        .port           = 8080
 };
 
 config_t *config;
@@ -55,7 +56,6 @@ int set_config_defaults()
                 return 1;
 
         config = &config_default;
-        config->authrealm = "gladd";
 
         defaults_set = 1;
         return 0;

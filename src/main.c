@@ -104,6 +104,7 @@ int main (int argc, char **argv)
         if ((status = getaddrinfo(NULL, tcpport, &hints, &servinfo)) != 0){
                 fprintf(stderr, "getaddrinfo error: %s\n",
                                 gai_strerror(status));
+                free_config();
                 exit(EXIT_FAILURE);
         }
 
@@ -128,6 +129,7 @@ int main (int argc, char **argv)
                 fprintf(stderr, "ERROR: %s\n", strerror(errsv));
                 syslog(LOG_ERR, "Failed to listen on port %li. Exiting.", 
                                                                 config->port);
+                free_config();
                 exit(EXIT_FAILURE);
         }
 
@@ -139,6 +141,7 @@ int main (int argc, char **argv)
                         errsv = errno;
                         fprintf(stderr, "ERROR: %s\n", strerror(errsv));
                         syslog(LOG_ERR, "Failed to daemonize. Exiting.");
+                        free_config();
                         exit(EXIT_FAILURE);
                 }
         }

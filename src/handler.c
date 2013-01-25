@@ -177,6 +177,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
         /* free memory */
         free_request(request);
+        free_config();
 
         /* child process can exit */
         exit (EXIT_SUCCESS);
