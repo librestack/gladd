@@ -126,7 +126,7 @@ char *decode64(char *str)
 /* key -> value lookup for client request headers */
 char *http_get_header(char *key)
 {
-        http_header_t *h = request->headers;
+        http_keyval_t *h = request->headers;
         while (h != NULL) {
                 if (strcmp(h->key, key) == 0)
                         return h->value;
@@ -142,8 +142,8 @@ int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
         int hcount = 0;
         char key[256];
         char value[256];
-        http_header_t *h;
-        http_header_t *hlast = NULL;
+        http_keyval_t *h;
+        http_keyval_t *hlast = NULL;
         char m[16];
         char r[MAX_RESOURCE_LEN];
         char v[16];
@@ -156,6 +156,7 @@ int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
         request->authuser = NULL;
         request->authpass = NULL;
         request->headers = NULL;
+        request->data = NULL;
 
         in = fmemopen(buf, strlen(buf), "r");
         assert (in != NULL);
@@ -172,7 +173,7 @@ int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
                 c = fscanf(in, "%s %[^\n]", key, value);
                 if (c <= 0)
                         break;
-                h = malloc(sizeof(http_header_t));
+                h = malloc(sizeof(http_keyval_t));
                 h->key = strdup(key);
                 *(h->key + strlen(h->key) - 1) = '\0';
                 h->value = strdup(value);
@@ -228,7 +229,7 @@ struct http_status get_status(int code)
 }
 
 /* process the headers from the client http request */
-int http_validate_headers(http_header_t *h, http_status_code_t *err)
+int http_validate_headers(http_keyval_t *h, http_status_code_t *err)
 {
         char user[64] = "";
         char pass[64] = "";
@@ -270,7 +271,8 @@ int http_validate_headers(http_header_t *h, http_status_code_t *err)
 /* free request info */
 void free_request()
 {
-        free_headers(request->headers);
+        free_keyval(request->headers);
+        free_keyval(request->data);
         free(request->httpv);
         free(request->method);
         free(request->res);
@@ -278,10 +280,10 @@ void free_request()
         free(request->authpass);
 }
 
-/* free request headers */
-void free_headers(http_header_t *h)
+/* free keyvalue struct */
+void free_keyval(http_keyval_t *h)
 {
-        http_header_t *tmp;
+        http_keyval_t *tmp;
 
         while (h != NULL) {
                 free(h->key);

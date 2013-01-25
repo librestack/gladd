@@ -35,7 +35,7 @@ char *test_http_read_request()
         char *headers;
         http_status_code_t err;
 
-        http_header_t *h;
+        http_keyval_t *h;
         http_request_t *r;
 
         asprintf(&headers, "GET /index.html HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");

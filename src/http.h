@@ -39,11 +39,11 @@ struct http_status {
         char *status;
 };
 
-typedef struct http_header_t {
+typedef struct http_keyval_t {
         char *key;
         char *value;
-        struct http_header_t *next;
-} http_header_t;
+        struct http_keyval_t *next;
+} http_keyval_t;
 
 typedef struct http_request_t {
         char *httpv;            /* HTTP version                          */
@@ -52,19 +52,20 @@ typedef struct http_request_t {
         ssize_t bytes;          /* bytes recv()'d                        */
         char *authuser;         /* username supplied for http basic auth */
         char *authpass;         /* password    "      "   "     "    "   */
-        http_header_t *headers; /* client request headers                */
+        http_keyval_t *headers; /* client request headers                */
+        http_keyval_t *data   ; /* client request data                   */
 } http_request_t;
 
 extern http_request_t *request;
 
 int check_content_length(http_status_code_t *err);
-void free_headers(http_header_t *h);
+void free_keyval(http_keyval_t *h);
 void free_request();
 char *decode64(char *str);
 struct http_status get_status(int code);
 void http_response(int sock, int code);
 char *http_get_header(char *key);
 int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err);
-int http_validate_headers(http_header_t *h, http_status_code_t *err);
+int http_validate_headers(http_keyval_t *h, http_status_code_t *err);
 
 #endif /* __GLADD_HTTP_H__ */
