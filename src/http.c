@@ -102,11 +102,10 @@ void bodyline(http_request_t *r, char *line)
                         http_add_request_data(r, key, value);
                         fprintf(stderr, "%s says %s\n", key, value);
                 }
+                free(clear);
         }
 
         fclose(fd);
-
-        free(clear);
 
         curl_easy_cleanup(handle);
         curl_global_cleanup();
