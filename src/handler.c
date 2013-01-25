@@ -85,8 +85,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         /* What are we being asked to do? */
         byte_count = recv(sock, buf, sizeof buf, 0);
 
-        /* read http client headers */
-        hcount = http_read_headers(buf, byte_count, &err);
+        /* read http client request */
+        hcount = http_read_request(buf, byte_count, &err);
         if (err != 0) {
                 http_response(sock, err);
                 exit(EXIT_FAILURE);

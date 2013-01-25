@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *test_http_read_headers()
+char *test_http_read_request()
 {
         int hcount = 0;
         char *clear;
@@ -40,7 +40,7 @@ char *test_http_read_headers()
 
         asprintf(&headers, "GET /index.html HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
 
-        hcount = http_read_headers(headers, sizeof(headers), &err);
+        hcount = http_read_request(headers, sizeof(headers), &err);
 
         mu_assert("Check http_read_headers() error code", err == 0);
 

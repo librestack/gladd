@@ -136,7 +136,7 @@ char *http_get_header(char *key)
 }
 
 /* check & store http headers from client */
-int http_read_headers(char *buf, ssize_t bytes, http_status_code_t *err)
+int http_read_request(char *buf, ssize_t bytes, http_status_code_t *err)
 {
         int c = 0;
         int hcount = 0;
