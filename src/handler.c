@@ -228,7 +228,7 @@ http_status_code_t response_static(int sock, url_t *u)
         char *basefile;
         http_status_code_t err = 0;
 
-        basefile = strndup(request->res+8, sizeof(request->res));
+        basefile = strdup(request->res+8);
         asprintf(&filename, "%s%s", u->path, basefile);
         free(basefile);
         send_file(sock, filename, &err);

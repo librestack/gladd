@@ -60,11 +60,13 @@ typedef struct http_request_t {
 
 extern http_request_t *request;
 
+void bodyline(http_request_t *r, char *line);
 int check_content_length(http_request_t *r, http_status_code_t *err);
 void free_keyval(http_keyval_t *h);
 void free_request(http_request_t *r);
 char *decode64(char *str);
 struct http_status get_status(int code);
+void http_add_request_data(http_request_t *r, char *key, char *value);
 http_request_t *http_init_request();
 http_keyval_t *http_set_keyval (char *key, char *value);
 void http_response(int sock, int code);

@@ -23,6 +23,7 @@
 #define _GNU_SOURCE
 #include <assert.h>
 #include <b64/cdecode.h>
+#include <curl/curl.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -75,6 +76,41 @@ struct http_status httpcode[] = {
 };
 
 http_request_t *request;
+
+/* 
+ * bodyline() - Also known as Fast Leg Theory.
+ * handles each line of the body of the request.
+ * Remember to duck.
+ */
+void bodyline(http_request_t *r, char *line)
+{
+        CURL *handle;
+        char *clear;
+        char dtok[LINE_MAX];
+        char key[LINE_MAX];
+        char value[LINE_MAX];
+        int l;
+        FILE *fd;
+
+        handle = curl_easy_init();
+
+        fd = fmemopen(line, strlen(line), "r");
+
+        while (fscanf(fd, "%[^&]&", dtok) == 1) {
+                clear = curl_easy_unescape(handle, dtok, strlen(line), &l);
+                if (sscanf(clear, "%[^=]=%[^\n]", key, value) == 2) {
+                        http_add_request_data(r, key, value);
+                        fprintf(stderr, "%s says %s\n", key, value);
+                }
+        }
+
+        fclose(fd);
+
+        free(clear);
+
+        curl_easy_cleanup(handle);
+        curl_global_cleanup();
+}
 
 /* Check we received a valid Content-Length header
  * returns either the length or -1 on error
@@ -133,6 +169,21 @@ char *http_get_header(http_request_t *r, char *key)
                 h = h->next;
         }
         return NULL;
+}
+
+/* record key=value pair from client request */
+void http_add_request_data(http_request_t *r, char *key, char *value)
+{
+        http_keyval_t *h;
+        static http_keyval_t *hlast;
+        
+        h = http_set_keyval(key, value);
+
+        if (r->data == NULL)
+                r->data = h;
+        else
+                hlast->next = h;
+        hlast = h;
 }
 
 /* return an initialized http request struct */
@@ -196,13 +247,14 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
         http_status_code_t *err)
 {
         http_request_t *r;
-        char key[256];
-        char value[256];
-        http_keyval_t *h;
+        char line[LINE_MAX] = "";
+        char key[256] = "";
+        char value[256] = "";
+        http_keyval_t *h = NULL;
         http_keyval_t *hlast = NULL;
-        char method[16];
-        char resource[MAX_RESOURCE_LEN];
-        char httpv[16];
+        char method[16] = "";
+        char resource[MAX_RESOURCE_LEN] = "";
+        char httpv[16] = "";
         FILE *in;
 
         *err = 0;
@@ -213,7 +265,12 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
         in = fmemopen(buf, strlen(buf), "r");
         assert (in != NULL);
 
-        if (fscanf(in, "%s %s HTTP/%s", method, resource, httpv) != 3) {
+        /* first line has http request */
+        if (fgets(line, sizeof(line), in) == NULL) {
+                *err = HTTP_BAD_REQUEST;
+                return NULL;
+        }
+        if (sscanf(line, "%s %s HTTP/%s", method, resource, httpv) != 3) {
                 *err = HTTP_BAD_REQUEST;
                 return NULL;
         }
@@ -222,8 +279,8 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
         http_set_request_resource(r, resource);
 
         /* read headers */
-        for (;;) {
-                if (fscanf(in, "\n%[^:]: %[^\n]", key, value) != 2) {
+        while (fgets(line, sizeof(line), in)) {
+                if (sscanf(line, "%[^:]: %[^\n]", key, value) != 2) {
                         break;
                 }
                 h = http_set_keyval(key, value);
@@ -236,10 +293,9 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
                 hlast = h;
                 (*hcount)++;
         }
-        for (;;) {
-                if (fscanf(in, "%s", value) != 1)
-                        break;
-                fprintf(stderr, "%s\n", value);
+        /* read body, after skipping the blank line */
+        while (fgets(line, sizeof(line), in)) {
+                bodyline(r, line);
         }
 
         fclose(in);

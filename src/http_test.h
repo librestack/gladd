@@ -25,6 +25,8 @@
 
 #include "http.h"
 
-char *test_http_read_request();
+char *test_http_read_request_get();
+char *test_http_read_request_post();
+char *test_http_read_request_data();
 
 #endif /* __GLADD_HTTP_TEST__H__ */

@@ -29,7 +29,7 @@ CFLAGS=-g -Wall -Werror
 
 INCLUDES=-I/usr/include/libxml2 -I/usr/include/postgresql
 MYSQLFLAGS=`mysql_config --cflags --libs`
-LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq ${MYSQLFLAGS} -lmysqlclient -lldap -lb64
+LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lpq ${MYSQLFLAGS} -lmysqlclient -lldap -lb64 -lcurl
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
 OBJECTFILES=args.o auth.o db.o config.o handler.o http.o mime.o signals.o string.o xml.o
