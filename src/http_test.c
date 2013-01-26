@@ -35,7 +35,7 @@ char *test_http_read_request_get()
         char *headers;
         http_status_code_t err;
 
-        http_keyval_t *h = NULL;
+        keyval_t *h = NULL;
         http_request_t *r = NULL;
 
         asprintf(&headers, "GET /static/form.html HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
@@ -94,7 +94,7 @@ char *test_http_read_request_post()
         int hcount = 0;
         http_status_code_t err;
 
-        http_keyval_t *h = NULL;
+        keyval_t *h = NULL;
         http_request_t *r = NULL;
 
         char *headers = "POST /sqlview/ HTTP/1.1\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\nContent-Length: 49\nContent-Type: application/x-www-form-urlencoded\n\nname=boris+was+here%2For+there%3F&id=9999999%2622";

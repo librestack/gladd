@@ -193,6 +193,7 @@ http_status_code_t response_sqlview(int sock, url_t *u)
 {
         char *r;
         char *sql;
+        char *where = "";
         char *xml;
         db_t *db;
 
@@ -200,8 +201,20 @@ http_status_code_t response_sqlview(int sock, url_t *u)
                 syslog(LOG_ERR, "db '%s' not in config", u->db);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
-        if (asprintf(&sql, "%s", getsql(u->view)) == -1)
+        
+        /* TODO: check if we have a key */
+        if (strcmp(request->res, u->url) != 0) {
+                /* url wasn't an exact match - grab the key */
+                if (asprintf(&where, " WHERE id='%s'", 
+                        request->res+strlen(u->url)) == -1)
+                {
+                        return HTTP_INTERNAL_SERVER_ERROR;
+                }
+        }
+
+        if (asprintf(&sql, "%s%s", getsql(u->view), where) == -1)
         {
+                free(where);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         if (sqltoxml(db, sql, &xml, 1) != 0) {

@@ -75,6 +75,12 @@ typedef struct db_t {
         struct db_t *next; /* pointer to next db so we can loop through them */
 } db_t;
 
+typedef struct keyval_t {
+        char *key;
+        char *value;
+        struct keyval_t *next;
+} keyval_t;
+
 typedef struct sql_t {
         char *alias;
         char *sql;
@@ -111,6 +117,7 @@ void free_acls();
 void free_auth();
 void free_config();
 void free_dbs();
+void free_keyval(keyval_t *h);
 void free_sql();
 void free_urls();
 

@@ -143,6 +143,20 @@ void free_dbs()
         }
 }
 
+/* free keyvalue struct */
+void free_keyval(keyval_t *h)
+{
+        keyval_t *tmp;
+
+        while (h != NULL) {
+                free(h->key);
+                free(h->value);
+                tmp = h;
+                h = h->next;
+                free(tmp);
+        }
+}
+
 /* free sql structs */
 void free_sql()
 {

@@ -28,6 +28,7 @@
 #define MAX_RESOURCE_LEN 256
 
 #include <sys/types.h>
+#include "config.h"
 
 typedef enum {
         HTTP_BAD_REQUEST                = 400,
@@ -41,12 +42,6 @@ struct http_status {
         char *status;
 };
 
-typedef struct http_keyval_t {
-        char *key;
-        char *value;
-        struct http_keyval_t *next;
-} http_keyval_t;
-
 typedef struct http_request_t {
         char *httpv;            /* HTTP version                          */
         char *method;           /* HTTP request method (GET, POST etc.)  */
@@ -54,21 +49,20 @@ typedef struct http_request_t {
         ssize_t bytes;          /* bytes recv()'d                        */
         char *authuser;         /* username supplied for http basic auth */
         char *authpass;         /* password    "      "   "     "    "   */
-        http_keyval_t *headers; /* client request headers                */
-        http_keyval_t *data   ; /* client request data                   */
+        keyval_t *headers;      /* client request headers                */
+        keyval_t *data;         /* client request data                   */
 } http_request_t;
 
 extern http_request_t *request;
 
 void bodyline(http_request_t *r, char *line);
 int check_content_length(http_request_t *r, http_status_code_t *err);
-void free_keyval(http_keyval_t *h);
 void free_request(http_request_t *r);
 char *decode64(char *str);
 struct http_status get_status(int code);
 void http_add_request_data(http_request_t *r, char *key, char *value);
 http_request_t *http_init_request();
-http_keyval_t *http_set_keyval (char *key, char *value);
+keyval_t *http_set_keyval (char *key, char *value);
 void http_response(int sock, int code);
 char *http_get_header(http_request_t *r, char *key);
 http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,

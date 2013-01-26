@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
-#include "config.h"
 #include "handler.h"
 #include "http.h"
 
@@ -161,7 +160,7 @@ char *decode64(char *str)
 /* key -> value lookup for client request headers */
 char *http_get_header(http_request_t *r, char *key)
 {
-        http_keyval_t *h = r->headers;
+        keyval_t *h = r->headers;
         while (h != NULL) {
                 if (strcmp(h->key, key) == 0)
                         return h->value;
@@ -173,8 +172,8 @@ char *http_get_header(http_request_t *r, char *key)
 /* record key=value pair from client request */
 void http_add_request_data(http_request_t *r, char *key, char *value)
 {
-        http_keyval_t *h;
-        static http_keyval_t *hlast;
+        keyval_t *h;
+        static keyval_t *hlast;
         
         h = http_set_keyval(key, value);
 
@@ -202,12 +201,12 @@ http_request_t *http_init_request()
         return r;
 }
 
-/* return a http_keyval_t with the key and value set */
-http_keyval_t *http_set_keyval (char *key, char *value)
+/* return a keyval_t with the key and value set */
+keyval_t *http_set_keyval (char *key, char *value)
 {
-        http_keyval_t *h;
+        keyval_t *h;
 
-        h = malloc(sizeof(http_keyval_t));
+        h = malloc(sizeof(keyval_t));
         h->key = strdup(key);
         h->value = strdup(value);
         h->next = NULL;
@@ -249,8 +248,8 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
         char line[LINE_MAX] = "";
         char key[256] = "";
         char value[256] = "";
-        http_keyval_t *h = NULL;
-        http_keyval_t *hlast = NULL;
+        keyval_t *h = NULL;
+        keyval_t *hlast = NULL;
         char method[16] = "";
         char resource[MAX_RESOURCE_LEN] = "";
         char httpv[16] = "";
@@ -344,7 +343,7 @@ int http_validate_headers(http_request_t *r, http_status_code_t *err)
         char pass[64] = "";
         char cryptauth[128] = "";
         char *clearauth;
-        http_keyval_t *h;
+        keyval_t *h;
 
         *err = 0;
 
@@ -390,18 +389,4 @@ void free_request(http_request_t *r)
         free(r->authuser);
         free(r->authpass);
         free(r);
-}
-
-/* free keyvalue struct */
-void free_keyval(http_keyval_t *h)
-{
-        http_keyval_t *tmp;
-
-        while (h != NULL) {
-                free(h->key);
-                free(h->value);
-                tmp = h;
-                h = h->next;
-                free(tmp);
-        }
 }
