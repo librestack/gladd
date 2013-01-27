@@ -31,8 +31,6 @@
 #define PROGRAM "gladd"
 #define DEFAULT_CONFIG "/etc/gladd.conf"
 
-extern int sockme;
-
 typedef struct acl_t {
         char *type; /* allow or deny */
         char *method;
@@ -98,6 +96,7 @@ typedef struct url_t {
 
 extern config_t *config;
 extern int g_signal;
+extern int sockme;
 
 int     add_acl (char *value);
 int     add_auth (char *value);
