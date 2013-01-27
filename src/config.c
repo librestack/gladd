@@ -29,6 +29,9 @@
 
 #include "config.h"
 
+void    handle_url_static(char params[LINE_MAX]);
+void    handle_url_sqlview(char params[LINE_MAX]);
+
 /* set config defaults */
 config_t config_default = {
         .authrealm      = "gladd",
@@ -46,237 +49,6 @@ auth_t *prevauth;       /* pointer to last auth */
 db_t   *prevdb;         /* pointer to last db  */
 sql_t  *prevsql;        /* pointer to last sql */
 url_t  *prevurl;        /* pointer to last url */
-
-/* set config defaults if they haven't been set already */
-int set_config_defaults()
-{
-        static int defaults_set = 0;
-
-        if (defaults_set != 0)
-                return 1;
-
-        config = &config_default;
-
-        defaults_set = 1;
-        return 0;
-}
-
-/* set config value if long integer is between min and max */
-int set_config_long(long *confset, char *keyname, long i, long min, long max)
-{
-        if ((i >= min) && (i <= max)) {
-                *confset = i;
-        }
-        else {
-                fprintf(stderr,"ERROR: invalid %s value\n", keyname);
-                return -1;
-        }
-        return 0;
-}
-
-/* clean up config->acls memory */
-void free_acls()
-{
-        acl_t *a;
-        acl_t *tmp;
-
-        a = config->acls;
-        while (a != NULL) {
-                free(a->method);
-                free(a->url);
-                free(a->type);
-                free(a->auth);
-                free(a->params);
-                tmp = a;
-                a = a->next;
-                free(tmp);
-        }
-}
-
-/* free auth structs */
-void free_auth()
-{
-        auth_t *a;
-        auth_t *tmp;
-
-        a = config->auth;
-        while (a != NULL) {
-                free(a->alias);
-                free(a->type);
-                free(a->db);
-                free(a->sql);
-                free(a->bind);
-                tmp = a;
-                a = a->next;
-                free(tmp);
-        }
-}
-
-/* free config memory */
-void free_config()
-{
-        free(config->encoding);
-        free_acls();
-        free_auth();
-        free_dbs();
-        free_sql();
-        free_urls();
-}
-
-/* free database struct */
-void free_dbs()
-{
-        db_t *d;
-        db_t *tmp;
-
-        d = config->dbs;
-        while (d != NULL) {
-                free(d->alias);
-                free(d->type);
-                free(d->host);
-                free(d->db);
-                free(d->user);
-                free(d->pass);
-                tmp = d;
-                d = d->next;
-                free(tmp);
-        }
-}
-
-/* free keyvalue struct */
-void free_keyval(keyval_t *h)
-{
-        keyval_t *tmp;
-
-        while (h != NULL) {
-                free(h->key);
-                free(h->value);
-                tmp = h;
-                h = h->next;
-                free(tmp);
-        }
-}
-
-/* free sql structs */
-void free_sql()
-{
-        sql_t *s;
-        sql_t *tmp;
-
-        s = config->sql;
-        while (s != NULL) {
-                free(s->alias);
-                free(s->sql);
-                tmp = s;
-                s = s->next;
-                free(tmp);
-        }
-}
-
-/* clean up config->urls memory */
-void free_urls()
-{
-        url_t *u;
-        url_t *tmp;
-
-        u = config->urls;
-        while (u != NULL) {
-                free(u->url);
-                free(u->path);
-                free(u->db);
-                free(u->view);
-                tmp = u;
-                u = u->next;
-                free(tmp);
-        }
-}
-
-/* static url handler */
-void handle_url_static(char params[LINE_MAX])
-{
-        url_t *newurl;
-        char url[LINE_MAX];
-        char path[LINE_MAX];
-
-        newurl = malloc(sizeof(struct url_t));
-
-        if (sscanf(params, "%s %s", url, path) == 2) {
-                newurl->type = "static";
-                newurl->url = strdup(url);
-                newurl->path = strdup(path);
-                newurl->db = NULL;
-                newurl->view = NULL;
-                newurl->next = NULL;
-                if (prevurl != NULL) {
-                        /* update ->next ptr in previous url
-                         * to point to new */
-                        prevurl->next = newurl;
-                }
-                else {
-                        /* no previous url, 
-                         * so set first ptr in config */
-                        config_new->urls = newurl;
-                }
-                prevurl = newurl;
-        }
-}
-
-/* handle sqlview type urls */
-void handle_url_sqlview(char params[LINE_MAX])
-{
-        url_t *newurl;
-        char url[LINE_MAX];
-        char db[LINE_MAX];
-        char view[LINE_MAX];
-
-        newurl = malloc(sizeof(struct url_t));
-
-        if (sscanf(params, "%s %s %s", url, db, view) == 3) {
-                newurl->type = "sqlview";
-                newurl->url = strdup(url);
-                newurl->db = strdup(db);
-                newurl->view = strdup(view);
-                newurl->path = NULL;
-                newurl->next = NULL;
-                if (prevurl != NULL) {
-                        /* update ->next ptr in previous url
-                         * to point to new */
-                        prevurl->next = newurl;
-                }
-                else {
-                        /* no previous url, 
-                         * so set first ptr in config */
-                        config_new->urls = newurl;
-                }
-                prevurl = newurl;
-        }
-}
-
-/* add url handler */
-int add_url_handler(char *value)
-{
-        char type[8];
-        char params[LINE_MAX];
-
-        if (sscanf(value, "%s %[^\n]", type, params) == 2) {
-                if (strncmp(type, "static", 6) == 0) {
-                        handle_url_static(params);
-                }
-                else if (strcmp(type, "sqlview") == 0) {
-                        handle_url_sqlview(params);
-                }
-                else {
-                        fprintf(stderr, "skipping unhandled url type '%s'\n", 
-                                                                        type);
-                        return -1;
-                }
-        }
-        else {
-                return -1;
-        }
-
-        return 0;
-}
 
 /* add acl */
 int add_acl (char *value)
@@ -472,6 +244,149 @@ int add_sql(char *value)
         return 0;
 }
 
+/* add url handler */
+int add_url_handler(char *value)
+{
+        char type[8];
+        char params[LINE_MAX];
+
+        if (sscanf(value, "%s %[^\n]", type, params) == 2) {
+                if (strncmp(type, "static", 6) == 0) {
+                        handle_url_static(params);
+                }
+                else if (strcmp(type, "sqlview") == 0) {
+                        handle_url_sqlview(params);
+                }
+                else {
+                        fprintf(stderr, "skipping unhandled url type '%s'\n", 
+                                                                        type);
+                        return -1;
+                }
+        }
+        else {
+                return -1;
+        }
+
+        return 0;
+}
+
+/* clean up config->acls memory */
+void free_acls()
+{
+        acl_t *a;
+        acl_t *tmp;
+
+        a = config->acls;
+        while (a != NULL) {
+                free(a->method);
+                free(a->url);
+                free(a->type);
+                free(a->auth);
+                free(a->params);
+                tmp = a;
+                a = a->next;
+                free(tmp);
+        }
+}
+
+/* free auth structs */
+void free_auth()
+{
+        auth_t *a;
+        auth_t *tmp;
+
+        a = config->auth;
+        while (a != NULL) {
+                free(a->alias);
+                free(a->type);
+                free(a->db);
+                free(a->sql);
+                free(a->bind);
+                tmp = a;
+                a = a->next;
+                free(tmp);
+        }
+}
+
+/* free config memory */
+void free_config()
+{
+        free(config->encoding);
+        free_acls();
+        free_auth();
+        free_dbs();
+        free_sql();
+        free_urls();
+}
+
+/* free database struct */
+void free_dbs()
+{
+        db_t *d;
+        db_t *tmp;
+
+        d = config->dbs;
+        while (d != NULL) {
+                free(d->alias);
+                free(d->type);
+                free(d->host);
+                free(d->db);
+                free(d->user);
+                free(d->pass);
+                tmp = d;
+                d = d->next;
+                free(tmp);
+        }
+}
+
+/* free keyvalue struct */
+void free_keyval(keyval_t *h)
+{
+        keyval_t *tmp;
+
+        while (h != NULL) {
+                free(h->key);
+                free(h->value);
+                tmp = h;
+                h = h->next;
+                free(tmp);
+        }
+}
+
+/* free sql structs */
+void free_sql()
+{
+        sql_t *s;
+        sql_t *tmp;
+
+        s = config->sql;
+        while (s != NULL) {
+                free(s->alias);
+                free(s->sql);
+                tmp = s;
+                s = s->next;
+                free(tmp);
+        }
+}
+
+/* clean up config->urls memory */
+void free_urls()
+{
+        url_t *u;
+        url_t *tmp;
+
+        u = config->urls;
+        while (u != NULL) {
+                free(u->url);
+                free(u->path);
+                free(u->db);
+                free(u->view);
+                tmp = u;
+                u = u->next;
+                free(tmp);
+        }
+}
+
 /* return the auth_t pointer for this alias */
 auth_t *getauth(char *alias)
 {
@@ -515,6 +430,80 @@ char *getsql(char *alias)
         }
 
         return NULL;
+}
+
+/* static url handler */
+void handle_url_static(char params[LINE_MAX])
+{
+        url_t *newurl;
+        char url[LINE_MAX];
+        char path[LINE_MAX];
+
+        newurl = malloc(sizeof(struct url_t));
+
+        if (sscanf(params, "%s %s", url, path) == 2) {
+                newurl->type = "static";
+                newurl->url = strdup(url);
+                newurl->path = strdup(path);
+                newurl->db = NULL;
+                newurl->view = NULL;
+                newurl->next = NULL;
+                if (prevurl != NULL) {
+                        /* update ->next ptr in previous url
+                         * to point to new */
+                        prevurl->next = newurl;
+                }
+                else {
+                        /* no previous url, 
+                         * so set first ptr in config */
+                        config_new->urls = newurl;
+                }
+                prevurl = newurl;
+        }
+}
+
+/* handle sqlview type urls */
+void handle_url_sqlview(char params[LINE_MAX])
+{
+        url_t *newurl;
+        char url[LINE_MAX];
+        char db[LINE_MAX];
+        char view[LINE_MAX];
+
+        newurl = malloc(sizeof(struct url_t));
+
+        if (sscanf(params, "%s %s %s", url, db, view) == 3) {
+                newurl->type = "sqlview";
+                newurl->url = strdup(url);
+                newurl->db = strdup(db);
+                newurl->view = strdup(view);
+                newurl->path = NULL;
+                newurl->next = NULL;
+                if (prevurl != NULL) {
+                        /* update ->next ptr in previous url
+                         * to point to new */
+                        prevurl->next = newurl;
+                }
+                else {
+                        /* no previous url, 
+                         * so set first ptr in config */
+                        config_new->urls = newurl;
+                }
+                prevurl = newurl;
+        }
+}
+
+/* open config file for reading */
+FILE *open_config(char *configfile)
+{
+        FILE *fd;
+
+        fd = fopen(configfile, "r");
+        if (fd == NULL) {
+                int errsv = errno;
+                fprintf(stderr, "ERROR: %s\n", strerror(errsv));
+        }
+        return fd;
 }
 
 /* check config line and handle appropriately */
@@ -573,19 +562,6 @@ int process_config_line(char *line)
         return -1; /* syntax error */
 }
 
-/* open config file for reading */
-FILE *open_config(char *configfile)
-{
-        FILE *fd;
-
-        fd = fopen(configfile, "r");
-        if (fd == NULL) {
-                int errsv = errno;
-                fprintf(stderr, "ERROR: %s\n", strerror(errsv));
-        }
-        return fd;
-}
-
 /* read config file into memory */
 int read_config(char *configfile)
 {
@@ -621,6 +597,33 @@ int read_config(char *configfile)
                 config = config_new;
 
         return retval;
+}
+
+/* set config defaults if they haven't been set already */
+int set_config_defaults()
+{
+        static int defaults_set = 0;
+
+        if (defaults_set != 0)
+                return 1;
+
+        config = &config_default;
+
+        defaults_set = 1;
+        return 0;
+}
+
+/* set config value if long integer is between min and max */
+int set_config_long(long *confset, char *keyname, long i, long min, long max)
+{
+        if ((i >= min) && (i <= max)) {
+                *confset = i;
+        }
+        else {
+                fprintf(stderr,"ERROR: invalid %s value\n", keyname);
+                return -1;
+        }
+        return 0;
 }
 
 int set_encoding(char *value)

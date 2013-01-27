@@ -99,26 +99,27 @@ typedef struct url_t {
 extern config_t *config;
 extern int g_signal;
 
-FILE *open_config(char *configfile);
-int process_config_line(char *line);
-int read_config(char *configfile);
-int set_config_defaults();
-int set_config_long(long *confset, char *keyname, long i, long min, long max);
-int set_encoding(char *value);
-char *toutf8(char *str);
-int add_acl (char *value);
-int add_auth (char *value);
-int add_db (char *value);
-int add_sql (char *value);
+int     add_acl (char *value);
+int     add_auth (char *value);
+int     add_db (char *value);
+int     add_sql (char *value);
+int     add_url_handler(char *value);
+void    free_acls();
+void    free_auth();
+void    free_config();
+void    free_dbs();
+void    free_keyval(keyval_t *h);
+void    free_sql();
+void    free_urls();
 auth_t *getauth(char *alias);
-db_t *getdb(char *alias);
-char *getsql(char *alias);
-void free_acls();
-void free_auth();
-void free_config();
-void free_dbs();
-void free_keyval(keyval_t *h);
-void free_sql();
-void free_urls();
+db_t   *getdb(char *alias);
+char   *getsql(char *alias);
+FILE   *open_config(char *configfile);
+int     process_config_line(char *line);
+int     read_config(char *configfile);
+int     set_config_defaults();
+int     set_config_long(long *confset, char *keyname, long i, long min,
+                long max);
+int     set_encoding(char *value);
 
 #endif /* __GLADD_CONFIG_H__ */
