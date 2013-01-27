@@ -193,7 +193,7 @@ http_status_code_t response_sqlview(int sock, url_t *u)
 {
         char *r;
         char *sql;
-        char *where = "";
+        field_t *filter = NULL;
         char *xml;
         db_t *db;
 
@@ -202,26 +202,27 @@ http_status_code_t response_sqlview(int sock, url_t *u)
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         
-        /* TODO: check if we have a key */
         if (strcmp(request->res, u->url) != 0) {
                 /* url wasn't an exact match - grab the key */
-                if (asprintf(&where, " WHERE id='%s'", 
-                        request->res+strlen(u->url)) == -1)
-                {
+                /* TODO: a bit of validation here please */
+                filter = malloc(sizeof(field_t));
+                if (asprintf(&filter->fname, "id") == -1)
                         return HTTP_INTERNAL_SERVER_ERROR;
-                }
+                filter->fvalue = strdup(request->res+strlen(u->url));
+                if (filter->fvalue == NULL)
+                        return HTTP_INTERNAL_SERVER_ERROR;
         }
 
-        if (asprintf(&sql, "%s%s", getsql(u->view), where) == -1)
+        if (asprintf(&sql, "%s", getsql(u->view)) == -1)
         {
-                free(where);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
-        if (sqltoxml(db, sql, &xml, 1) != 0) {
+        if (sqltoxml(db, sql, filter, &xml, 1) != 0) {
                 free(sql);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(sql);
+        //free_fields(filter);
         if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1)
         {
                 free(xml);

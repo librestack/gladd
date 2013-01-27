@@ -107,7 +107,7 @@ char *test_db(db_t *db)
         }
 
         mu_assert("db_fetch_all() search",
-                db_fetch_all(db, getsql(db->type), &r, &rowc) == 0);
+                db_fetch_all(db, getsql(db->type), NULL, &r, &rowc) == 0);
 
         field_t *f;
 

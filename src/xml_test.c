@@ -48,7 +48,7 @@ char *test_xml_doc()
 
         db = config->dbs->next;
         asprintf(&sql, "SELECT * FROM test;");
-        mu_assert("sqltoxml()", sqltoxml(db, sql, &xmldoc, 0) == 0);
+        mu_assert("sqltoxml()", sqltoxml(db, sql, NULL, &xmldoc, 0) == 0);
         free(sql);
         fprintf(stderr, "%s\n", xmldoc);
         mu_assert("sqltoxml() - check xml", strcmp(xmldoc, xmltst) == 0);

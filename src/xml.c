@@ -46,7 +46,7 @@ int buildxml(char **xml)
         return 0;
 }
 
-int sqltoxml(db_t *db, char *sql, char **xml, int pretty)
+int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 {
         int rowc;
         row_t *rows;
@@ -65,7 +65,7 @@ int sqltoxml(db_t *db, char *sql, char **xml, int pretty)
                 return -1;
         }
 
-        if (db_fetch_all(db, sql, &rows, &rowc) < 0) {
+        if (db_fetch_all(db, sql, filter, &rows, &rowc) < 0) {
                 syslog(LOG_ERR, "Error in db_fetch_all()");
         }
 

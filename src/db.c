@@ -265,7 +265,7 @@ int db_exec_sql_pg(db_t *db, char *sql)
 
 /* return all results from a SELECT
  * wrapper for db-specific functions */
-int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
+int db_fetch_all(db_t *db, char *sql, field_t *filter, row_t **rows, int *rowc)
 {
         if (db == NULL) {
                 syslog(LOG_ERR, 
@@ -273,13 +273,13 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
                 return -1;
         }
         if (strcmp(db->type, "pg") == 0) {
-                return db_fetch_all_pg(db, sql, rows, rowc);
+                return db_fetch_all_pg(db, sql, filter, rows, rowc);
         }
         else if (strcmp(db->type, "my") == 0) {
-                return db_fetch_all_my(db, sql, rows, rowc);
+                return db_fetch_all_my(db, sql, filter, rows, rowc);
         }
         else if (strcmp(db->type, "ldap") == 0) {
-                return db_fetch_all_ldap(db, sql, rows, rowc);
+                return db_fetch_all_ldap(db, sql, filter, rows, rowc);
         }
         else {
                 syslog(LOG_ERR, 
@@ -290,13 +290,14 @@ int db_fetch_all(db_t *db, char *sql, row_t **rows, int *rowc)
         return 0;
 }
 
-int db_fetch_all_ldap(db_t *db, char *query, row_t **rows, int *rowc)
+int db_fetch_all_ldap(db_t *db, char *query, field_t *filter, row_t **rows,
+        int *rowc)
 {
         BerElement *ber;
         LDAPMessage *msg;
         LDAPMessage *res = NULL;
         char *a;
-        char *filter = NULL;
+        char *lfilter = NULL;
         char *search;
         char **vals;
         int i;
@@ -308,7 +309,7 @@ int db_fetch_all_ldap(db_t *db, char *query, row_t **rows, int *rowc)
 
         asprintf(&search, "%s,%s", query, db->db);
         rc = ldap_search_ext_s(db->conn, search, LDAP_SCOPE_SUBTREE,
-                filter, NULL, 0, NULL, NULL, LDAP_NO_LIMIT,
+                lfilter, NULL, 0, NULL, NULL, LDAP_NO_LIMIT,
                 LDAP_NO_LIMIT, &res);
         free(search);
 
@@ -369,7 +370,8 @@ int db_fetch_all_ldap(db_t *db, char *query, row_t **rows, int *rowc)
 }
 
 /* return all results from a SELECT - postgres */
-int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
+int db_fetch_all_my(db_t *db, char *sql, field_t *filter, row_t **rows,
+        int *rowc)
 {
         MYSQL_RES *res;
         MYSQL_ROW row;
@@ -380,8 +382,18 @@ int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
         field_t *ftmp = NULL;
         row_t *r;
         row_t *rtmp = NULL;
+        char *sqltmp;
+        char *join;
 
         *rowc = 0;
+
+        if (filter != NULL) {
+                join = (strcasestr(sql, "WHERE") == NULL) ? "WHERE" : "AND";
+                sqltmp = strdup(sql);
+                asprintf(&sql, "%s %s %s=\"%s\"", sqltmp, join, filter->fname,
+                        filter->fvalue);
+                free(sqltmp);
+        }
 
         if (mysql_query(db->conn, sql) != 0) {
                 syslog(LOG_ERR, "%u: %s\n", mysql_errno(db->conn), 
@@ -428,7 +440,8 @@ int db_fetch_all_my(db_t *db, char *sql, row_t **rows, int *rowc)
 }
 
 /* return all results from a SELECT - postgres */
-int db_fetch_all_pg(db_t *db, char *sql, row_t **rows, int *rowc)
+int db_fetch_all_pg(db_t *db, char *sql, field_t *filter, row_t **rows,
+        int *rowc)
 {
         PGresult *res;
         int i, j;
@@ -437,6 +450,14 @@ int db_fetch_all_pg(db_t *db, char *sql, row_t **rows, int *rowc)
         field_t *ftmp = NULL;
         row_t *r;
         row_t *rtmp = NULL;
+        char *sqltmp;
+
+        if (filter != NULL) {
+                sqltmp = strdup(sql);
+                asprintf(&sql, "%s WHERE %s='%s'", sqltmp, filter->fname,
+                        filter->fvalue);
+                free(sqltmp);
+        }
 
         res = PQexec(db->conn, sql);
         if (PQresultStatus(res) != PGRES_TUPLES_OK) {
