@@ -32,6 +32,7 @@
 #include <syslog.h>
 #include "handler.h"
 #include "http.h"
+#include "string.h"
 
 /* 
  * HTTP response codes from:
@@ -85,6 +86,7 @@ void bodyline(http_request_t *r, char *line)
 {
         CURL *handle;
         char *clear;
+        char *despaced;
         char dtok[LINE_MAX] = "";
         char key[LINE_MAX] = "";
         char value[LINE_MAX] = "";
@@ -96,12 +98,17 @@ void bodyline(http_request_t *r, char *line)
         fd = fmemopen(line, strlen(line), "r");
 
         while (fscanf(fd, "%[^&]&", dtok) == 1) {
-                clear = curl_easy_unescape(handle, dtok, strlen(line), &l);
+                /* curl_easy_unescape() has a bug and doesn't unescape 
+                 * '+' to space.
+                 * see https://github.com/bmuller/mod_auth_openid/issues/10 */
+                despaced = replaceall(dtok, "+", " "); /* fix curl bug */
+                clear = curl_easy_unescape(handle, despaced, strlen(line), &l);
                 if (sscanf(clear, "%[^=]=%[^\n]", key, value) == 2) {
                         http_add_request_data(r, key, value);
                         fprintf(stderr, "%s says %s\n", key, value);
                 }
                 free(clear);
+                free(despaced);
         }
 
         fclose(fd);
