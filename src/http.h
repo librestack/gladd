@@ -59,6 +59,7 @@ extern http_request_t *request;
 
 void bodyline(http_request_t *r, char *line);
 int check_content_length(http_request_t *r, http_status_code_t *err);
+char *check_content_type(http_request_t *r, http_status_code_t *err);
 void free_request(http_request_t *r);
 char *decode64(char *str);
 struct http_status get_status(int code);

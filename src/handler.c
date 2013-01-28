@@ -68,6 +68,7 @@ void *get_in_addr(struct sockaddr *sa)
 void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
         char buf[BUFSIZE];
+        char *mtype;
         char s[INET6_ADDRSTRLEN];
         http_status_code_t err;
         int auth = -1;
@@ -75,6 +76,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         int state;
         ssize_t byte_count;
         url_t *u;
+        long len;
 
         inet_ntop(their_addr.ss_family,
                         get_in_addr((struct sockaddr *)&their_addr),
@@ -124,14 +126,14 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         else {
                 if (strcmp(request->method, "POST") == 0) {
 
-                        /* FIXME: temp */
+                        /* FIXME: temp (begins) */
                         FILE *fd;
                         fd = fopen("/tmp/lastpost", "w");
                         fprintf(fd, "%s", buf);
                         fclose(fd);
+                        /* FIXME: temp (ends) */
 
                         /* POST requires Content-Length header */
-                        long len;
                         http_status_code_t err;
 
                         len = check_content_length(request, &err);
@@ -142,21 +144,13 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         else {
                                 syslog(LOG_DEBUG, "Content-Length: %li", len);
                         }
-                        char *mtype;
-                        mtype = http_get_header(request, "Content-Type");
-                        if (strncmp(mtype,
-                                "application/x-www-form-urlencoded",
-                                strlen("application/x-www-form-urlencoded")
-                                ) != 0)
-                        {
-                                /* POST requires Content-Type header
-                                 * we only accept one kind */
+
+                        mtype = check_content_type(request, &err);
+                        if (err != 0) {
                                 syslog(LOG_DEBUG,
                                         "Unsupported Media Type '%s'", mtype);
-                                http_response(sock,
-                                        HTTP_UNSUPPORTED_MEDIA_TYPE);
+                                http_response(sock, err);
                                 goto close_connection;
-                                
                         }
                 }
                 if (strncmp(u->type, "static", 6) == 0) {

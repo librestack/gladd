@@ -145,6 +145,30 @@ int check_content_length(http_request_t *r, http_status_code_t *err)
         return len;
 }
 
+/* ensure Content-Type header is present and valid
+ * returns content-type string or NULL on error
+ * err is set to the appropriate http status code on error
+ */
+char *check_content_type(http_request_t *r, http_status_code_t *err)
+{
+        char *mtype;
+
+        mtype = http_get_header(request, "Content-Type");
+        if (strncmp(mtype, "application/x-www-form-urlencoded",
+                strlen("application/x-www-form-urlencoded")) != 0)
+        {
+                /* POST requires Content-Type header
+                 * we only accept one kind */
+                syslog(LOG_DEBUG,
+                        "Unsupported Media Type '%s'", mtype);
+                *err = HTTP_UNSUPPORTED_MEDIA_TYPE;
+                return NULL;
+        }
+
+        return mtype;
+
+}
+
 /* return decoded base64 string */
 char *decode64(char *str)
 {
