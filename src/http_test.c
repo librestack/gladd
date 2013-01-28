@@ -126,6 +126,10 @@ char *test_http_read_request_post()
         mu_assert("Test 5th header key", strcmp(h->key,"Content-Type") == 0);
         mu_assert("Ensure final header->next is NULL", !(h = h->next));
 
+        mu_assert("Check Content-Type is valid",
+                strcmp(http_get_header(r, "Content-Type"),
+                "application/x-www-form-urlencoded") == 0);
+
         mu_assert("http_validate_headers()",
                 http_validate_headers(r, &err) == 0);
 
