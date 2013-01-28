@@ -156,18 +156,18 @@ char *test_db(db_t *db)
 
         /* db_insert() */
 
-        field_t *data;
-        field_t *data2;
+        keyval_t *data;
+        keyval_t *data2;
         data = malloc(sizeof(field_t));
         data2 = malloc(sizeof(field_t));
-        asprintf(&data->fname, "name");
-        asprintf(&data->fvalue, "Boris");
-        asprintf(&data2->fname, "id");
-        asprintf(&data2->fvalue, "66");
+        asprintf(&data->key, "name");
+        asprintf(&data->value, "Boris");
+        asprintf(&data2->key, "id");
+        asprintf(&data2->value, "66");
         data->next = data2;
         data2->next = NULL;
         mu_assert("Test db_insert()", db_insert(db, "test", data) == 0);
-        free_fields(data);
+        free_keyval(data);
 
         /* db_update() */
 

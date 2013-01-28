@@ -57,9 +57,9 @@ int db_fetch_all_my(db_t *db, char *sql, field_t *filter, row_t **rows,
         int *rowc);
 int db_fetch_all_pg(db_t *db, char *sql, field_t *filter, row_t **rows,
         int *rowc);
-int db_insert(db_t *db, char *table, field_t *data);
-int db_insert_ldap(db_t *db, char *table, field_t *data);
-int db_insert_sql(db_t *db, char *table, field_t *data);
+int db_insert(db_t *db, char *table, keyval_t *data);
+int db_insert_ldap(db_t *db, char *table, keyval_t *data);
+int db_insert_sql(db_t *db, char *table, keyval_t *data);
 int db_test_bind(db_t *db, char *bindstr, char *bindattr,
         char *user, char *pass);
 void free_fields(field_t *f);

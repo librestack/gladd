@@ -239,8 +239,8 @@ int db_exec_sql(db_t *db, char *sql)
 int db_exec_sql_my(db_t *db, char *sql)
 {
         if (mysql_query(db->conn, sql) != 0) {
-                fprintf(stderr, "%u: %s\n", mysql_errno(db->conn), 
-                                            mysql_error(db->conn));
+                syslog(LOG_DEBUG, "%u: %s\n", mysql_errno(db->conn), 
+                                              mysql_error(db->conn));
                 return -1;
         }
         return 0;
@@ -253,8 +253,8 @@ int db_exec_sql_pg(db_t *db, char *sql)
 
         res = PQexec(db->conn, sql);
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-                fprintf(stderr,
-                        "SQL exec failed: %s", PQerrorMessage(db->conn));
+                syslog(LOG_DEBUG,
+                       "SQL exec failed: %s", PQerrorMessage(db->conn));
                 PQclear(res);
                 return -1;
         }
@@ -502,7 +502,7 @@ int db_fetch_all_pg(db_t *db, char *sql, field_t *filter, row_t **rows,
         return 0;
 }
 
-int db_insert(db_t *db, char *table, field_t *data)
+int db_insert(db_t *db, char *table, keyval_t *data)
 {
         if (db == NULL) {
                 syslog(LOG_ERR, 
@@ -525,13 +525,13 @@ int db_insert(db_t *db, char *table, field_t *data)
 }
 
 /* ldap add */
-int db_insert_ldap(db_t *db, char *table, field_t *data)
+int db_insert_ldap(db_t *db, char *table, keyval_t *data)
 {
         return 0;
 }
 
 /* INSERT into sql database */
-int db_insert_sql(db_t *db, char *table, field_t *data)
+int db_insert_sql(db_t *db, char *table, keyval_t *data)
 {
         char *flds = NULL;
         char *sql;
@@ -540,6 +540,7 @@ int db_insert_sql(db_t *db, char *table, field_t *data)
         char *tmpvals = NULL;
         char quot = '\'';
         int rval;
+        int isconn = 0;
       
         /* use backticks to quote mysql */
         if (strcmp(db->type, "my") == 0)
@@ -547,31 +548,42 @@ int db_insert_sql(db_t *db, char *table, field_t *data)
                 
         /* build INSERT sql from supplied data */
         while (data != NULL) {
-                fprintf(stderr, "%s = %s\n", data->fname, data->fvalue);
+                fprintf(stderr, "%s = %s\n", data->key, data->value);
                 if (flds == NULL) {
-                        asprintf(&flds, "%s", data->fname);
-                        asprintf(&vals, "%1$c%2$s%1$c", quot, data->fvalue);
+                        asprintf(&flds, "%s", data->key);
+                        asprintf(&vals, "%1$c%2$s%1$c", quot, data->value);
                 }
                 else {
                         tmpflds = strdup(flds);
                         tmpvals = strdup(vals);
                         free(flds); free(vals);
-                        asprintf(&flds, "%s,%s", tmpflds, data->fname);
+                        asprintf(&flds, "%s,%s", tmpflds, data->key);
                         asprintf(&vals, "%2$s,%1$c%3$s%1$c",
-                                quot, tmpvals, data->fvalue);
+                                quot, tmpvals, data->value);
                         free(tmpflds); free(tmpvals);
                 }
                 data = data->next;
         }
 
         asprintf(&sql, "INSERT INTO %s (%s) VALUES (%s)", table, flds, vals);
-        free(flds);
-        free(vals);
+        free(flds); free(vals);
+        syslog(LOG_DEBUG, "%s", sql);
 
-        fprintf(stderr, "%s\n", sql);
+        if (db->conn == NULL) {
+                if (db_connect(db) != 0) {
+                        syslog(LOG_ERR, "Failed to connect to db on %s",
+                                db->host);
+                        return -1;
+                }
+                isconn = 1;
+        }
+
         rval = db_exec_sql(db, sql);
-
         free(sql);
+
+        /* leave the connection how we found it */
+        if (isconn == 1)
+                db_disconnect(db);
 
         return rval;
 }
