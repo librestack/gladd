@@ -502,18 +502,20 @@ int db_fetch_all_pg(db_t *db, char *sql, field_t *filter, row_t **rows,
         return 0;
 }
 
-int db_insert(db_t *db, char *table, keyval_t *data)
+/* database agnostic resource insertion */
+int db_insert(db_t *db, char *resource, keyval_t *data)
 {
         if (db == NULL) {
                 syslog(LOG_ERR, 
                         "No database info supplied to db_insert()\n");
                 return -1;
         }
+        /* TODO: field validation */
         if ((strcmp(db->type, "pg") == 0) || (strcmp(db->type, "my") == 0)) {
-                return db_insert_sql(db, table, data);
+                return db_insert_sql(db, resource, data);
         }
         else if (strcmp(db->type, "ldap") == 0) {
-                return db_insert_ldap(db, table, data);
+                return db_insert_ldap(db, resource, data);
         }
         else {
                 syslog(LOG_ERR, 
@@ -525,13 +527,13 @@ int db_insert(db_t *db, char *table, keyval_t *data)
 }
 
 /* ldap add */
-int db_insert_ldap(db_t *db, char *table, keyval_t *data)
+int db_insert_ldap(db_t *db, char *resource, keyval_t *data)
 {
         return 0;
 }
 
 /* INSERT into sql database */
-int db_insert_sql(db_t *db, char *table, keyval_t *data)
+int db_insert_sql(db_t *db, char *resource, keyval_t *data)
 {
         char *flds = NULL;
         char *sql;
@@ -565,7 +567,7 @@ int db_insert_sql(db_t *db, char *table, keyval_t *data)
                 data = data->next;
         }
 
-        asprintf(&sql, "INSERT INTO %s (%s) VALUES (%s)", table, flds, vals);
+        asprintf(&sql,"INSERT INTO %s (%s) VALUES (%s)", resource, flds, vals);
         free(flds); free(vals);
         syslog(LOG_DEBUG, "%s", sql);
 
