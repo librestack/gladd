@@ -301,6 +301,12 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
                 return NULL;
         }
         r->httpv = strdup(httpv);
+
+        if ((strcmp(r->httpv, "1.0") != 0) && (strcmp(r->httpv, "1.1") != 0)) {
+                *err = HTTP_VERSION_NOT_SUPPORTED;
+                return NULL;
+        }
+
         http_set_request_method(r, method);
         http_set_request_resource(r, resource);
 
