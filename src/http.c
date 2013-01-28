@@ -102,7 +102,7 @@ void bodyline(http_request_t *r, char *line)
                  * '+' to space.
                  * see https://github.com/bmuller/mod_auth_openid/issues/10 */
                 despaced = replaceall(dtok, "+", " "); /* fix curl bug */
-                clear = curl_easy_unescape(handle, despaced, strlen(line), &l);
+                clear = curl_easy_unescape(handle, despaced, strlen(dtok), &l);
                 if (sscanf(clear, "%[^=]=%[^\n]", key, value) == 2) {
                         http_add_request_data(r, key, value);
                         fprintf(stderr, "%s says %s\n", key, value);
