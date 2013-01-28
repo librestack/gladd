@@ -502,6 +502,80 @@ int db_fetch_all_pg(db_t *db, char *sql, field_t *filter, row_t **rows,
         return 0;
 }
 
+int db_insert(db_t *db, char *table, field_t *data)
+{
+        if (db == NULL) {
+                syslog(LOG_ERR, 
+                        "No database info supplied to db_insert()\n");
+                return -1;
+        }
+        if ((strcmp(db->type, "pg") == 0) || (strcmp(db->type, "my") == 0)) {
+                return db_insert_sql(db, table, data);
+        }
+        else if (strcmp(db->type, "ldap") == 0) {
+                return db_insert_ldap(db, table, data);
+        }
+        else {
+                syslog(LOG_ERR, 
+                    "Invalid database type '%s' passed to db_insert()\n",
+                    db->type);
+                return -1;
+        }
+        return 0;
+}
+
+/* ldap add */
+int db_insert_ldap(db_t *db, char *table, field_t *data)
+{
+        return 0;
+}
+
+/* INSERT into sql database */
+int db_insert_sql(db_t *db, char *table, field_t *data)
+{
+        char *flds = NULL;
+        char *sql;
+        char *vals = NULL;
+        char *tmpflds = NULL;
+        char *tmpvals = NULL;
+        char quot = '\'';
+        int rval;
+      
+        /* use backticks to quote mysql */
+        if (strcmp(db->type, "my") == 0)
+                quot = '"';
+                
+        /* build INSERT sql from supplied data */
+        while (data != NULL) {
+                fprintf(stderr, "%s = %s\n", data->fname, data->fvalue);
+                if (flds == NULL) {
+                        asprintf(&flds, "%s", data->fname);
+                        asprintf(&vals, "%1$c%2$s%1$c", quot, data->fvalue);
+                }
+                else {
+                        tmpflds = strdup(flds);
+                        tmpvals = strdup(vals);
+                        free(flds); free(vals);
+                        asprintf(&flds, "%s,%s", tmpflds, data->fname);
+                        asprintf(&vals, "%2$s,%1$c%3$s%1$c",
+                                quot, tmpvals, data->fvalue);
+                        free(tmpflds); free(tmpvals);
+                }
+                data = data->next;
+        }
+
+        asprintf(&sql, "INSERT INTO %s (%s) VALUES (%s)", table, flds, vals);
+        free(flds);
+        free(vals);
+
+        fprintf(stderr, "%s\n", sql);
+        rval = db_exec_sql(db, sql);
+
+        free(sql);
+
+        return rval;
+}
+
 int db_test_bind(db_t *db, char *bindstr, char *bindattr,
         char *user, char *pass)
 {

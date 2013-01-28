@@ -196,6 +196,15 @@ http_status_code_t response_sqlview(int sock, url_t *u)
                         return HTTP_INTERNAL_SERVER_ERROR;
         }
 
+        if (strcmp(request->method, "POST") == 0) {
+                if (filter == NULL) {
+                        /* POST to collection => create */
+                }
+                else {
+                        /* POST to element => update */
+                }
+        }
+
         if (asprintf(&sql, "%s", getsql(u->view)) == -1)
         {
                 return HTTP_INTERNAL_SERVER_ERROR;

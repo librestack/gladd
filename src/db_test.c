@@ -20,6 +20,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include "db_test.h"
 #include "minunit.h"
 #include <stdio.h>
@@ -152,6 +153,23 @@ char *test_db(db_t *db)
                         strncmp(f->fvalue, "ivan", 4) == 0);
         }
         mu_assert("Ensure last field->next == NULL", f->next == NULL);
+
+        /* db_insert() */
+
+        field_t *data;
+        field_t *data2;
+        data = malloc(sizeof(field_t));
+        data2 = malloc(sizeof(field_t));
+        asprintf(&data->fname, "name");
+        asprintf(&data->fvalue, "Boris");
+        asprintf(&data2->fname, "id");
+        asprintf(&data2->fvalue, "66");
+        data->next = data2;
+        data2->next = NULL;
+        mu_assert("Test db_insert()", db_insert(db, "test", data) == 0);
+
+        /* db_update() */
+
         mu_assert("db_disconnect()", db_disconnect(db) == 0);
 
         liberate_rows(r);
