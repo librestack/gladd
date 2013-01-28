@@ -181,7 +181,6 @@ char *test_http_postdata_checks()
         u = http_match_url(r);
         mu_assert("http_match_url() - match test url",
                 http_match_url(r) != NULL);
-        free_urls(u);
         free_request(r);
 
         return 0;
