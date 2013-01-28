@@ -216,12 +216,14 @@ http_status_code_t response_sqlview(int sock, url_t *u)
         if (strcmp(request->method, "POST") == 0) {
                 if (filter == NULL) {
                         /* POST to collection => create */
+                        /* TODO: validate field data */
                         if (db_insert(db, u->view, request->data) != 0) {
                                 return HTTP_INTERNAL_SERVER_ERROR;
                         }
                 }
                 else {
                         /* POST to element => update */
+                        /* TODO */
                 }
         }
 
