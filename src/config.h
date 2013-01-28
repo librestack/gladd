@@ -87,6 +87,7 @@ typedef struct sql_t {
 
 typedef struct url_t {
         char *type;
+        char *method;
         char *url;
         char *path;
         char *db;
@@ -109,7 +110,7 @@ void    free_config();
 void    free_dbs();
 void    free_keyval(keyval_t *h);
 void    free_sql();
-void    free_urls();
+void    free_urls(url_t *u);
 auth_t *getauth(char *alias);
 db_t   *getdb(char *alias);
 char   *getsql(char *alias);

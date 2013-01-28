@@ -47,7 +47,7 @@ void sigterm_handler (int signo)
         close(sockme);
         syslog(LOG_INFO, "Received SIGTERM.  Shutting down.");
         closelog();
-        free_urls();
+        free_config();
         exit(EXIT_SUCCESS);
 }
 

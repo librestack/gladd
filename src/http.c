@@ -169,6 +169,27 @@ char *http_get_header(http_request_t *r, char *key)
         return NULL;
 }
 
+/* match requested url to config->urls */
+url_t *http_match_url(http_request_t *r)
+{
+        url_t *u;
+
+        syslog(LOG_DEBUG, "Searching for %s %s\n", r->method, r->res);
+        u = config->urls;
+        while (u != NULL) {
+                syslog(LOG_DEBUG, "%s %s\n", u->method, u->url);
+                if ((strncmp(r->res, u->url, strlen(u->url))==0) &&
+                    (strcmp(r->method, u->method) == 0))
+                {
+                        break;
+                }
+                u = u->next;
+        }
+
+        return u;
+}
+
+
 /* record key=value pair from client request */
 void http_add_request_data(http_request_t *r, char *key, char *value)
 {
@@ -389,4 +410,5 @@ void free_request(http_request_t *r)
         free(r->authuser);
         free(r->authpass);
         free(r);
+        r = NULL;
 }

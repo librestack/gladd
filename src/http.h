@@ -62,6 +62,7 @@ char *decode64(char *str);
 struct http_status get_status(int code);
 void http_add_request_data(http_request_t *r, char *key, char *value);
 http_request_t *http_init_request();
+url_t  *http_match_url(http_request_t *r);
 keyval_t *http_set_keyval (char *key, char *value);
 void http_response(int sock, int code);
 char *http_get_header(http_request_t *r, char *key);

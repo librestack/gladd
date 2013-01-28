@@ -114,63 +114,46 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         if (auth != 0) {
                 http_response(sock, auth);
         }
-        else if (strncmp(request->method, "GET", 3) == 0) {
 
-                u = config->urls;
-                while (u != NULL) {
-                        syslog(LOG_DEBUG, "url matching... Trying %s", u->url);
-                        if (strncmp(request->res, u->url, strlen(u->url))==0) {
-                                if (strncmp(u->type, "static", 6) == 0) {
-                                        /* serve static files */
-                                        err = response_static(sock, u);
-                                        if (err != 0)
-                                                http_response(sock, err);
-                                        break;
-                                }
-                                else if (strcmp(u->type, "sqlview") == 0) {
-                                        /* handle sqlview */
-                                        err = response_sqlview(sock, u);
-                                        if (err != 0)
-                                                http_response(sock, err);
-                                        break;
-                                }
-                                else {
-                                        syslog(LOG_ERR, 
-                                                "Unknown url type '%s'",
-                                                u->type);
-                                }
-                        }
-                        u = u->next;
-                }
-
-                if (u == NULL) {
-                        /* Not found */
-                        http_response(sock, HTTP_NOT_FOUND);
-                }
-        }
-        else if (strncmp(request->method, "POST", 3) == 0) {
-                long len;
-                http_status_code_t err;
-                FILE *fd;
-
-                len = check_content_length(request, &err);
-                if (err != 0) {
-                        http_response(sock, err);
-                }
-                else {
-                        syslog(LOG_DEBUG, "Content-Length: %li", len);
-                        
-                        /* FIXME: temp */
-                        /* write POST data out to file for testing */
-                        fd = fopen("/tmp/mypost", "w");
-                        fprintf(fd, "%s", buf);
-                        fclose(fd);
-                }
+        /* match url */
+        u = http_match_url(request);
+        if (u == NULL) {
+                /* Not found */
+                http_response(sock, HTTP_NOT_FOUND);
         }
         else {
-                /* Method Not Allowed */
-                http_response(sock, 405);
+                if (strcmp(request->method, "POST") == 0) {
+                        /* POST requires Content-Length header */
+                        long len;
+                        http_status_code_t err;
+
+                        len = check_content_length(request, &err);
+                        if (err != 0) {
+                                http_response(sock, err);
+                                goto close_connection;
+                        }
+                        else {
+                                syslog(LOG_DEBUG, "Content-Length: %li", len);
+                        }
+                }
+                if (strncmp(u->type, "static", 6) == 0) {
+                        /* serve static files */
+                        err = response_static(sock, u);
+                        if (err != 0)
+                                http_response(sock, err);
+                }
+                else if (strcmp(u->type, "sqlview") == 0) {
+                        /* handle sqlview */
+                        err = response_sqlview(sock, u);
+                        if (err != 0)
+                                http_response(sock, err);
+                }
+                else {
+                        syslog(LOG_ERR, "Unknown url type '%s'", u->type);
+                }
         }
+
+close_connection:
 
         /* close client connection */
         close(sock);
@@ -222,7 +205,6 @@ http_status_code_t response_sqlview(int sock, url_t *u)
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(sql);
-        //free_fields(filter);
         if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1)
         {
                 free(xml);

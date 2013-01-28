@@ -316,7 +316,7 @@ void free_config()
         free_auth();
         free_dbs();
         free_sql();
-        free_urls();
+        free_urls(config->urls);
 }
 
 /* free database struct */
@@ -370,13 +370,12 @@ void free_sql()
 }
 
 /* clean up config->urls memory */
-void free_urls()
+void free_urls(url_t *u)
 {
-        url_t *u;
         url_t *tmp;
 
-        u = config->urls;
         while (u != NULL) {
+                free(u->method);
                 free(u->url);
                 free(u->path);
                 free(u->db);
@@ -437,12 +436,14 @@ void handle_url_static(char params[LINE_MAX])
 {
         url_t *newurl;
         char url[LINE_MAX];
+        char method[LINE_MAX];
         char path[LINE_MAX];
 
         newurl = malloc(sizeof(struct url_t));
 
-        if (sscanf(params, "%s %s", url, path) == 2) {
+        if (sscanf(params, "%s %s %s", method, url, path) == 3) {
                 newurl->type = "static";
+                newurl->method = strdup(method);
                 newurl->url = strdup(url);
                 newurl->path = strdup(path);
                 newurl->db = NULL;
@@ -466,14 +467,16 @@ void handle_url_static(char params[LINE_MAX])
 void handle_url_sqlview(char params[LINE_MAX])
 {
         url_t *newurl;
+        char method[LINE_MAX];
         char url[LINE_MAX];
         char db[LINE_MAX];
         char view[LINE_MAX];
 
         newurl = malloc(sizeof(struct url_t));
 
-        if (sscanf(params, "%s %s %s", url, db, view) == 3) {
+        if (sscanf(params, "%s %s %s %s", method, url, db, view) == 4) {
                 newurl->type = "sqlview";
+                newurl->method = strdup(method);
                 newurl->url = strdup(url);
                 newurl->db = strdup(db);
                 newurl->view = strdup(view);

@@ -155,3 +155,34 @@ char *test_http_read_request_data()
 
         return 0;
 }
+
+char *test_http_postdata_invalid()
+{
+        http_request_t *r;
+
+        r = http_init_request();
+        asprintf(&r->method, "POST");
+        asprintf(&r->res, "/invalid/");
+        mu_assert("http_match_url() - Ensure unmatched url fails",
+                http_match_url(r) == NULL);
+        free_request(r);
+
+        return 0;
+}
+
+char *test_http_postdata_checks()
+{
+        http_request_t *r;
+        url_t *u;
+
+        r = http_init_request();
+        asprintf(&r->method, "POST");
+        asprintf(&r->res, "/sqlview/");
+        u = http_match_url(r);
+        mu_assert("http_match_url() - match test url",
+                http_match_url(r) != NULL);
+        free_urls(u);
+        free_request(r);
+
+        return 0;
+}

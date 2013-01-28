@@ -122,22 +122,33 @@ char *test_config_read_url()
 
         mu_assert("Ensure urls are read from config", config->urls != NULL);
         mu_assert("Ensure urls are read from config", 
-                        strncmp(config->urls->type, "static", 6) == 0);
+                        strcmp(config->urls->type, "static") == 0);
 
         mu_assert("Reading 1st url from config", u = config->urls);
         mu_assert("Checking 1st url from config", 
-                        strncmp(u->url, "/static/", strlen(u->url)) == 0);
+                        strcmp(u->url, "/static/") == 0);
+        mu_assert("Checking 1st url method from config", 
+                        strcmp(u->method, "GET") == 0);
         mu_assert("Reading 2nd url from config", u = u->next);
         mu_assert("Checking 2nd url from config", 
-                        strncmp(u->url, "/static2/", strlen(u->url)) == 0);
+                        strcmp(u->url, "/static2/") == 0);
+        mu_assert("Checking 2nd url method from config", 
+                        strcmp(u->method, "GET") == 0);
         mu_assert("Reading 3rd url from config", u = u->next);
         mu_assert("Checking 3rd url from config", 
-                        strncmp(u->url, "/static3/", strlen(u->url)) == 0);
+                        strcmp(u->url, "/static3/") == 0);
+        mu_assert("Checking 3rd url method from config", 
+                        strcmp(u->method, "GET") == 0);
         mu_assert("Reading 4th url from config", u = u->next);
         mu_assert("Checking 4th url from config ... url", 
-                        strncmp(u->url, "/sqlview/", strlen(u->url)) == 0);
+                        strcmp(u->url, "/sqlview/") == 0);
+        mu_assert("... method", strcmp(u->method, "GET") == 0);
         mu_assert("... db", strcmp(u->db, "db1") == 0);
         mu_assert("... view", strcmp(u->view, "sql1") == 0);
+        mu_assert("Reading 5th url from config", u = u->next);
+        mu_assert("... method", strcmp(u->method, "POST") == 0);
+        mu_assert("... db", strcmp(u->db, "db1") == 0);
+        mu_assert("... view", strcmp(u->view, "test") == 0);
 
         mu_assert("Ensure final url->next returns NULL", u->next == NULL);
 
