@@ -167,6 +167,7 @@ char *test_db(db_t *db)
         data->next = data2;
         data2->next = NULL;
         mu_assert("Test db_insert()", db_insert(db, "test", data) == 0);
+        free_fields(data);
 
         /* db_update() */
 
