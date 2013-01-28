@@ -123,6 +123,13 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         }
         else {
                 if (strcmp(request->method, "POST") == 0) {
+
+                        /* FIXME: temp */
+                        FILE *fd;
+                        fd = fopen("/tmp/lastpost", "w");
+                        fprintf(fd, "%s", buf);
+                        fclose(fd);
+
                         /* POST requires Content-Length header */
                         long len;
                         http_status_code_t err;
@@ -134,6 +141,22 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         }
                         else {
                                 syslog(LOG_DEBUG, "Content-Length: %li", len);
+                        }
+                        char *mtype;
+                        mtype = http_get_header(request, "Content-Type");
+                        if (strncmp(mtype,
+                                "application/x-www-form-urlencoded",
+                                strlen("application/x-www-form-urlencoded")
+                                ) != 0)
+                        {
+                                /* POST requires Content-Type header
+                                 * we only accept one kind */
+                                syslog(LOG_DEBUG,
+                                        "Unsupported Media Type '%s'", mtype);
+                                http_response(sock,
+                                        HTTP_UNSUPPORTED_MEDIA_TYPE);
+                                goto close_connection;
+                                
                         }
                 }
                 if (strncmp(u->type, "static", 6) == 0) {
