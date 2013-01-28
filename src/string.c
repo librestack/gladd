@@ -20,8 +20,11 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include "string.h"
 #include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* trim leading spaces from string */
@@ -31,6 +34,48 @@ char *lstrip(char *str)
         while (isspace(*str)) str++;
 
         return str;
+}
+
+/* search and replace 
+ * NB: only replaces one instance of string
+ * remember to free() the returned string
+ */
+char *replace(char *str, char *find, char *repl)
+{
+        char *p;
+        char *newstr;
+        char *tmp;
+
+        if (!(p = strstr(str, find)))
+                return strdup(str);
+
+        tmp = strndup(str, p-str);
+        asprintf(&newstr, "%s%s%s", tmp, repl, p+strlen(find));
+        free(tmp);
+
+        return newstr;
+}
+
+/* replace all instances of find in str with repl
+ * remember to free() the returned string
+ */
+char *replaceall(char *str, char *find, char *repl)
+{
+        char *newstr;
+        char *tmp;
+
+        tmp = strdup(str);
+        newstr = replace(tmp, find, repl);
+
+        while (strcmp(newstr, tmp) != 0) {
+                free(tmp);
+                tmp = strdup(newstr);
+                free(newstr);
+                newstr = replace(tmp, find, repl);
+        }
+        free(tmp);
+
+        return newstr;
 }
 
 /* trim trailing spaces from string */

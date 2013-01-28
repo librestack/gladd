@@ -76,6 +76,7 @@ static char * all_tests()
         mu_run_test(test_http_read_request_data);
         mu_run_test(test_http_postdata_invalid);
         mu_run_test(test_http_postdata_checks);
+        mu_run_test(test_string_replace);
         free_config();
         printline("*", 80);
         return 0;

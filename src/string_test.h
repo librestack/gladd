@@ -26,5 +26,6 @@
 #include "string.h"
 
 char *test_string_trimstr();
+char *test_string_replace();
 
 #endif /*__BACS_STRING_TEST_H__ */

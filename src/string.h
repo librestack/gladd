@@ -24,6 +24,8 @@
 #define __BACS_STRING_H__ 1
 
 char *lstrip(char *str);
+char *replace(char *str, char *find, char *repl);
+char *replaceall(char *str, char *find, char *repl);
 char *rstrip(char *str);
 char *strip(char *str);
 char *strstrip(char *s);

@@ -54,3 +54,26 @@ char *test_string_trimstr()
         
         return 0;
 }
+
+char *test_string_replace()
+{
+        char *str;
+
+        str = replace("This is wrong\n", "right", "correct");
+        mu_assert("Test string replacement (search string not in target)",
+                strcmp(str, "This is wrong\n") == 0);
+        free(str);
+
+        str = replace("This is right\n", "right", "correct");
+        mu_assert("Test string replacement",
+                strcmp(str, "This is correct\n") == 0);
+        free(str);
+
+        str = replaceall("oogie! oogie! oogie!", "oogie", "oi");
+        mu_assert("Test multiple string replacement",
+                strcmp(str, "oi! oi! oi!") == 0);
+
+        free(str);
+
+        return 0;
+}
