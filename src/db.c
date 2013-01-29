@@ -529,6 +529,7 @@ int db_insert(db_t *db, char *resource, keyval_t *data)
 /* ldap add */
 int db_insert_ldap(db_t *db, char *resource, keyval_t *data)
 {
+        /* TODO */
         return 0;
 }
 
