@@ -115,6 +115,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         auth = check_auth(request);
         if (auth != 0) {
                 http_response(sock, auth);
+                goto close_connection;
         }
 
         /* match url */
