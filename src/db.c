@@ -606,7 +606,7 @@ int db_test_bind(db_t *db, char *bindstr, char *bindattr,
                 syslog(LOG_DEBUG, "Bind error: %s (%d)",
                         ldap_err2string(rc), rc);
                 db_disconnect_ldap(db);
-                return 401;
+                return HTTP_UNAUTHORIZED;
         }
         db_disconnect_ldap(db);
 
