@@ -54,7 +54,6 @@ char *test_auth_deny()
         mu_assert("ensure GET /static/secret.html returns 401 Unauthorized", 
                 check_auth(r) == 401);
 
-
         http_set_request_resource(r, "/denyme.html");
         mu_assert("ensure GET /denyme.html returns 403 Forbidden", 
                 check_auth(r) == 403);
