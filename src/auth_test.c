@@ -99,12 +99,25 @@ char *test_auth_allow()
 
 char *test_auth_require()
 {
+        http_request_t *r;
+
+        r = http_init_request();
+
         mu_assert("check_auth_require() - fail on invalid alias",
-                check_auth_require("invalid", NULL, NULL) != 0);
+                check_auth_require("invalid", r) != 0);
+
+        asprintf(&r->authuser, "betty");
+        asprintf(&r->authpass, "false");
         mu_assert("check_auth_require() - fail with invalid credentials",
-                check_auth_require("ldap", "betty", "false") != 0);
+                check_auth_require("ldap", r) != 0);
+        free_request(r);
+
+        r = http_init_request();
+        asprintf(&r->authuser, "betty");
+        asprintf(&r->authpass, "ie5a8P40");
         mu_assert("check_auth_require() - successful ldap bind",
-                check_auth_require("ldap", "betty", "ie5a8P40") == 0);
+                check_auth_require("ldap", r) == 0);
+        free_request(r);
 
         return 0;
 }

@@ -245,6 +245,7 @@ http_request_t *http_init_request()
         r->httpv = NULL;
         r->method = NULL;
         r->res = NULL;
+        r->authtype = NULL;
         r->authuser = NULL;
         r->authpass = NULL;
         r->headers = NULL;
@@ -367,10 +368,10 @@ void http_response(int sock, int code)
         char *mime = "text/html";
         char *headers = "";
 
-        if (code == 401) {
+        if (code == HTTP_UNAUTHORIZED) {
                 /* 401 Unauthorized MUST include WWW-Authenticate header */
-                asprintf(&headers, "\nWWW-Authenticate: Basic realm=\"%s\"", 
-                                config->authrealm);
+                asprintf(&headers, "\nWWW-Authenticate: %s realm=\"%s\"", 
+                                request->authtype, config->authrealm);
         }
 
         status = get_status(code).status;
@@ -397,6 +398,7 @@ struct http_status get_status(int code)
 /* process the headers from the client http request */
 int http_validate_headers(http_request_t *r, http_status_code_t *err)
 {
+        char type[64] = "";
         char user[64] = "";
         char pass[64] = "";
         char cryptauth[128] = "";
@@ -408,11 +410,12 @@ int http_validate_headers(http_request_t *r, http_status_code_t *err)
         h = r->headers;
         while (h != NULL) {
                 if (strcmp(h->key, "Authorization") == 0) {
-                        if (sscanf(h->value, "Basic %s", cryptauth) == 1) {
+                        if (sscanf(h->value, "%s %s", type, cryptauth) == 2) {
                                 clearauth = decode64(cryptauth);
                                 if (sscanf(clearauth, "%[^:]:%[^:]",
                                         user, pass) == 2)
                                 {
+                                        r->authtype = strdup(type);
                                         r->authuser = strdup(user);
                                         r->authpass = strdup(pass);
                                         free(clearauth);
@@ -444,6 +447,7 @@ void free_request(http_request_t *r)
         free(r->httpv);
         free(r->method);
         free(r->res);
+        free(r->authtype);
         free(r->authuser);
         free(r->authpass);
         free(r);

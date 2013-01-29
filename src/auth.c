@@ -48,9 +48,7 @@ int check_auth(http_request_t *r)
                                 syslog(LOG_DEBUG, "acl matches");
                                 if (strcmp(a->type, "require") == 0) {
                                         /* auth require - needs more checks */
-                                        return check_auth_require("ldap",
-                                                r->authuser, 
-                                                r->authpass);
+                                        return check_auth_require("ldap", r);
                                 }
                                 /* acl matches, return 0 if allow, else 403 */
                                 return 
@@ -69,7 +67,7 @@ int check_auth(http_request_t *r)
 }
 
 /* verify auth requirements met */
-int check_auth_require(char *alias, char *authuser, char *authpass)
+int check_auth_require(char *alias, http_request_t *r)
 {
         auth_t *a;
 
@@ -81,8 +79,21 @@ int check_auth_require(char *alias, char *authuser, char *authpass)
         }
 
         if (strcmp(a->type, "ldap") == 0) {
-                return db_test_bind(getdb(a->db), getsql(a->sql), a->bind,
-                        authuser, authpass);
+                if ((r->authuser == NULL) || (r->authpass == NULL)) {
+                        if (http_get_header(r, "ComeQuietly") != NULL) {
+                                /* FIXME: temp - replace with different auth
+                                 * type */
+                                return HTTP_FORBIDDEN;
+                        }
+                        else {
+                                return HTTP_UNAUTHORIZED;
+                        }
+                }
+                else {
+                        return db_test_bind(getdb(a->db),
+                                getsql(a->sql), a->bind,
+                                        r->authuser, r->authpass);
+                }
         }
         else {
                 syslog(LOG_ERR,

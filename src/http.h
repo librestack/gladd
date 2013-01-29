@@ -51,6 +51,7 @@ typedef struct http_request_t {
         char *method;           /* HTTP request method (GET, POST etc.)  */
         char *res;              /* resource (url) requested              */
         ssize_t bytes;          /* bytes recv()'d                        */
+        char *authtype;         /* Basic, or Silent                      */
         char *authuser;         /* username supplied for http basic auth */
         char *authpass;         /* password    "      "   "     "    "   */
         keyval_t *headers;      /* client request headers                */
