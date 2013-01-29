@@ -23,6 +23,7 @@
 #define _GNU_SOURCE
 #define LDAP_DEPRECATED 1
 #include "db.h"
+#include "http.h"
 #include <ldap.h>
 #include <libpq-fe.h>
 #include <mysql.h>
