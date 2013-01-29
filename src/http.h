@@ -32,6 +32,8 @@
 
 typedef enum {
         HTTP_BAD_REQUEST                = 400,
+        HTTP_UNAUTHORIZED               = 401,
+        HTTP_FORBIDDEN                  = 403,
         HTTP_NOT_FOUND                  = 404,
         HTTP_LENGTH_REQUIRED            = 411,
         HTTP_UNSUPPORTED_MEDIA_TYPE     = 415,

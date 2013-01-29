@@ -54,7 +54,8 @@ int check_auth(http_request_t *r)
                                 }
                                 /* acl matches, return 0 if allow, else 403 */
                                 return 
-                                    strncmp(a->type, "allow", 5) == 0 ? 0:403;
+                                    strncmp(a->type, "allow", 5) == 0
+                                    ? 0 : HTTP_FORBIDDEN;
                         }
                 }
                 a = a->next;
@@ -64,7 +65,7 @@ int check_auth(http_request_t *r)
         }
 
         syslog(LOG_DEBUG, "no acl matched");
-        return 403; /* default is to deny access */
+        return HTTP_FORBIDDEN; /* default is to deny access */
 }
 
 /* verify auth requirements met */
@@ -76,7 +77,7 @@ int check_auth_require(char *alias, char *authuser, char *authpass)
                 syslog(LOG_ERR, 
                         "Invalid alias '%s' supplied to check_auth_require()",
                         alias);
-                return 500;
+                return HTTP_INTERNAL_SERVER_ERROR;
         }
 
         if (strcmp(a->type, "ldap") == 0) {
@@ -87,7 +88,7 @@ int check_auth_require(char *alias, char *authuser, char *authpass)
                 syslog(LOG_ERR,
                         "Invalid auth type '%s' in check_auth_require()",
                         a->type);
-                return 500;
+                return HTTP_INTERNAL_SERVER_ERROR;
         }
 
         return 0;
