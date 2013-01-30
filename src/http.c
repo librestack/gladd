@@ -250,6 +250,8 @@ http_request_t *http_init_request()
         r->authpass = NULL;
         r->headers = NULL;
         r->data = NULL;
+
+        asprintf(&r->authtype,"Basic");
         
         return r;
 }
@@ -415,6 +417,7 @@ int http_validate_headers(http_request_t *r, http_status_code_t *err)
                                 if (sscanf(clearauth, "%[^:]:%[^:]",
                                         user, pass) == 2)
                                 {
+                                        free(r->authtype);
                                         r->authtype = strdup(type);
                                         r->authuser = strdup(user);
                                         r->authpass = strdup(pass);
