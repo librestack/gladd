@@ -38,7 +38,7 @@ char *test_http_read_request_get()
         keyval_t *h = NULL;
         http_request_t *r = NULL;
 
-        asprintf(&headers, "GET /static/form.html HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
+        asprintf(&headers, "GET /static/form.html?somequerystring=value HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
 
         r = http_read_request(headers, sizeof(headers), &hcount, &err);
         free(headers);
@@ -52,6 +52,8 @@ char *test_http_read_request_get()
         mu_assert("Check HTTP version = 1.1", strcmp(r->httpv, "1.1") == 0);
         mu_assert("Check request url = /static/form.html",
                 strcmp(r->res, "/static/form.html") == 0);
+        mu_assert("Check request querystring",
+                strcmp(r->querystr, "somequerystring=value") == 0);
         fprintf(stderr, "Headers: %i\n", hcount);
         fprintf(stderr, "'%s'\n", h->key);
         fprintf(stderr, "'%s'\n", h->value);

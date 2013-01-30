@@ -245,6 +245,7 @@ http_request_t *http_init_request()
         r->httpv = NULL;
         r->method = NULL;
         r->res = NULL;
+        r->querystr = NULL;
         r->authtype = NULL;
         r->authuser = NULL;
         r->authpass = NULL;
@@ -286,11 +287,21 @@ void http_set_request_method(http_request_t *r, char *method)
 void http_set_request_resource(http_request_t *r, char *res)
 {
         int i;
+        char url[LINE_MAX];
+        char qstr[LINE_MAX];
 
         if (r->res != NULL) {
                 free(r->res);
         }
-        i = asprintf(&r->res, "%s", res);
+        if (sscanf(res, "%[^?]?%[^\n]", url, qstr) == 2) {
+                /* we have a querystring - store it */
+                i = asprintf(&r->res, "%s", url);
+                assert(i != -1);
+                i = asprintf(&r->querystr, "%s", qstr);
+        }
+        else {
+                i = asprintf(&r->res, "%s", res);
+        }
         assert(i != -1);
                 
 }
@@ -450,6 +461,7 @@ void free_request(http_request_t *r)
         free(r->httpv);
         free(r->method);
         free(r->res);
+        free(r->querystr);
         free(r->authtype);
         free(r->authuser);
         free(r->authpass);
