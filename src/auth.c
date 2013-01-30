@@ -80,16 +80,11 @@ int check_auth_require(char *alias, http_request_t *r)
 
         if (strcmp(a->type, "ldap") == 0) {
                 if ((r->authuser == NULL) || (r->authpass == NULL)) {
-                        if (http_get_header(r, "ComeQuietly") != NULL) {
-                                /* FIXME: temp - replace with different auth
-                                 * type */
-                                return HTTP_FORBIDDEN;
-                        }
-                        else {
-                                return HTTP_UNAUTHORIZED;
-                        }
+                        /* don't allow auth with blank credentials */
+                        return HTTP_UNAUTHORIZED;
                 }
                 else {
+                        /* test credentials against ldap */
                         return db_test_bind(getdb(a->db),
                                 getsql(a->sql), a->bind,
                                         r->authuser, r->authpass);

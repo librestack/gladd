@@ -592,6 +592,7 @@ int db_insert_sql(db_t *db, char *resource, keyval_t *data)
         return rval;
 }
 
+/* test credentials against ldap */
 int db_test_bind(db_t *db, char *bindstr, char *bindattr,
         char *user, char *pass)
 {
