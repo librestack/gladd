@@ -323,6 +323,7 @@ char *test_config_multiline()
         char *sql;
 
         mu_assert("Fetch multi-line sql", sql = getsql("createaccount"));
+        fprintf(stderr, "%s\n", sql);
         mu_assert("Check multi-line sql is read correctly from config",
                 strcmp(getsql("createaccount"),
                 "INSERT INTO account (id, name) VALUES (0, 'Boris')") == 0);

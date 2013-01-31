@@ -516,7 +516,6 @@ int process_config_line(char *line)
         char key[LINE_MAX] = "";
         char value[LINE_MAX] = "";
         static char *multi = NULL;
-        int len;
         char *tmp = NULL;
 
         if (line[0] == '#')
@@ -534,9 +533,11 @@ int process_config_line(char *line)
                 }
                 else {
                         /* another bit; tack it on */
-                        len = strlen(multi);
-                        multi = realloc(multi, len + strlen(line) + 1);
-                        memcpy(multi + len, line, strlen(line) + 1);
+                        tmp = strdup(multi);
+                        free(multi);
+                        asprintf(&multi, "%s%s", tmp, line);
+                        free(tmp);
+                        *(multi + strlen(multi) - 1) = '\0';
                         return 0;
                 }
         }
