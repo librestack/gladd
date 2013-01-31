@@ -515,11 +515,32 @@ int process_config_line(char *line)
         long i = 0;
         char key[LINE_MAX] = "";
         char value[LINE_MAX] = "";
+        static char *multi = NULL;
+        int len;
+        char *tmp = NULL;
 
         if (line[0] == '#')
                 return 1; /* skipping comment */
         
-        if (sscanf(line, "%[a-zA-Z0-9]", value) == 0) {
+        if (multi != NULL) {
+                /* we're processing a multi-line config here */
+                if (strncmp(line, "end", 3) == 0) {
+                        tmp = strdup(multi);
+                        free(multi);
+                        multi = NULL;
+                        i = process_config_line(tmp);
+                        free(tmp);
+                        return i;
+                }
+                else {
+                        /* another bit; tack it on */
+                        len = strlen(multi);
+                        multi = realloc(multi, len + strlen(line) + 1);
+                        memcpy(multi + len, line, strlen(line) + 1);
+                        return 0;
+                }
+        }
+        else if (sscanf(line, "%[a-zA-Z0-9]", value) == 0) {
                 return 1; /* skipping blank line */
         }
         else if (sscanf(line, "%s %li", key, &i) == 2) {
@@ -549,6 +570,12 @@ int process_config_line(char *line)
                 }
                 else if (strcmp(key, "auth") == 0) {
                         return add_auth(value);
+                }
+                else if (strcmp(key, "begin") == 0) {
+                        /* multi-line config - cat the bits together and
+                         * call this function again */
+                        asprintf(&multi, "%s ", value);
+                        return 0;
                 }
                 else if (strcmp(key, "db") == 0) {
                         return add_db(value);

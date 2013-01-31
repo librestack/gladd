@@ -177,6 +177,7 @@ char *test_config_read_sql()
         mu_assert("Reading 4th sql from config", s = s->next);
         mu_assert("Reading 5th sql from config", s = s->next);
         mu_assert("Reading 6th sql from config", s = s->next);
+        mu_assert("Reading 7th sql from config", s = s->next);
         
         mu_assert("Ensure final sql->next returns NULL", s->next == NULL);
 
@@ -313,6 +314,18 @@ char *test_config_db()
         /* fetch db by alias */
         mu_assert("getdb() - fetch db by alias",
                 strcmp(getdb("db_test")->db, "gladd_test") == 0);
+
+        return 0;
+}
+
+char *test_config_multiline()
+{
+        char *sql;
+
+        mu_assert("Fetch multi-line sql", sql = getsql("createaccount"));
+        mu_assert("Check multi-line sql is read correctly from config",
+                strcmp(getsql("createaccount"),
+                "INSERT INTO account (id, name) VALUES (0, 'Boris')") == 0);
 
         return 0;
 }
