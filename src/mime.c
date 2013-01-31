@@ -37,6 +37,12 @@ void get_mime_type(char *mimetype, char *filename)
                 if (strncmp(fileext, "html", 4) == 0) {
                         strcpy(mimetype, "text/html");
                 }
+                else if (strncmp(fileext, "gif", 3) == 0) {
+                        strcpy(mimetype, "image/gif");
+                }
+                else if (strncmp(fileext, "xml", 3) == 0) {
+                        strcpy(mimetype, "application/xml");
+                }
                 else if (strncmp(fileext, "xsl", 3) == 0) {
                         strcpy(mimetype, "application/xml");
                 }
