@@ -154,18 +154,17 @@ char *check_content_type(http_request_t *r, http_status_code_t *err)
         char *mtype;
 
         mtype = http_get_header(request, "Content-Type");
-        if (strcmp(mtype, "application/x-www-form-urlencoded") != 0)
+        if ((strcmp(mtype, "application/x-www-form-urlencoded") == 0)
+        || (strcmp(mtype, "text/xml") == 0))
         {
-                /* POST requires Content-Type header
-                 * we only accept one kind */
+                return mtype;
+        }
+        else {
                 syslog(LOG_DEBUG,
                         "Unsupported Media Type '%s'", mtype);
                 *err = HTTP_UNSUPPORTED_MEDIA_TYPE;
                 return NULL;
         }
-
-        return mtype;
-
 }
 
 /* return decoded base64 string */

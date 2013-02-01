@@ -30,7 +30,7 @@
 #include "config.h"
 
 void    handle_url_static(char params[LINE_MAX]);
-void    handle_url_sqlview(char params[LINE_MAX]);
+void    handle_url_dynamic(char *type, char params[LINE_MAX]);
 
 /* set config defaults */
 config_t config_default = {
@@ -255,7 +255,10 @@ int add_url_handler(char *value)
                         handle_url_static(params);
                 }
                 else if (strcmp(type, "sqlview") == 0) {
-                        handle_url_sqlview(params);
+                        handle_url_dynamic("sqlview", params);
+                }
+                else if (strcmp(type, "xmlpost") == 0) {
+                        handle_url_dynamic("xmlpost", params);
                 }
                 else {
                         fprintf(stderr, "skipping unhandled url type '%s'\n", 
@@ -464,7 +467,7 @@ void handle_url_static(char params[LINE_MAX])
 }
 
 /* handle sqlview type urls */
-void handle_url_sqlview(char params[LINE_MAX])
+void handle_url_dynamic(char *type, char params[LINE_MAX])
 {
         url_t *newurl;
         char method[LINE_MAX];
@@ -475,7 +478,7 @@ void handle_url_sqlview(char params[LINE_MAX])
         newurl = malloc(sizeof(struct url_t));
 
         if (sscanf(params, "%s %s %s %s", method, url, db, view) == 4) {
-                newurl->type = "sqlview";
+                newurl->type = strdup(type);
                 newurl->method = strdup(method);
                 newurl->url = strdup(url);
                 newurl->db = strdup(db);
