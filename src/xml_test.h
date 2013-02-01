@@ -24,5 +24,6 @@
 #define __GLADD_XML_TEST_H__ 1
 
 char *test_xml_doc();
+char *test_xml_to_sql();
 
 #endif /*__GLADD_XML_TEST_H__ */

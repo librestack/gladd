@@ -22,6 +22,7 @@
 
 #define _GNU_SOURCE
 #include <libxml/parser.h>
+#include <libxml/xmlschemas.h>
 #include <string.h>
 #include <syslog.h>
 #include "config.h"
@@ -137,3 +138,63 @@ char *toutf8(char *str)
         return str;
 }
 
+/* 
+ * Based on an example by Volker Grabsch at:
+ * http://wiki.njh.eu/XML-Schema_validation_with_libxml2
+ * site is licenced under GNU Free Documentation License 1.2.
+ */
+int xml_validate(const char *schema_filename, const char *xml)
+{
+        xmlDocPtr docschema;
+        xmlDocPtr docxml;
+        xmlSchemaParserCtxtPtr parser_ctxt;
+        xmlSchemaPtr schema;
+        int is_valid;
+
+        /* parse xml from memory */
+        docxml = xmlReadMemory(xml, strlen(xml), "noname.xml", NULL, 0);
+        if (docxml == NULL) {
+                return -1;
+        }
+
+        docschema = xmlReadFile(schema_filename, NULL, XML_PARSE_NONET);
+        if (docschema == NULL) {
+                /* the schema cannot be loaded or is not well-formed */
+                return -2;
+        }
+
+        parser_ctxt = xmlSchemaNewDocParserCtxt(docschema);
+        if (parser_ctxt == NULL) {
+                /* unable to create a parser context for the schema */
+                xmlFreeDoc(docschema);
+                return -3;
+        }
+
+        schema = xmlSchemaParse(parser_ctxt);
+        if (schema == NULL) {
+                /* the schema itself is not valid */
+                xmlSchemaFreeParserCtxt(parser_ctxt);
+                xmlFreeDoc(docschema);
+                return -4;
+        }
+
+        xmlSchemaValidCtxtPtr valid_ctxt = xmlSchemaNewValidCtxt(schema);
+        if (valid_ctxt == NULL) {
+                /* unable to create a validation context for the schema */
+                xmlSchemaFree(schema);
+                xmlSchemaFreeParserCtxt(parser_ctxt);
+                xmlFreeDoc(docschema);
+                return -5;
+        }
+        is_valid = (xmlSchemaValidateDoc(valid_ctxt, docxml) == 0);
+
+        /* clean up */
+        xmlSchemaFreeValidCtxt(valid_ctxt);
+        xmlSchemaFree(schema);
+        xmlSchemaFreeParserCtxt(parser_ctxt);
+        xmlFreeDoc(docschema);
+        xmlFreeDoc(docxml);
+
+        /* force the return value to be non-negative on success */
+        return is_valid ? 0 : 1;
+}

@@ -27,8 +27,8 @@
 #include "db.h"
 #include "minunit.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 char *test_xml_doc()
 {
@@ -54,6 +54,21 @@ char *test_xml_doc()
         mu_assert("sqltoxml() - check xml", strcmp(xmldoc, xmltst) == 0);
         free(xmldoc);
 #endif /* _NPG */
+
+        return 0;
+}
+
+char *test_xml_to_sql()
+{
+        char *schema = "/home/bacs/dev/gladbooksd/static/xml/journal.xsd";
+        char *badxml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><journal description=\"My First Journal Entry\"><debit account=\"1100\">100.00</debit><credit account=\"4000\">100.00</credit></journal>";
+        char *goodxml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><journal description=\"My First Journal Entry\"><debit account=\"1100\" amount=\"100.00\"/><credit account=\"4000\" amount=\"100.00\"/></journal>";
+        
+        mu_assert("Validate some broken xml",
+                xml_validate(schema, badxml) == 1);
+
+        mu_assert("Validate some good xml",
+                xml_validate(schema, goodxml) == 0);
 
         return 0;
 }
