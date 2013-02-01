@@ -154,8 +154,7 @@ char *check_content_type(http_request_t *r, http_status_code_t *err)
         char *mtype;
 
         mtype = http_get_header(request, "Content-Type");
-        if (strncmp(mtype, "application/x-www-form-urlencoded",
-                strlen("application/x-www-form-urlencoded")) != 0)
+        if (strcmp(mtype, "application/x-www-form-urlencoded") != 0)
         {
                 /* POST requires Content-Type header
                  * we only accept one kind */
@@ -319,6 +318,7 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
         char method[16] = "";
         char resource[MAX_RESOURCE_LEN] = "";
         char httpv[16] = "";
+        char *stripped;
         FILE *in;
 
         *err = 0;
@@ -350,9 +350,15 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
 
         /* read headers */
         while (fgets(line, sizeof(line), in)) {
-                if (sscanf(line, "%[^:]: %[^\n]", key, value) != 2) {
+                /* we strip out any \r which jquery puts in, before matching */
+                stripped = replaceall(line, "\r", "");
+                if (sscanf(stripped, "%[^:]: %[^\n]",
+                        key, value) != 2)
+                {
+                        free(stripped);
                         break;
                 }
+                free(stripped);
                 h = http_set_keyval(key, value);
                 if (hlast != NULL) {
                         hlast->next = h;
