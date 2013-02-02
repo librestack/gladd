@@ -195,6 +195,8 @@ int xml_validate(const char *schema_filename, const char *xml)
         xmlFreeDoc(docschema);
         xmlFreeDoc(docxml);
 
+        xmlCleanupParser();
+
         /* force the return value to be non-negative on success */
         return is_valid ? 0 : 1;
 }

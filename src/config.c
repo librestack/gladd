@@ -478,7 +478,7 @@ void handle_url_dynamic(char *type, char params[LINE_MAX])
         newurl = malloc(sizeof(struct url_t));
 
         if (sscanf(params, "%s %s %s %s", method, url, db, view) == 4) {
-                newurl->type = strdup(type);
+                newurl->type = type;
                 newurl->method = strdup(method);
                 newurl->url = strdup(url);
                 newurl->db = strdup(db);
