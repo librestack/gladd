@@ -23,6 +23,8 @@
 #define _GNU_SOURCE
 #include <libxml/parser.h>
 #include <libxml/xmlschemas.h>
+#include <libxslt/transform.h>
+#include <libxslt/xsltutils.h>
 #include <string.h>
 #include <syslog.h>
 #include "config.h"
@@ -136,6 +138,52 @@ char *toutf8(char *str)
         isolat1ToUTF8((unsigned char *) str, &outlen, 
                       (unsigned char *) str, &inlen);
         return str;
+}
+
+/* perform xslt transformation on xml
+ * remember to free() output in calling function when done */
+int xmltransform(const char *xslt_filename, const char *xml, char **output)
+{
+        xsltStylesheetPtr docxslt;
+        xmlDocPtr docxml;
+        xmlDocPtr docsql;
+        xmlChar *sqlout;
+        int doclen;
+
+        /* TODO: check stylesheet file actually exists first */
+
+        /* tell libxml2 parser to substitute entities */
+        xmlSubstituteEntitiesDefault(1);
+
+        /* tell libxml2 to load external subsets */
+        xmlLoadExtDtdDefaultValue = 1;
+
+        /* read the stylesheet */
+        docxslt = xsltParseStylesheetFile((const xmlChar *)xslt_filename);
+
+        /* read the xml doc in from memory */
+        docxml = xmlReadMemory(xml, strlen(xml), "noname.xml", NULL, 0);
+        if (docxml == NULL) {
+                xsltFreeStylesheet(docxslt);
+                return -1;
+        }
+        
+        /* perform the transformation */
+        docsql = xsltApplyStylesheet(docxslt, docxml, NULL);
+
+        /* flatten output */
+        xsltSaveResultToString(&sqlout, &doclen, docsql, docxslt);
+        asprintf(output, "%s", (char *)sqlout);
+
+        /* cleanup */
+        free(sqlout);
+        xsltFreeStylesheet(docxslt);
+        xmlFreeDoc(docxml);
+        xmlFreeDoc(docsql);
+        xsltCleanupGlobals();
+        xmlCleanupParser();
+
+        return 0;
 }
 
 /* 

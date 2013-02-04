@@ -61,14 +61,29 @@ char *test_xml_doc()
 char *test_xml_to_sql()
 {
         char *schema = "/home/bacs/dev/gladbooksd/static/xml/journal.xsd";
+        char *xslt = "/home/bacs/dev/gladbooksd/static/xml/journal.xsl";
         char *badxml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><journal description=\"My First Journal Entry\"><debit account=\"1100\">100.00</debit><credit account=\"4000\">100.00</credit></journal>";
         char *goodxml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><journal description=\"My First Journal Entry\"><debit account=\"1100\" amount=\"100.00\"/><credit account=\"4000\" amount=\"100.00\"/></journal>";
+
+        char *gooderxml = "<?xml version=\"1.0\" encoding=\"utf-8\"?> <journal description=\"My First Journal Entry\"> <debit account=\"1100\" amount=\"120.00\" /> <credit account=\"2222\" amount=\"20.00\" /> <credit account=\"4000\" amount=\"100.00\" /> </journal>";
+
+        char *sql;
+        char *sqlout = "BEGIN;INSERT INTO journal (description) VALUES ('My First Journal Entry');INSERT INTO ledger (journal, account, debit) VALUES (currval(pg_get_serial_sequence('journal','id')),'1100','120.00');INSERT INTO ledger (journal, account, credit) VALUES (currval(pg_get_serial_sequence('journal','id')),'2222','20.00');INSERT INTO ledger (journal, account, credit) VALUES (currval(pg_get_serial_sequence('journal','id')),'4000','100.00');COMMIT;";
         
         mu_assert("Validate some broken xml",
                 xml_validate(schema, badxml) == 1);
 
         mu_assert("Validate some good xml",
                 xml_validate(schema, goodxml) == 0);
+
+        mu_assert("Transform XML using XSLT",
+                xmltransform(xslt, gooderxml, &sql) == 0);
+
+        fprintf(stderr, "%s\n", sql);
+
+        mu_assert("Verify sql output from xslt", strcmp(sql, sqlout) == 0);
+
+        free(sql);
 
         return 0;
 }
