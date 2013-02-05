@@ -1,19 +1,9 @@
-FEATURE: sql config and tokens
 FEATURE: ldap url support
 FEATURE: domains (VirtualHost)
 FEATURE: add more acl syntax tests
-FEATURE: enable acl checks
-FEATURE: add stop restart and reload command line options
 FEATURE: add --config command line option
 FEATURE: Align debug values with syslog
-FEATURE: add handling for url sqlview (pg lookups)
-FEATURE: add handling for url sqlurl
-FEATURE: add handling for url ldap lookups
-FEATURE: enable POST updating of data
-FEATURE: send WWW-Authenticate header with 401 Unauthorized
-FEATURE: enable HTTP auth
 FEATURE: send Allow header with 405 Method Not Allowed
-FEATURE: set config->authrealm from config file
 FEATURE: acl allow / deny by IP
 FEATURE: verify dbs in sqlurls are defined somewhere in config
 FEATURE: differentiate between files and directories for static url paths
