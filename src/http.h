@@ -35,6 +35,7 @@ typedef enum {
         HTTP_UNAUTHORIZED               = 401,
         HTTP_FORBIDDEN                  = 403,
         HTTP_NOT_FOUND                  = 404,
+        HTTP_METHOD_NOT_ALLOWED         = 405,
         HTTP_LENGTH_REQUIRED            = 411,
         HTTP_UNSUPPORTED_MEDIA_TYPE     = 415,
         HTTP_INTERNAL_SERVER_ERROR      = 500,
