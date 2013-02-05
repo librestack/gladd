@@ -310,13 +310,18 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                 free(xsl);
 
                 /* TODO: execute sql */
-                db_exec_sql(db, sql);
+                if (db_exec_sql(db, sql) != 0) {
+                        syslog(LOG_ERR, "xsltpost sql execution failed");
+                        return HTTP_BAD_REQUEST;
+                }
         }
         else {
                 /* POST to element => update */
                 /* TODO */
                 return HTTP_NOT_IMPLEMENTED;
         }
+
+        respond(sock, "200 Success");
 
         return 0;
 }
