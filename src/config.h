@@ -55,6 +55,7 @@ typedef struct config_t {
         long debug;
         char *encoding;      /* encoding to use - default UTF-8 */
         long port;
+        char *xmlpath;       /* path to xml, xsl and xsd files */
         struct acl_t *acls;
         struct auth_t *auth;
         struct db_t *dbs;
@@ -121,5 +122,6 @@ int     set_config_defaults();
 int     set_config_long(long *confset, char *keyname, long i, long min,
                 long max);
 int     set_encoding(char *value);
+int     set_xmlpath(char *value);
 
 #endif /* __GLADD_CONFIG_H__ */

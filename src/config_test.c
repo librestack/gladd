@@ -93,6 +93,9 @@ char *test_config_set()
         mu_assert("Ensure daemon is set from config", config->daemon == 1);
         mu_assert("Ensure encoding is set from config", 
                 strcmp(config->encoding, "ISO-8859-1") == 0);
+        mu_assert("Ensure xmlpath is set from config", 
+                strcmp(config->xmlpath,
+                "/home/bacs/dev/gladbooksd/static/xml/") == 0);
         return 0;
 }
 

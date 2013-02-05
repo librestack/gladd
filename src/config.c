@@ -38,6 +38,7 @@ config_t config_default = {
         .daemon         = 0,
         .debug          = 0,
         .encoding       = "UTF-8",
+        .xmlpath        = ".",
         .port           = 8080
 };
 
@@ -315,6 +316,7 @@ void free_auth()
 void free_config()
 {
         free(config->encoding);
+        free(config->xmlpath);
         free_acls();
         free_auth();
         free_dbs();
@@ -566,7 +568,7 @@ int process_config_line(char *line)
                 if (strcmp(key, "encoding") == 0) {
                         return set_encoding(value);
                 }
-                if (strcmp(key, "url") == 0) {
+                else if (strcmp(key, "url") == 0) {
                         return add_url_handler(value);
                 }
                 else if (strcmp(key, "acl") == 0) {
@@ -586,6 +588,9 @@ int process_config_line(char *line)
                 }
                 else if (strcmp(key, "sql") == 0) {
                         return add_sql(value);
+                }
+                else if (strcmp(key, "xmlpath") == 0) {
+                        return set_xmlpath(value);
                 }
                 else {
                         fprintf(stderr, "unknown config directive '%s'\n", 
@@ -670,4 +675,11 @@ int set_encoding(char *value)
                 fprintf(stderr, "Ignoring invalid encoding '%s'\n", value);
                 return -1;
         }
+}
+
+/* set path to xml, xsl and xsd files */
+int set_xmlpath(char *value)
+{
+        /* TODO: check is dir */
+        return asprintf(&config->xmlpath, "%s", value);
 }
