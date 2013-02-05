@@ -39,6 +39,7 @@ typedef enum {
         HTTP_LENGTH_REQUIRED            = 411,
         HTTP_UNSUPPORTED_MEDIA_TYPE     = 415,
         HTTP_INTERNAL_SERVER_ERROR      = 500,
+        HTTP_NOT_IMPLEMENTED            = 501,
         HTTP_VERSION_NOT_SUPPORTED      = 505
 } http_status_code_t;
 
