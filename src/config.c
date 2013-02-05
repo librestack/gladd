@@ -262,7 +262,7 @@ int add_url_handler(char *value)
                         handle_url_dynamic("xmlpost", params);
                 }
                 else if (strcmp(type, "xslpost") == 0) {
-                        handle_url_dynamic("xmlpost", params);
+                        handle_url_dynamic("xslpost", params);
                 }
                 else {
                         fprintf(stderr, "skipping unhandled url type '%s'\n", 

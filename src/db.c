@@ -217,10 +217,22 @@ int db_disconnect_pg(db_t *db)
  * wrapper for db-specific functions */
 int db_exec_sql(db_t *db, char *sql)
 {
+        int isconn = 0;
+
         if (db == NULL) {
                 fprintf(stderr, 
                         "No database info supplied to db_exec_sql()\n");
                 return -1;
+        }
+
+        /* connect if we aren't already */
+        if (db->conn == NULL) {
+                if (db_connect(db) != 0) {
+                        syslog(LOG_ERR, "Failed to connect to db on %s",
+                                db->host);
+                        return -1;
+                }
+                isconn = 1;
         }
         if (strcmp(db->type, "pg") == 0) {
                 return db_exec_sql_pg(db, sql);
@@ -233,6 +245,11 @@ int db_exec_sql(db_t *db, char *sql)
                     "Invalid database type '%s' passed to db_exec_sql()\n",
                     db->type);
         }
+
+        /* leave the connection how we found it */
+        if (isconn == 1)
+                db_disconnect(db);
+
         return 0;
 }
 

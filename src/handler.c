@@ -33,6 +33,7 @@
 #include "xml.h"
 
 #include <arpa/inet.h>
+#include <assert.h>
 #include <errno.h>
 #include <libxml/parser.h>
 #include <limits.h>
@@ -49,6 +50,7 @@
 
 int sockme;
 
+http_status_code_t response_xslpost(int sock, url_t *u);
 
 /*
  * get sockaddr, IPv4 or IPv6:
@@ -166,6 +168,11 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         if (err != 0)
                                 http_response(sock, err);
                 }
+                else if (strcmp(u->type, "xslpost") == 0) {
+                        err = response_xslpost(sock, u);
+                        if (err != 0)
+                                http_response(sock, err);
+                }
                 else {
                         syslog(LOG_ERR, "Unknown url type '%s'", u->type);
                 }
@@ -245,6 +252,71 @@ http_status_code_t response_sqlview(int sock, url_t *u)
         respond(sock, r);
         free(r);
         free(xml);
+
+        return 0;
+}
+
+/* handle xslpost */
+http_status_code_t response_xslpost(int sock, url_t *u)
+{
+        db_t *db;
+        char *xsd;
+        char *xsl;
+        char *sql;
+        field_t *filter = NULL;
+
+        if (strcmp(u->method, "POST") != 0) {
+                syslog(LOG_ERR, "xslpost method not POST");
+                return HTTP_METHOD_NOT_ALLOWED;
+        }
+        
+        if (!(db = getdb(u->db))) {
+                syslog(LOG_ERR, "db '%s' not in config", u->db);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        
+        if (strcmp(request->res, u->url) != 0) {
+                /* url wasn't an exact match - grab the key */
+                filter = malloc(sizeof(field_t));
+                if (asprintf(&filter->fname, "id") == -1)
+                        return HTTP_INTERNAL_SERVER_ERROR;
+                filter->fvalue = strdup(request->res+strlen(u->url));
+                if (filter->fvalue == NULL)
+                        return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        if (filter == NULL) {
+                /* POST to collection => create */
+
+                /* validate request body xml */
+                assert(asprintf(&xsd, "%s/%s.xsd", config->xmlpath, u->view)
+                        != -1);
+                if (xml_validate(xsd, request->data->value) != 0) {
+                        free(xsd);
+                        syslog(LOG_DEBUG, "%s", request->data->value);
+                        syslog(LOG_ERR, "Request XML failed validation");
+                        return HTTP_BAD_REQUEST;
+                }
+                free(xsd);
+
+                /* transform xml into sql */
+                assert(asprintf(&xsl, "%s/%s.xsl", config->xmlpath, u->view)
+                        != -1);
+                if (xmltransform(xsl, request->data->value, &sql) != 0) {
+                        free(xsl);
+                        syslog(LOG_ERR, "XSLT transform failed");
+                        return HTTP_BAD_REQUEST;
+                }
+                free(xsl);
+
+                /* TODO: execute sql */
+                db_exec_sql(db, sql);
+        }
+        else {
+                /* POST to element => update */
+                /* TODO */
+                return HTTP_NOT_IMPLEMENTED;
+        }
 
         return 0;
 }

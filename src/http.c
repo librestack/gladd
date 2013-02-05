@@ -155,7 +155,7 @@ char *check_content_type(http_request_t *r, http_status_code_t *err)
 
         mtype = http_get_header(request, "Content-Type");
         if ((strcmp(mtype, "application/x-www-form-urlencoded") == 0)
-        || (strcmp(mtype, "text/xml") == 0))
+        || (strncmp(mtype, "text/xml", 8) == 0))
         {
                 return mtype;
         }
@@ -309,6 +309,10 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
         http_status_code_t *err)
 {
         http_request_t *r;
+        char *ctype;
+        char *clen;
+        long lclen;
+        size_t size;
         char line[LINE_MAX] = "";
         char key[256] = "";
         char value[256] = "";
@@ -319,6 +323,7 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
         char httpv[16] = "";
         char *stripped;
         FILE *in;
+        char *xmlbuf;
 
         *err = 0;
 
@@ -368,9 +373,36 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
                 hlast = h;
                 (*hcount)++;
         }
-        /* read body, after skipping the blank line */
-        while (fgets(line, sizeof(line), in)) {
-                bodyline(r, line);
+
+        /* only read body if we have a Content-Type and Content-Length */
+        if ((ctype = http_get_header(r, "Content-Type"))
+                && (clen = http_get_header(r, "Content-Length")))
+        {
+                errno = 0;
+                lclen = strtol(clen, NULL, 10);
+                if (errno != 0)
+                        return NULL;
+                if (strncmp(ctype, "text/xml", 8) == 0) {
+                        /* read xml body */
+                        r->data = malloc(sizeof(keyval_t));
+                        asprintf(&r->data->key, "text/xml");
+                        r->data->next = NULL;
+                        xmlbuf = calloc(1, lclen + 1);
+                        size = fread(xmlbuf, 1, lclen, in);
+                        if (size != lclen) {
+                                /* we have the wrong number of bytes */
+                                *err = HTTP_BAD_REQUEST;
+                                return NULL;
+                        }
+                        r->data->value = strdup(xmlbuf);
+                        free(xmlbuf);
+                }
+                else {
+                        /* read body, after skipping the blank line */
+                        while (fgets(line, sizeof(line), in)) {
+                                bodyline(r, line);
+                        }
+                }
         }
 
         fclose(in);

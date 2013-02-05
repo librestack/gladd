@@ -191,3 +191,25 @@ char *test_http_postdata_checks()
 
         return 0;
 }
+
+char *test_http_read_request_post_xml()
+{
+        http_request_t *r;
+        int hcount = 0;
+        http_status_code_t err = 0;
+
+        char *headers = "POST / HTTP/1.1\nHost: localhost:3000\nAccept: */*\nContent-Length: 227\nContent-Type: text/xml\n";
+        char *xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<journal description=\"My First Journal Entry\">\n  <debit account=\"1100\" amount=\"120.00\" />\n  <credit account=\"2222\" amount=\"20.00\" />\n  <credit account=\"4000\" amount=\"100.00\" />\n</journal>\n";
+        char *xmlreq;
+
+        asprintf(&xmlreq, "%s\n%s", headers, xml);
+        mu_assert("Read XML POST request",
+                r = http_read_request(xmlreq, sizeof(xmlreq), &hcount, &err));
+        free(xmlreq);
+
+        fprintf(stderr, "%s\n", r->data->value);
+
+        free_request(r);
+
+        return 0;
+}
