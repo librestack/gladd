@@ -311,9 +311,11 @@ http_status_code_t response_xslpost(int sock, url_t *u)
 
                 /* execute sql */
                 if (db_exec_sql(db, sql) != 0) {
+                        free(sql);
                         syslog(LOG_ERR, "xsltpost sql execution failed");
                         return HTTP_BAD_REQUEST;
                 }
+                free(sql);
         }
         else {
                 /* POST to element => update */
