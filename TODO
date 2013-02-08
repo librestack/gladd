@@ -10,4 +10,3 @@ FEATURE: differentiate between files and directories for static url paths
 BUG: config reload is happening, even if it "failed"
 BUG: config reload isn't working for acls
 BUG: ipv6 listening not working by default (enable dual stack)
-BUG: tests rely on external files - must be self-contained

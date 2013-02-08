@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<journal description="My First Journal Entry">
+  <debit account="1001" amount="120.00" />
+  <credit account="2001" amount="20.00" />
+  <credit account="4000" amount="100.00" />
+</journal>
