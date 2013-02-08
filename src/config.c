@@ -39,7 +39,8 @@ config_t config_default = {
         .debug          = 0,
         .encoding       = "UTF-8",
         .xmlpath        = ".",
-        .port           = 8080
+        .port           = 8080,
+        .urldefault     = "index.html"
 };
 
 config_t *config;
@@ -319,6 +320,7 @@ void free_auth()
 void free_config()
 {
         free(config->encoding);
+        free(config->urldefault);
         free(config->xmlpath);
         free_acls();
         free_auth();
@@ -570,6 +572,9 @@ int process_config_line(char *line)
         else if (sscanf(line, "%s %[^\n]", key, value) == 2) {
                 if (strcmp(key, "encoding") == 0) {
                         return set_encoding(value);
+                }
+                else if (strcmp(key, "url_default") == 0) {
+                        return asprintf(&config->urldefault, "%s", value);
                 }
                 else if (strcmp(key, "url") == 0) {
                         return add_url_handler(value);

@@ -55,6 +55,7 @@ typedef struct config_t {
         long debug;
         char *encoding;      /* encoding to use - default UTF-8 */
         long port;
+        char *urldefault;
         char *xmlpath;       /* path to xml, xsl and xsd files */
         struct acl_t *acls;
         struct auth_t *auth;

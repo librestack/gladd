@@ -81,6 +81,8 @@ char *test_config_defaults()
                 strncmp(config->authrealm, "gladd", 5) == 0);
         mu_assert("Ensure default encoding=UTF-8", 
                 strncmp(config->encoding, "UTF-8", 5) == 0);
+        mu_assert("Ensure default url_default=index.html", 
+                strcmp(config->urldefault, "index.html") == 0);
         return 0;
 }
 
@@ -96,6 +98,8 @@ char *test_config_set()
         mu_assert("Ensure xmlpath is set from config", 
                 strcmp(config->xmlpath,
                 "/home/bacs/dev/gladbooksd/static/xml/") == 0);
+        mu_assert("Ensure url_default is read from config",
+                strcmp(config->urldefault, "/path/to/index.html") == 0);
         return 0;
 }
 
