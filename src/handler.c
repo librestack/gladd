@@ -113,6 +113,13 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         state = 1;
         setsockopt(sockme, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
 
+        /* if / requested, substitute default */
+        if (strcmp(request->res, "/") == 0) {
+                free(request->res);
+                request->res = strdup(config->urldefault);
+        }
+        syslog(LOG_DEBUG, "Barney: %s", request->res);
+
         /* check auth & auth */
         auth = check_auth(request);
         if (auth != 0) {
