@@ -40,6 +40,9 @@ void get_mime_type(char *mimetype, char *filename)
                 else if (strncmp(fileext, "gif", 3) == 0) {
                         strcpy(mimetype, "image/gif");
                 }
+                else if (strncmp(fileext, "png", 3) == 0) {
+                        strcpy(mimetype, "image/png");
+                }
                 else if (strncmp(fileext, "xml", 3) == 0) {
                         strcpy(mimetype, "application/xml");
                 }
@@ -48,6 +51,9 @@ void get_mime_type(char *mimetype, char *filename)
                 }
                 else if (strncmp(fileext, "css", 3) == 0) {
                         strcpy(mimetype, "text/css");
+                }
+                else if (strncmp(fileext, "js", 3) == 0) {
+                        strcpy(mimetype, "text/javascript");
                 }
                 free(fileext);
         }
