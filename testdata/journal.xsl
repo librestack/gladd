@@ -2,19 +2,23 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:fo="http://www.w3.org/1999/XSL/Format">
 <xsl:output method="text" disable-output-escaping="yes" />
 
-        <xsl:variable name="username" select="request/username" />
-	<xsl:variable name="ipaddress" select="request/ipaddress" />
+        <xsl:variable name="authuser" select="request/authuser" />
+	<xsl:variable name="clientip" select="request/clientip" />
 
 	<xsl:template match="request">
-		<xsl:apply-templates select="data/journal"/>
+       		<xsl:apply-templates select="data/journal"/>
 	</xsl:template>
 
 	<xsl:template match="journal">
 		<xsl:text>BEGIN;</xsl:text>
-		<xsl:text>INSERT INTO journal (transactdate, description) VALUES ('</xsl:text>
+		<xsl:text>INSERT INTO journal (transactdate, description, authuser, clientip) VALUES ('</xsl:text>
 		<xsl:value-of select="@transactdate"/>
 		<xsl:text>','</xsl:text>
 		<xsl:value-of select="@description"/>
+		<xsl:text>','</xsl:text>
+		<xsl:copy-of select="$authuser"/>
+		<xsl:text>','</xsl:text>
+		<xsl:copy-of select="$clientip"/>
 		<xsl:text>');</xsl:text>
 		<fo:inline-sequence>
 			<xsl:apply-templates select="debit"/>

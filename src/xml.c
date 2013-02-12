@@ -172,8 +172,8 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
         }
 
         /* add some server variables to xml before transformation */
-        xml_prepend_element(docxml, "authuser", request->authuser);
         xml_prepend_element(docxml, "clientip", request->clientip);
+        xml_prepend_element(docxml, "authuser", request->authuser);
 
         /* perform the transformation */
         docsql = xsltApplyStylesheet(docxslt, docxml, NULL);
@@ -182,6 +182,8 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
         /* flatten output */
         xsltSaveResultToString(&sqlout, &doclen, docsql, docxslt);
         asprintf(output, "%s", (char *)sqlout);
+
+        syslog(LOG_DEBUG, "%s", sqlout);
 
         /* cleanup */
         free(sqlout);
@@ -202,7 +204,7 @@ void xml_prepend_element(xmlDocPtr docxml, char *name, char *value)
         xmlNodePtr nval = NULL;
 
         nfld = xmlNewNode(NULL, BAD_CAST name);
-        nval = xmlNewText(BAD_CAST request->authuser);
+        nval = xmlNewText(BAD_CAST value);
         xmlAddChild(nfld, nval);
         r = xmlDocGetRootElement(docxml);
         n = xmlFirstElementChild(r);
