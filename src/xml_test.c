@@ -86,5 +86,7 @@ char *test_xml_to_sql()
 
         free(sql);
 
+        free_request(request);
+
         return 0;
 }
