@@ -1,25 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-<xs:element name="journal">
-  <xs:complexType>
-    <xs:sequence>
-      <xs:element name="debit" maxOccurs="unbounded">
-        <xs:complexType>
-          <xs:attribute name="account" type="xs:positiveInteger" use="required"/>
-          <xs:attribute name="amount" type="xs:decimal" use="required"/>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="credit" maxOccurs="unbounded">
-        <xs:complexType>
-          <xs:attribute name="account" type="xs:positiveInteger" use="required"/>
-          <xs:attribute name="amount" type="xs:decimal" use="required"/>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-    <xs:attribute name="transactdate" type="xs:date" use="required"/>
-    <xs:attribute name="description" type="xs:string" use="required"/>
-  </xs:complexType>
-</xs:element>
+<xs:element name="request">
+	<xs:complexType>
+		<xs:sequence>
+
+			<xs:element name="data">
+				<xs:complexType>
+					<xs:sequence>
+
+						<xs:element name="journal">
+						  <xs:complexType>
+						    <xs:sequence>
+
+						      <xs:element name="debit" maxOccurs="unbounded">
+										<xs:complexType>
+										  <xs:attribute name="account" type="xs:positiveInteger" use="required"/>
+										  <xs:attribute name="amount" type="xs:decimal" use="required"/>
+										</xs:complexType>
+						      </xs:element><!--debit-->
+
+						      <xs:element name="credit" maxOccurs="unbounded">
+										<xs:complexType>
+										  <xs:attribute name="account" type="xs:positiveInteger" use="required"/>
+										  <xs:attribute name="amount" type="xs:decimal" use="required"/>
+										</xs:complexType>
+						      </xs:element><!--credit-->
+
+						    </xs:sequence>
+						    <xs:attribute name="transactdate" type="xs:date" use="required"/>
+						    <xs:attribute name="description" type="xs:string" use="required"/>
+						  </xs:complexType>
+						</xs:element><!--journal-->
+
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element><!--data-->
+
+		</xs:sequence>
+	</xs:complexType>
+</xs:element><!--request-->
 
 </xs:schema>

@@ -95,6 +95,10 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 http_response(sock, err);
                 exit(EXIT_FAILURE);
         }
+        
+        /* keep a note of client ip */
+        asprintf(&request->clientip, "%s", s);
+
         http_validate_headers(request, &err);
         if (err != 0) {
                 syslog(LOG_INFO, "Bad Request - invalid request headers");

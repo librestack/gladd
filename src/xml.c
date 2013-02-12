@@ -25,13 +25,16 @@
 #include <libxml/xmlschemas.h>
 #include <libxslt/transform.h>
 #include <libxslt/xsltutils.h>
+#include <assert.h>
 #include <string.h>
 #include <syslog.h>
 #include "config.h"
+#include "http.h"
 #include "string.h"
 #include "xml.h"
 
 int flattenxml(xmlDocPtr doc, char **xml, int pretty);
+void xml_prepend_element(xmlDocPtr docxml, char *name, char *value);
 
 int buildxml(char **xml)
 {
@@ -167,9 +170,14 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
                 xsltFreeStylesheet(docxslt);
                 return -1;
         }
-        
+
+        /* add some server variables to xml before transformation */
+        xml_prepend_element(docxml, "authuser", request->authuser);
+        xml_prepend_element(docxml, "clientip", request->clientip);
+
         /* perform the transformation */
         docsql = xsltApplyStylesheet(docxslt, docxml, NULL);
+        assert(docsql != NULL);
 
         /* flatten output */
         xsltSaveResultToString(&sqlout, &doclen, docsql, docxslt);
@@ -184,6 +192,21 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
         xmlCleanupParser();
 
         return 0;
+}
+
+void xml_prepend_element(xmlDocPtr docxml, char *name, char *value)
+{
+        xmlNodePtr r;
+        xmlNodePtr n;
+        xmlNodePtr nfld = NULL;
+        xmlNodePtr nval = NULL;
+
+        nfld = xmlNewNode(NULL, BAD_CAST name);
+        nval = xmlNewText(BAD_CAST request->authuser);
+        xmlAddChild(nfld, nval);
+        r = xmlDocGetRootElement(docxml);
+        n = xmlFirstElementChild(r);
+        xmlAddPrevSibling(n, nfld);
 }
 
 /* 

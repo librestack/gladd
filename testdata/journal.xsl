@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:fo="http://www.w3.org/1999/XSL/Format">
 <xsl:output method="text" disable-output-escaping="yes" />
+
+        <xsl:variable name="username" select="request/username" />
+	<xsl:variable name="ipaddress" select="request/ipaddress" />
+
+	<xsl:template match="request">
+		<xsl:apply-templates select="data/journal"/>
+	</xsl:template>
+
 	<xsl:template match="journal">
 		<xsl:text>BEGIN;</xsl:text>
 		<xsl:text>INSERT INTO journal (transactdate, description) VALUES ('</xsl:text>
