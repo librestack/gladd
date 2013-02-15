@@ -273,6 +273,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         char *xsd;
         char *xsl;
         char *sql;
+        char *action;
         field_t *filter = NULL;
 
         if (strcmp(u->method, "POST") != 0) {
@@ -297,41 +298,44 @@ http_status_code_t response_xslpost(int sock, url_t *u)
 
         if (filter == NULL) {
                 /* POST to collection => create */
-
-                /* validate request body xml */
-                assert(asprintf(&xsd, "%s/%s.xsd", config->xmlpath, u->view)
-                        != -1);
-                if (xml_validate(xsd, request->data->value) != 0) {
-                        free(xsd);
-                        syslog(LOG_DEBUG, "%s", request->data->value);
-                        syslog(LOG_ERR, "Request XML failed validation");
-                        return HTTP_BAD_REQUEST;
-                }
-                free(xsd);
-
-                /* transform xml into sql */
-                assert(asprintf(&xsl, "%s/%s.xsl", config->xmlpath, u->view)
-                        != -1);
-                if (xmltransform(xsl, request->data->value, &sql) != 0) {
-                        free(xsl);
-                        syslog(LOG_ERR, "XSLT transform failed");
-                        return HTTP_BAD_REQUEST;
-                }
-                free(xsl);
-
-                /* execute sql */
-                if (db_exec_sql(db, sql) != 0) {
-                        free(sql);
-                        syslog(LOG_ERR, "xsltpost sql execution failed");
-                        return HTTP_BAD_REQUEST;
-                }
-                free(sql);
+                asprintf(&action, "create");
         }
         else {
                 /* POST to element => update */
-                /* TODO */
-                return HTTP_NOT_IMPLEMENTED;
+                asprintf(&action, "update");
         }
+
+        /* validate request body xml */
+        assert(asprintf(&xsd, "%s/%s/%s.xsd", config->xmlpath, u->view, action)
+                != -1);
+        if (xml_validate(xsd, request->data->value) != 0) {
+                free(xsd);
+                syslog(LOG_DEBUG, "%s", request->data->value);
+                syslog(LOG_ERR, "Request XML failed validation");
+                return HTTP_BAD_REQUEST;
+        }
+        free(xsd);
+
+        /* transform xml into sql */
+        assert(asprintf(&xsl, "%s/%s/%s.xsl", config->xmlpath, u->view, action)
+                != -1);
+
+        free(action);
+
+        if (xmltransform(xsl, request->data->value, &sql) != 0) {
+                free(xsl);
+                syslog(LOG_ERR, "XSLT transform failed");
+                return HTTP_BAD_REQUEST;
+        }
+        free(xsl);
+
+        /* execute sql */
+        if (db_exec_sql(db, sql) != 0) {
+                free(sql);
+                syslog(LOG_ERR, "xsltpost sql execution failed");
+                return HTTP_BAD_REQUEST;
+        }
+        free(sql);
 
         respond(sock, "200 Success");
 
