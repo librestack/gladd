@@ -32,7 +32,7 @@
 void sigchld_handler (int signo)
 {
         int status;
-        wait(&status);
+        while (waitpid(-1, &status, WNOHANG) > 0);
 }
 
 /* catch SIGINT and clean up */
