@@ -473,7 +473,7 @@ int http_validate_headers(http_request_t *r, http_status_code_t *err)
                                         free(clearauth);
                                 }
                                 else {
-                                        fprintf(stderr,
+                                        syslog(LOG_DEBUG,
                                                 "Invalid auth details\n");
                                         free(clearauth);
                                         *err = HTTP_BAD_REQUEST;
@@ -481,7 +481,8 @@ int http_validate_headers(http_request_t *r, http_status_code_t *err)
                                 }
                         }
                         else {
-                                fprintf(stderr,"Invalid Authorization header");
+                                syslog(LOG_DEBUG,
+                                        "Invalid Authorization header '%s'", h->value);
                                 *err = HTTP_BAD_REQUEST;
                                 return -1;
                         }
