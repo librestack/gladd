@@ -2,6 +2,8 @@ INSTALL
 
 Installation instructions for gladd.
 
+(rather incomplete)
+
 gladd_test (called by `make test`) requires a database to exist called gladd_test.  It is also essential that gladd_fake does *not* exist or the unit tests will fail.
 
 == Ubuntu 12.04 LTS ==
