@@ -66,6 +66,20 @@ auth    ldap    ldap    ldap1   ld_auth         uid
 # and SELECT * FROM <view>
 ###############################################################################
 sql someview		SELECT * FROM someview
-
 sql ld_auth		ou=people
 sql ld_group		ou=group
+
+# sql can be multiline, like so...
+begin sql xmlpost
+
+SELECT
+	this,
+	that,
+	theother
+FROM
+	mytable
+WHERE
+	this=that
+ORDER BY theother
+
+end sql xmlpost
