@@ -20,23 +20,52 @@
 
 debug		1
 port		3000
+daemon		0
 encoding	UTF-8
+url_default	/html/index.html
+xmlpath         /path/to/xml/
 
 ###############################################################################
 ## databases
-db      db_test     pg      localhost       gladd_test
+db      test_my		my	localhost     testdb  myuser mypass
+db      test_pg		pg	localhost     testdb
+db      ldap1       	ldap    ldap://ldap.example.com dc=example,dc=com
 
 ###############################################################################
 # urls (tried in order of appearance)
 ###############################################################################
-#url     static  /static/index.html        static/index.html
-url     static  /static/        /home/bacs/dev/gladd/static/
-url	sqlview /sqlview/	db_test		test
-url     static  /		/home/bacs/dev/gladd/static/index.html
+url     static  GET	/css/		/path/to/css/
+url     static  GET	/html/		/path/to/html/
+url	sqlview GET	/someview/      test_pg  someview
+
+# here, mycollection refers to a subdirectory in xmlpath above
+# it would normally contain:
+#   create.xsd - an xml schema to validate POST data against
+#   create.xsl - the xslt to transform the POSTed xml into sql to execute
+# and the same for update:
+#   update.xsd - an xml schema to validate POST data against
+#   update.xsl - the xslt to transform the POSTed xml into sql to execute
+url	xslpost POST	/mycollection/		test_pg		mycollection
 
 ###############################################################################
 # acls (tried in order of appearance)
 ###############################################################################
-acl	GET	/static/secret.html	deny	*
-acl	GET	/static/		allow	*
-acl	GET	/sqlview/		allow	*
+acl	GET	/css/				allow	*
+acl	GET	/html/				allow	*
+acl	GET	/someview/			require	*
+acl	POST	/mycollection/			require	*
+
+###############################################################################
+## auth
+## (ldap only supported at present)
+auth    ldap    ldap    ldap1   ld_auth         uid
+
+###############################################################################
+# sql
+# Rather than creating lengthy SQL queries here, create a view in the database
+# and SELECT * FROM <view>
+###############################################################################
+sql someview		SELECT * FROM someview
+
+sql ld_auth		ou=people
+sql ld_group		ou=group
