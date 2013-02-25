@@ -3,3 +3,15 @@ INSTALL
 Installation instructions for gladd.
 
 gladd_test (called by `make test`) requires a database to exist called gladd_test.  It is also essential that gladd_fake does *not* exist or the unit tests will fail.
+
+== Ubuntu 12.04 LTS ==
+
+# install required runtime libraries
+apt-get install libxslt1.1
+apt-get install libpq5
+apt-get install libmysqlclient18
+apt-get install libcurl3
+
+# copy gladd to /usr/local/bin/gladd
+
+# install a config file in /etc/gladd.conf
