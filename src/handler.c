@@ -51,6 +51,7 @@
 int sockme;
 
 http_status_code_t response_xslpost(int sock, url_t *u);
+field_t *get_element(int *err);
 
 /*
  * get sockaddr, IPv4 or IPv6:
@@ -213,6 +214,7 @@ http_status_code_t response_sqlview(int sock, url_t *u)
         char *sql;
         field_t *filter = NULL;
         char *xml;
+        int err;
         db_t *db;
 
         if (!(db = getdb(u->db))) {
@@ -220,15 +222,10 @@ http_status_code_t response_sqlview(int sock, url_t *u)
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         
-        if (strcmp(request->res, u->url) != 0) {
-                /* url wasn't an exact match - grab the key */
-                /* TODO: a bit of validation here please */
-                filter = malloc(sizeof(field_t));
-                if (asprintf(&filter->fname, "id") == -1)
-                        return HTTP_INTERNAL_SERVER_ERROR;
-                filter->fvalue = strdup(request->res+strlen(u->url));
-                if (filter->fvalue == NULL)
-                        return HTTP_INTERNAL_SERVER_ERROR;
+        /* fetch element id as filter, if applicable */
+        filter = get_element(&err);
+        if (err != 0) {
+                return err;
         }
 
         if (strcmp(request->method, "POST") == 0) {
@@ -274,6 +271,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         char *xsl;
         char *sql;
         char *action;
+        int err;
         field_t *filter = NULL;
 
         if (strcmp(u->method, "POST") != 0) {
@@ -285,15 +283,11 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                 syslog(LOG_ERR, "db '%s' not in config", u->db);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
-        
-        if (strcmp(request->res, u->url) != 0) {
-                /* url wasn't an exact match - grab the key */
-                filter = malloc(sizeof(field_t));
-                if (asprintf(&filter->fname, "id") == -1)
-                        return HTTP_INTERNAL_SERVER_ERROR;
-                filter->fvalue = strdup(request->res+strlen(u->url));
-                if (filter->fvalue == NULL)
-                        return HTTP_INTERNAL_SERVER_ERROR;
+
+        /* fetch element id as filter, if applicable */
+        filter = get_element(&err);
+        if (err != 0) {
+                return err;
         }
 
         if (filter == NULL) {
@@ -349,7 +343,11 @@ http_status_code_t response_static(int sock, url_t *u)
         char *basefile;
         http_status_code_t err = 0;
 
-        basefile = strdup(request->res + strlen(u->url));
+        basefile = strdup(request->res + strlen(u->url) - 1);
+
+        syslog(LOG_DEBUG, "basefile: %s", basefile);
+        syslog(LOG_DEBUG, "u->path: %s", u->path);
+
         asprintf(&filename, "%s%s", u->path, basefile);
         free(basefile);
         send_file(sock, filename, &err);
@@ -428,3 +426,32 @@ int send_file(int sock, char *path, http_status_code_t *err)
         return 0;
 }
 
+/* if not a collection, fetch the last element from the request url */
+field_t * get_element(int *err) {
+        int i;
+        field_t * filter = NULL;
+
+        *err = 0;
+
+        if (strncmp(request->res + strlen(request->res) - 1, "/", 1) != 0) {
+                /* url didn't end in / - this is an element of a collection */
+                filter = malloc(sizeof(field_t));
+                if (asprintf(&filter->fname, "id") == -1) {
+                        *err = HTTP_INTERNAL_SERVER_ERROR;
+                        return NULL;
+                }
+                /* grab the key (the last segment of the url) */
+                for (i = strlen(request->res); i > 0; --i) {
+                        if (strncmp(request->res + i, "/", 1) == 0)
+                                break;
+                }
+                if (i == 0) {
+                        *err = HTTP_INTERNAL_SERVER_ERROR;
+                        return NULL;
+                }
+                filter->fvalue = strdup(request->res + i + 1);
+                syslog(LOG_DEBUG, "URL requested: %s", request->res);
+                syslog(LOG_DEBUG, "Element id: %s", filter->fvalue);
+        }
+        return filter;
+}

@@ -25,6 +25,7 @@
 #include <b64/cdecode.h>
 #include <curl/curl.h>
 #include <errno.h>
+#include <fnmatch.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -207,8 +208,8 @@ url_t *http_match_url(http_request_t *r)
         u = config->urls;
         while (u != NULL) {
                 syslog(LOG_DEBUG, "%s %s\n", u->method, u->url);
-                if ((strncmp(r->res, u->url, strlen(u->url))==0) &&
-                    (strcmp(r->method, u->method) == 0))
+                if ((fnmatch(u->url, r->res, 0) == 0) &&
+                         (strcmp(r->method, u->method) == 0))
                 {
                         break;
                 }
