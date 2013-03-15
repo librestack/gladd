@@ -98,3 +98,29 @@ char *strip(char *str)
 {
         return lstrip(rstrip(str));
 }
+
+/* tokenize string into array */
+char **tokenize(int *segments, char **stringp, char *delim)
+{
+        int lenstring;
+        char *i;
+        char **tokens;
+        int segs = 0;
+        const int max_segs = 42;
+
+        tokens = calloc(max_segs, sizeof(char *));
+
+        lenstring = strlen(*stringp);
+        for (i=*stringp;i < *stringp + lenstring; i++) {
+                if (strncmp(i, delim, 1) == 0) {
+                        i[0] = '\0'; /* replace slash with null */
+                        tokens[segs] = i + 1;
+                        segs++;
+                        if (segs > max_segs)
+                                break;
+                }
+        }
+
+        *segments = segs;
+        return tokens;
+}

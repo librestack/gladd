@@ -29,5 +29,6 @@ char *replaceall(char *str, char *find, char *repl);
 char *rstrip(char *str);
 char *strip(char *str);
 char *strstrip(char *s);
+char **tokenize(int *segments, char **stringp, char *delim);
 
 #endif /* __BACS_STRING_H__ */

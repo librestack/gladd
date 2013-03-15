@@ -80,6 +80,7 @@ static char * all_tests()
         mu_run_test(test_config_multiline);
         mu_run_test(test_xml_to_sql);
         mu_run_test(test_http_read_request_post_xml);
+        mu_run_test(test_string_tokenize);
         free_config();
         printline("*", 80);
         return 0;

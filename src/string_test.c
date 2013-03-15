@@ -77,3 +77,27 @@ char *test_string_replace()
 
         return 0;
 }
+
+char *test_string_tokenize()
+{
+        char *teststring;
+        char **tokens;
+        int toknum;
+        
+        asprintf(&teststring, "/instance/business/collection/element");
+        tokens = tokenize(&toknum, &teststring, "/");
+        mu_assert("Test string tokenizer - count tokens", toknum == 4);
+        mu_assert("Test string tokenizer - token #1",
+                strcmp(tokens[0], "instance") == 0);
+        mu_assert("Test string tokenizer - token #2",
+                strcmp(tokens[1], "business") == 0);
+        mu_assert("Test string tokenizer - token #3",
+                strcmp(tokens[2], "collection") == 0);
+        mu_assert("Test string tokenizer - token #4",
+                strcmp(tokens[3], "element") == 0);
+
+        free(tokens);
+        free(teststring);
+
+        return 0;
+}

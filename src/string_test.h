@@ -27,5 +27,6 @@
 
 char *test_string_trimstr();
 char *test_string_replace();
+char *test_string_tokenize();
 
 #endif /*__BACS_STRING_TEST_H__ */
