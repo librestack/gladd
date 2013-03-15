@@ -65,6 +65,7 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
         field_t *f;
         char *fname;
         char *fvalue;
+        char *newsql;
 
         if (db_connect(db) != 0) {
                 syslog(LOG_ERR, "Failed to connect to db on %s", db->host);
@@ -72,12 +73,14 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
         }
 
         /* do variable substitution */
-        sqlvars(&sql);
-        syslog(LOG_DEBUG, "SQL: %s\n", sql);
+        newsql = strdup(sql);
+        sqlvars(&newsql);
+        syslog(LOG_DEBUG, "SQL: %s\n", newsql);
 
-        if (db_fetch_all(db, sql, filter, &rows, &rowc) < 0) {
+        if (db_fetch_all(db, newsql, filter, &rows, &rowc) < 0) {
                 syslog(LOG_ERR, "Error in db_fetch_all()");
         }
+        free(newsql);
 
         doc = xmlNewDoc(BAD_CAST "1.0");
         n = xmlNewNode(NULL, BAD_CAST "resources");
@@ -145,6 +148,7 @@ void sqlvars(char **sql)
                 free(sqltmp);
         }
 
+        free(tokens);
         free(url);
 }
 
