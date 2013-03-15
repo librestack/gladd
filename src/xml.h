@@ -27,7 +27,7 @@
 
 int buildxml(char **xmldoc);
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty);
-int sqlvars(char **sql);
+void sqlvars(char **sql);
 int xmltransform(const char *xslt_filename, const char *xml, char **output);
 int xml_validate(const char *schema_filename, const char *xml);
 

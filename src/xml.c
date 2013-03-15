@@ -71,6 +71,9 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
                 return -1;
         }
 
+        /* do variable substitution */
+        sqlvars(&sql);
+
         if (db_fetch_all(db, sql, filter, &rows, &rowc) < 0) {
                 syslog(LOG_ERR, "Error in db_fetch_all()");
         }
@@ -119,7 +122,7 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 }
 
 /* subsitute variables in sql for their values */
-int sqlvars(char **sql)
+void sqlvars(char **sql)
 {
         char **tokens;
         int toknum;
@@ -142,8 +145,6 @@ int sqlvars(char **sql)
         }
 
         free(url);
-
-        return 0;
 }
 
 int flattenxml(xmlDocPtr doc, char **xml, int pretty)

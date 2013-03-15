@@ -35,6 +35,9 @@ char *test_xml_doc()
 {
         char *xmldoc;
 
+        request = http_init_request();
+        asprintf(&request->res, "/myinstance/mybusiness/collection/element");
+
         mu_assert("Beginning test_xml_doc", buildxml(&xmldoc) == 0);
         mu_assert("Verify XML content", 
                 strcmp(xmldoc,
@@ -55,6 +58,8 @@ char *test_xml_doc()
         mu_assert("sqltoxml() - check xml", strcmp(xmldoc, xmltst) == 0);
         free(xmldoc);
 #endif /* _NPG */
+
+        free_request(request);
 
         return 0;
 }
@@ -98,7 +103,7 @@ char *test_xml_sqlvars()
         request = http_init_request();
         asprintf(&request->res, "/myinstance/mybusiness/collection/element");
         asprintf(&sql, "SELECT * FROM $1.$0.myview");
-        mu_assert("sqlvars()", sqlvars(&sql) == 0);
+        sqlvars(&sql);
         mu_assert("sql variable subsitution",
                 strcmp(sql,
                 "SELECT * FROM mybusiness.myinstance.myview") == 0);
