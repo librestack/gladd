@@ -90,3 +90,22 @@ char *test_xml_to_sql()
 
         return 0;
 }
+
+char *test_xml_sqlvars()
+{
+        char *sql;
+
+        request = http_init_request();
+        asprintf(&request->res, "/myinstance/mybusiness/collection/element");
+        asprintf(&sql, "SELECT * FROM $1.$0.myview");
+        mu_assert("sqlvars()", sqlvars(&sql) == 0);
+        mu_assert("sql variable subsitution",
+                strcmp(sql,
+                "SELECT * FROM mybusiness.myinstance.myview") == 0);
+
+
+        free(sql);
+        free_request(request);
+
+        return 0;
+}

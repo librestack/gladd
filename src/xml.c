@@ -118,6 +118,34 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
         return 0;
 }
 
+/* subsitute variables in sql for their values */
+int sqlvars(char **sql)
+{
+        char **tokens;
+        int toknum;
+        char *url;
+        char *sqltmp;
+        char *var;
+        int i;
+
+        url = strdup(request->res);
+
+        tokens = tokenize(&toknum, &url, "/");
+
+        for (i=0; i <= toknum; i++) {
+                asprintf(&var, "$%i", i);
+                sqltmp = replaceall(*sql, var, tokens[i]);
+                free(var);
+                free(*sql);
+                *sql = strdup(sqltmp);
+                free(sqltmp);
+        }
+
+        free(url);
+
+        return 0;
+}
+
 int flattenxml(xmlDocPtr doc, char **xml, int pretty)
 {
         xmlChar *xmlbuff;
