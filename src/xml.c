@@ -73,6 +73,7 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 
         /* do variable substitution */
         sqlvars(&sql);
+        syslog(LOG_DEBUG, "SQL: %s\n", sql);
 
         if (db_fetch_all(db, sql, filter, &rows, &rowc) < 0) {
                 syslog(LOG_ERR, "Error in db_fetch_all()");
