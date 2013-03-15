@@ -23,6 +23,7 @@
 #include "auth.h"
 #include "config.h"
 #include "db.h"
+#include <fnmatch.h>
 #include <string.h>
 #include <syslog.h>
 
@@ -41,7 +42,7 @@ int check_auth(http_request_t *r)
                         "Checking acls for %s %s ... trying %s %s", 
                         r->method, r->res, a->method, a->url);
                 /* ensure method and url matches */
-                if ((strncmp(r->res, a->url, strlen(a->url)) == 0) &&
+                if ((fnmatch(a->url, r->res, 0) == 0) &&
                     (strncmp(r->method, a->method, strlen(r->method)) == 0))
                 {
                         if (strncmp(a->auth, "*", strlen(a->auth)) == 0) {

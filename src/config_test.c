@@ -231,7 +231,7 @@ char *test_config_acl_allow_all()
         mu_assert("test 2nd acl->method is read from config",
                 strncmp(acl->method, "GET", strlen(acl->method)) == 0);
         mu_assert("test 2nd acl->url is read from config", 
-                strncmp(acl->url, "/static/", strlen(acl->url)) == 0);
+                strncmp(acl->url, "/static/*", strlen(acl->url)) == 0);
         mu_assert("test 2nd acl->type is read from config", 
                 strncmp(acl->type, "allow", strlen(acl->type)) == 0);
         mu_assert("test 2nd acl->auth is read from config", 
