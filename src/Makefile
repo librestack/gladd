@@ -25,7 +25,7 @@ CC=gcc
 # -D_NMY   => compile without mysql support
 # -D_NLDAP => compile without ldap support
 # -D_NXML  => compile without xml support
-CFLAGS=-g -Wall -Werror
+CFLAGS=-g -Wall -Werror -Wno-unused-but-set-variable
 
 INCLUDES=-I/usr/include/libxml2 -I/usr/include/postgresql
 MYSQLFLAGS=`mysql_config --cflags --libs`
