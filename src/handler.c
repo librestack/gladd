@@ -331,7 +331,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         }
         free(sql);
 
-        respond(sock, "200 Success");
+        respond(sock, "<response><code>200</code><message>Success</message></response>");
 
         return 0;
 }
