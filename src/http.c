@@ -429,6 +429,7 @@ void http_response(int sock, int code)
         status = get_status(code).status;
         asprintf(&response, HTTP_RESPONSE, code, status, mime, headers);
         respond(sock, response);
+        syslog(LOG_DEBUG, "http response sent: %i - %s", code, status);
         free(response);
         free(headers);
 }
