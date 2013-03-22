@@ -40,6 +40,7 @@ config_t config_default = {
         .encoding       = "UTF-8",
         .xmlpath        = ".",
         .port           = 8080,
+        .xforward       = 0,
         .urldefault     = "index.html"
 };
 
@@ -567,6 +568,10 @@ int process_config_line(char *line)
                 else if (strcmp(key, "daemon") == 0) {
                         return set_config_long(&config_new->daemon, 
                                                 "port", i, 0, 1);
+                }
+                else if (strcmp(key, "x-forward") == 0) {
+                        return set_config_long(&config_new->xforward, 
+                                                "x-forward", i, 0, 1);
                 }
         }
         else if (sscanf(line, "%s %[^\n]", key, value) == 2) {

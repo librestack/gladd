@@ -83,6 +83,7 @@ char *test_config_defaults()
                 strncmp(config->encoding, "UTF-8", 5) == 0);
         mu_assert("Ensure default url_default=index.html", 
                 strcmp(config->urldefault, "index.html") == 0);
+        mu_assert("Ensure default x-forward=0", config->xforward == 0);
         return 0;
 }
 
@@ -100,6 +101,7 @@ char *test_config_set()
                 "/home/bacs/dev/gladbooksd/static/xml/") == 0);
         mu_assert("Ensure url_default is read from config",
                 strcmp(config->urldefault, "/path/to/index.html") == 0);
+        mu_assert("Ensure xforward is set from config", config->xforward == 1);
         return 0;
 }
 
