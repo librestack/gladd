@@ -206,7 +206,14 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
         }
 
         /* add some server variables to xml before transformation */
-        xml_prepend_element(docxml, "clientip", request->clientip);
+        if (config->xforward == 1) {
+                /* behind proxy, so use X-Forwarded-For header */
+                xml_prepend_element(docxml, "clientip", 
+                        http_get_header(request, "X-Forwarded-For"));
+        }
+        else {
+                xml_prepend_element(docxml, "clientip", request->clientip);
+        }
         xml_prepend_element(docxml, "authuser", request->authuser);
 
         /* perform the transformation */
