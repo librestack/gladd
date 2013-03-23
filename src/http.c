@@ -246,6 +246,7 @@ http_request_t *http_init_request()
         r->res = NULL;
         r->querystr = NULL;
         r->clientip = NULL;
+        r->xforwardip = NULL;
         r->authtype = NULL;
         r->authuser = NULL;
         r->authpass = NULL;
@@ -504,6 +505,7 @@ void free_request(http_request_t *r)
         free(r->res);
         free(r->querystr);
         free(r->clientip);
+        free(r->xforwardip);
         free(r->authtype);
         free(r->authuser);
         free(r->authpass);

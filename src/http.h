@@ -56,6 +56,7 @@ typedef struct http_request_t {
         char *querystr;         /* any query string supplied             */
         ssize_t bytes;          /* bytes recv()'d                        */
         char *clientip;         /* IP address of client                  */
+        char *xforwardip;       /* X-Forwarded-For header                */
         char *authtype;         /* Basic, or Silent                      */
         char *authuser;         /* username supplied for http basic auth */
         char *authpass;         /* password    "      "   "     "    "   */

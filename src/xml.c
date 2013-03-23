@@ -186,7 +186,6 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
         xmlDocPtr docsql;
         xmlChar *sqlout;
         int doclen;
-        char *xforwardip;
 
         /* TODO: check stylesheet file actually exists first */
 
@@ -207,10 +206,9 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
         }
 
         /* add some server variables to xml before transformation */
-        xforwardip = http_get_header(request, "X-Forwarded-For");
-        if ((config->xforward == 1) && (xforwardip)) {
+        if ((config->xforward == 1) && (request->xforwardip)) {
                 /* behind proxy, so use X-Forwarded-For header */
-                xml_prepend_element(docxml, "clientip", xforwardip);
+                xml_prepend_element(docxml, "clientip", request->xforwardip);
         }
         else {
                 xml_prepend_element(docxml, "clientip", request->clientip);
