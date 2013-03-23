@@ -111,8 +111,10 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         if (config->xforward == 1) {
                 char *xforwardip;
                 xforwardip = http_get_header(request, "X-Forwarded-For");
-                syslog(LOG_DEBUG, "X-Forwarded-For: %s", xforwardip);
-                request->xforwardip = strdup(xforwardip);
+                if (xforwardip) {
+                        syslog(LOG_DEBUG, "X-Forwarded-For: %s", xforwardip);
+                        request->xforwardip = strdup(xforwardip);
+                }
         }
 
         syslog(LOG_DEBUG, "Client header count: %i", hcount);
