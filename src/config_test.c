@@ -124,6 +124,34 @@ char *test_config_read_auth()
         return 0;
 }
 
+char *test_config_read_users()
+{
+        user_t *u;
+
+        mu_assert("Ensure user lines are read from config", 
+                config->users != NULL);
+        mu_assert("Reading 1st user from config", u = config->users);
+        mu_assert("Check 1st user->username",
+                strcmp(u->username, "alpha") == 0);
+        mu_assert("Check 1st user->password",
+                strcmp(u->password, "alphasecret") == 0);
+        mu_assert("Reading 2nd user from config", u = u->next);
+        mu_assert("Check 2nd user->username",
+                strcmp(u->username, "bravo") == 0);
+        mu_assert("Check 2nd user->password",
+                strcmp(u->password, "bravosecret") == 0);
+        mu_assert("Reading 3rd user from config", u = u->next);
+        mu_assert("Check 3rd user->username",
+                strcmp(u->username, "charlie") == 0);
+        mu_assert("Check 3rd user->password",
+                strcmp(u->password, "charliesecret") == 0);
+        mu_assert("Ensure final users->next returns NULL", u->next == NULL);
+        mu_assert("Fetch user by username and check password", 
+                strcmp(getuser("bravo")->password, "bravosecret") == 0);
+
+        return 0;
+}
+
 /* test successive reads of url->next */
 char *test_config_read_url()
 {

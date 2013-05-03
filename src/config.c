@@ -52,6 +52,7 @@ auth_t *prevauth;       /* pointer to last auth */
 db_t   *prevdb;         /* pointer to last db  */
 sql_t  *prevsql;        /* pointer to last sql */
 url_t  *prevurl;        /* pointer to last url */
+user_t *prevuser;       /* pointer to last user */
 
 /* add acl */
 int add_acl (char *value)
@@ -279,6 +280,33 @@ int add_url_handler(char *value)
         return 0;
 }
 
+/* store user in config */
+int add_user(char *value)
+{
+        user_t *newuser;
+        char username[LINE_MAX] = "";
+        char password[LINE_MAX] = "";
+
+        if (sscanf(value, "%s %[^\n]", username, password) != 2) {
+                return -1;
+        }
+
+        newuser = malloc(sizeof(struct user_t));
+
+        newuser->username = strndup(username, LINE_MAX);
+        newuser->password = strndup(password, LINE_MAX);
+        newuser->next = NULL;
+
+        if (prevuser != NULL)
+                prevuser->next = newuser;
+        else
+                config_new->users = newuser;
+        prevuser = newuser;
+
+        return 0;
+}
+
+
 /* clean up config->acls memory */
 void free_acls()
 {
@@ -328,6 +356,7 @@ void free_config()
         free_dbs();
         free_sql();
         free_urls(config->urls);
+        free_users(config->users);
 }
 
 /* free database struct */
@@ -397,6 +426,20 @@ void free_urls(url_t *u)
         }
 }
 
+/* clean up config->users memory */
+void free_users(user_t *u)
+{
+        user_t *tmp;
+
+        while (u != NULL) {
+                free(u->username);
+                free(u->password);
+                tmp = u;
+                u = u->next;
+                free(tmp);
+        }
+}
+
 /* return the auth_t pointer for this alias */
 auth_t *getauth(char *alias)
 {
@@ -437,6 +480,21 @@ char *getsql(char *alias)
                 if (strcmp(alias, s->alias) == 0)
                         return s->sql;
                 s = s->next;
+        }
+
+        return NULL;
+}
+
+/* fetch user from config by username */
+user_t *getuser(char *username)
+{
+        user_t *u;
+
+        u = config->users;
+        while (u != NULL) {
+                if (strcmp(username, u->username) == 0)
+                        return u;
+                u = u->next;
         }
 
         return NULL;
@@ -583,6 +641,9 @@ int process_config_line(char *line)
                 }
                 else if (strcmp(key, "url") == 0) {
                         return add_url_handler(value);
+                }
+                else if (strcmp(key, "user") == 0) {
+                        return add_user(value);
                 }
                 else if (strcmp(key, "acl") == 0) {
                         return add_acl(value);
