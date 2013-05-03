@@ -73,7 +73,7 @@ int check_auth(http_request_t *r)
                         else if (strncmp(a->type, "require",
                         strlen(a->type)) == 0) 
                         {
-                                syslog(LOG_DEBUG, "require sufficient...");
+                                syslog(LOG_DEBUG, "acl require ...");
                                 /* this MUST pass, but do further checks */
                                 i = check_auth_require(a->auth, r);
                                 if (i != 0) {

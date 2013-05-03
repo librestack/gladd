@@ -138,10 +138,9 @@ char *test_auth_require()
 
 char *test_auth_patterns()
 {
-        //http_request_t *r;
+        http_request_t *r;
 
         read_config("test_auth_patterns_00.conf");
-        /*
         r = http_init_request();
         asprintf(&r->method, "GET");
         asprintf(&r->res, "/static/secret.html");
@@ -150,10 +149,8 @@ char *test_auth_patterns()
         mu_assert("check_auth() - valid user will fail when ldap required",
                 check_auth(r) == HTTP_UNAUTHORIZED);
         free_request(r);
-        */
         free_config();
 
-        /*
         read_config("test_auth_patterns_01.conf");
         r = http_init_request();
         asprintf(&r->method, "GET");
@@ -164,7 +161,6 @@ char *test_auth_patterns()
                 check_auth(r) == 0);
         free_request(r);
         free_config();
-        */
 
         return 0;
 }

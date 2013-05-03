@@ -615,6 +615,11 @@ int db_test_bind(db_t *db, char *bindstr, char *bindattr,
 {
         char *binddn;
         int rc;
+
+        if (db == NULL) {
+                syslog(LOG_DEBUG, "NULL db passed to db_test_bind()");
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
         
         db_connect_ldap(db);
         asprintf(&binddn, "%s=%s,%s,%s", bindattr, user, bindstr, db->db);
