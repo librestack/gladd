@@ -90,7 +90,9 @@ int check_auth(http_request_t *r)
                 a = a->next;
         }
         if (a != NULL) {
-                return 0;
+                if (strncmp(a->type, "sufficient", strlen(a->type)) == 0) {
+                        return 0;
+                }
         }
 
         syslog(LOG_DEBUG, "no acl matched");
@@ -117,7 +119,7 @@ int check_auth_sufficient(char *alias, http_request_t *r)
                 return check_auth_alias(alias, r);
         }
 
-        return 0;
+        return HTTP_FORBIDDEN;
 }
 
 /* all auth MUST pass */
@@ -176,6 +178,7 @@ int check_auth_alias(char *alias, http_request_t *r)
                         u = getuser(r->authuser);
                         if (u == NULL) {
                                 /* user not found */
+                                syslog(LOG_DEBUG, "no static user match");
                                 return HTTP_UNAUTHORIZED;
                         }
                         if (strcmp(r->authpass, u->password) != 0) {
