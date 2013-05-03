@@ -84,7 +84,9 @@ int add_acl (char *value)
                 newacl->params = NULL;
                 newacl->next = NULL;
         }
-        else if (strncmp(type, "require", 5) == 0) {
+        else if ((strncmp(type, "require", 5) == 0) ||
+                 (strncmp(type, "sufficient", 11) == 0)) 
+        {
                 newacl->method = strndup(method, LINE_MAX);
                 newacl->url = strndup(url, LINE_MAX);
                 newacl->type = strndup(type, LINE_MAX);
@@ -125,6 +127,14 @@ int add_auth (char *value)
         }
         newauth = malloc(sizeof(struct auth_t));
         if (strcmp(type, "ldap") == 0) {
+                newauth->alias = strdup(alias);
+                newauth->type = strdup(type);
+                newauth->db = strdup(db);
+                newauth->sql = strdup(sql);
+                newauth->bind = strdup(bind);
+                newauth->next = NULL;
+        }
+        else if (strcmp(type, "user") == 0) {
                 newauth->alias = strdup(alias);
                 newauth->type = strdup(type);
                 newauth->db = strdup(db);
@@ -324,6 +334,7 @@ void free_acls()
                 a = a->next;
                 free(tmp);
         }
+        config->acls = NULL;
 }
 
 /* free auth structs */
@@ -343,20 +354,32 @@ void free_auth()
                 a = a->next;
                 free(tmp);
         }
+        config->auth = NULL;
 }
 
 /* free config memory */
 void free_config()
 {
         free(config->encoding);
+        config->encoding = NULL;
         free(config->urldefault);
+        config->urldefault = NULL;
         free(config->xmlpath);
+        config->xmlpath = NULL;
         free_acls();
         free_auth();
         free_dbs();
         free_sql();
         free_urls(config->urls);
         free_users(config->users);
+
+        config_new = NULL;
+        prevacl = NULL;
+        prevauth = NULL;
+        prevdb = NULL;
+        prevsql = NULL;
+        prevurl = NULL;
+        prevuser = NULL;
 }
 
 /* free database struct */
@@ -377,6 +400,7 @@ void free_dbs()
                 d = d->next;
                 free(tmp);
         }
+        config->dbs = NULL;
 }
 
 /* free keyvalue struct */
@@ -407,6 +431,7 @@ void free_sql()
                 s = s->next;
                 free(tmp);
         }
+        config->sql = NULL;
 }
 
 /* clean up config->urls memory */
@@ -424,6 +449,7 @@ void free_urls(url_t *u)
                 u = u->next;
                 free(tmp);
         }
+        config->urls = NULL;
 }
 
 /* clean up config->users memory */
@@ -715,14 +741,14 @@ int read_config(char *configfile)
 /* set config defaults if they haven't been set already */
 int set_config_defaults()
 {
-        static int defaults_set = 0;
+        //static int defaults_set = 0;
 
-        if (defaults_set != 0)
-                return 1;
+        //if (defaults_set != 0)
+        //        return 1;
 
         config = &config_default;
 
-        defaults_set = 1;
+        //defaults_set = 1;
         return 0;
 }
 

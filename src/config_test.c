@@ -117,6 +117,8 @@ char *test_config_read_auth()
         mu_assert("Check 1st auth->db", strcmp(a->db, "ldap1") == 0);
         mu_assert("Check 1st auth->sql", strcmp(a->sql, "ld_auth") == 0);
         mu_assert("Check 1st auth->bind", strcmp(a->bind, "uid") == 0);
+        mu_assert("Reading 2nd auth from config", a = a->next);
+        mu_assert("Check 2nd auth->type", strcmp(a->type, "user") == 0);
         mu_assert("Skip fake auth type", a = a->next);
         mu_assert("Ensure final auth->next returns NULL", a->next == NULL);
         mu_assert("getauth()", getauth("ldap"));

@@ -119,5 +119,52 @@ char *test_auth_require()
                 check_auth_require("ldap", r) == 0);
         free_request(r);
 
+        r = http_init_request();
+        asprintf(&r->authuser, "bravo");
+        asprintf(&r->authpass, "wrongpassword");
+        mu_assert("check_auth_require() - invalid user/pass combo",
+                check_auth_require("user", r) != 0);
+        free_request(r);
+
+        r = http_init_request();
+        asprintf(&r->authuser, "bravo");
+        asprintf(&r->authpass, "bravosecret");
+        mu_assert("check_auth_require() - successful user/pass combo",
+                check_auth_require("user", r) == 0);
+        free_request(r);
+
+        return 0;
+}
+
+char *test_auth_patterns()
+{
+        //http_request_t *r;
+
+        read_config("test_auth_patterns_00.conf");
+        /*
+        r = http_init_request();
+        asprintf(&r->method, "GET");
+        asprintf(&r->res, "/static/secret.html");
+        asprintf(&r->authuser, "bravo");
+        asprintf(&r->authpass, "bravosecret");
+        mu_assert("check_auth() - valid user will fail when ldap required",
+                check_auth(r) == HTTP_UNAUTHORIZED);
+        free_request(r);
+        */
+        free_config();
+
+        /*
+        read_config("test_auth_patterns_01.conf");
+        r = http_init_request();
+        asprintf(&r->method, "GET");
+        asprintf(&r->res, "/static/secret.html");
+        asprintf(&r->authuser, "bravo");
+        asprintf(&r->authpass, "bravosecret");
+        mu_assert("check_auth() - valid user sufficient",
+                check_auth(r) == 0);
+        free_request(r);
+        free_config();
+        */
+
         return 0;
 }

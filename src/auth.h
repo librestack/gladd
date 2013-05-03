@@ -26,6 +26,8 @@
 #include "http.h"
 
 int check_auth(http_request_t *r);
+int check_auth_alias(char *alias, http_request_t *r);
 int check_auth_require(char *alias, http_request_t *r);
+int check_auth_sufficient(char *alias, http_request_t *r);
 
 #endif /* __GLADD_AUTH_H__ */

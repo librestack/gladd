@@ -84,6 +84,7 @@ static char * all_tests()
         mu_run_test(test_xml_sqlvars);
         mu_run_test(test_config_read_users);
         free_config();
+        mu_run_test(test_auth_patterns);
         printline("*", 80);
         return 0;
 }

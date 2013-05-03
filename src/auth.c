@@ -35,6 +35,7 @@
 int check_auth(http_request_t *r)
 {
         acl_t *a;
+        int i;
 
         a = config->acls;
         while (a != NULL) {
@@ -45,16 +46,45 @@ int check_auth(http_request_t *r)
                 if ((fnmatch(a->url, r->res, 0) == 0) &&
                     (strncmp(r->method, a->method, strlen(r->method)) == 0))
                 {
-                        if (strncmp(a->auth, "*", strlen(a->auth)) == 0) {
-                                syslog(LOG_DEBUG, "acl matches");
-                                if (strcmp(a->type, "require") == 0) {
-                                        /* auth require - needs more checks */
-                                        return check_auth_require("ldap", r);
+                        syslog(LOG_DEBUG,
+                                "Found matching acl - checking credentials");
+
+                        if (strncmp(a->type, "deny", strlen(a->type)) == 0) {
+                                syslog(LOG_DEBUG, "acl deny");
+                                return HTTP_FORBIDDEN;
+                        }
+                        else if (strncmp(a->type, "allow",
+                        strlen(a->type)) == 0) 
+                        {
+                                syslog(LOG_DEBUG, "acl allow");
+                                return 0;
+                        }
+                        else if (strncmp(a->type, "sufficient",
+                        strlen(a->type)) == 0) 
+                        {
+                                syslog(LOG_DEBUG, "acl sufficient...");
+                                /* if this is successful, no further checks */
+                                i = check_auth_sufficient(a->auth, r);
+                                if (i == 0) {
+                                        syslog(LOG_DEBUG, "auth sufficient");
+                                        return i;
                                 }
-                                /* acl matches, return 0 if allow, else 403 */
-                                return 
-                                    strncmp(a->type, "allow", 5) == 0
-                                    ? 0 : HTTP_FORBIDDEN;
+                        }
+                        else if (strncmp(a->type, "require",
+                        strlen(a->type)) == 0) 
+                        {
+                                syslog(LOG_DEBUG, "require sufficient...");
+                                /* this MUST pass, but do further checks */
+                                i = check_auth_require(a->auth, r);
+                                if (i != 0) {
+                                        syslog(LOG_DEBUG, "auth require fail");
+                                        return i;
+                                }
+                        }
+                        else {
+                                syslog(LOG_DEBUG,
+                                "acl auth type '%s' not understood", a->type);
+                                return HTTP_INTERNAL_SERVER_ERROR;
                         }
                 }
                 a = a->next;
@@ -67,28 +97,91 @@ int check_auth(http_request_t *r)
         return HTTP_FORBIDDEN; /* default is to deny access */
 }
 
-/* verify auth requirements met */
+/* any auth will do */
+int check_auth_sufficient(char *alias, http_request_t *r)
+{
+        auth_t *a;
+        int i;
+        
+        if (strncmp(alias, "*", 1) == 0) {
+                a = config->auth;
+                while (a != NULL) {
+                        i = check_auth_alias(a->alias, r);
+                        if (i == 0) {
+                                return i; /* That'll do nicely */
+                        }
+                        a = a->next;
+                }
+        }
+        else {
+                return check_auth_alias(alias, r);
+        }
+
+        return 0;
+}
+
+/* all auth MUST pass */
 int check_auth_require(char *alias, http_request_t *r)
+{
+        auth_t *a;
+        int i;
+        
+        if (strncmp(alias, "*", 1) == 0) {
+                /* all auth MUST succeed */
+                a = config->auth;
+                while (a != NULL) {
+                        i = check_auth_alias(a->alias, r);
+                        if (i != 0) {
+                                return i; /* one failure is all it takes */
+                        }
+                        a = a->next;
+                }
+        }
+        else {
+                return check_auth_alias(alias, r);
+        }
+
+        return 0;
+}
+
+int check_auth_alias(char *alias, http_request_t *r)
 {
         auth_t *a;
 
         if (! (a = getauth(alias))) {
                 syslog(LOG_ERR, 
-                        "Invalid alias '%s' supplied to check_auth_require()",
+                        "Invalid alias '%s' supplied to check_auth_alias()",
                         alias);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
 
-        if (strcmp(a->type, "ldap") == 0) {
+        syslog(LOG_DEBUG, "checking alias %s", alias);
+
+        if ((strcmp(a->type, "ldap") == 0) || (strcmp(a->type, "user") == 0)) {
                 if ((r->authuser == NULL) || (r->authpass == NULL)) {
                         /* don't allow auth with blank credentials */
                         return HTTP_UNAUTHORIZED;
                 }
-                else {
+                if (strcmp(a->type, "ldap") == 0) {
                         /* test credentials against ldap */
+                        syslog(LOG_DEBUG, "checking ldap users");
                         return db_test_bind(getdb(a->db),
                                 getsql(a->sql), a->bind,
                                         r->authuser, r->authpass);
+                }
+                else if (strcmp(a->type, "user") == 0) {
+                        /* test credentials against users */
+                        syslog(LOG_DEBUG, "checking static users");
+                        user_t *u;
+                        u = getuser(r->authuser);
+                        if (u == NULL) {
+                                /* user not found */
+                                return HTTP_UNAUTHORIZED;
+                        }
+                        if (strcmp(r->authpass, u->password) != 0) {
+                                /* password incorrect */
+                                return HTTP_UNAUTHORIZED;
+                        }
                 }
         }
         else {
