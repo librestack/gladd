@@ -164,14 +164,14 @@ int check_auth_alias(char *alias, http_request_t *r)
                         /* don't allow auth with blank credentials */
                         return HTTP_UNAUTHORIZED;
                 }
-                if (strcmp(a->type, "ldap") == 0) {
+                if (strncmp(a->type, "ldap", 4) == 0) {
                         /* test credentials against ldap */
                         syslog(LOG_DEBUG, "checking ldap users");
                         return db_test_bind(getdb(a->db),
                                 getsql(a->sql), a->bind,
                                         r->authuser, r->authpass);
                 }
-                else if (strcmp(a->type, "user") == 0) {
+                else if (strncmp(a->type, "user", 4) == 0) {
                         /* test credentials against users */
                         syslog(LOG_DEBUG, "checking static users");
                         user_t *u;
@@ -181,8 +181,12 @@ int check_auth_alias(char *alias, http_request_t *r)
                                 syslog(LOG_DEBUG, "no static user match");
                                 return HTTP_UNAUTHORIZED;
                         }
-                        if (strcmp(r->authpass, u->password) != 0) {
+                        syslog(LOG_DEBUG, "matched static user");
+                        if (strncmp(r->authpass, u->password,
+                        strlen(u->password)) != 0) 
+                        {
                                 /* password incorrect */
+                                syslog(LOG_DEBUG, "password incorrect");
                                 return HTTP_UNAUTHORIZED;
                         }
                 }
