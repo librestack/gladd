@@ -55,8 +55,8 @@ int buildxml(char **xml)
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 {
         int rowc;
-        row_t *rows;
-        row_t *r;
+        row_t *rows = NULL;
+        row_t *r = NULL;
         xmlNodePtr n = NULL;
         xmlNodePtr nrow = NULL;
         xmlNodePtr nfld = NULL;
