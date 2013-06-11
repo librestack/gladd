@@ -387,7 +387,7 @@ int db_fetch_all_ldap(db_t *db, char *query, field_t *filter, row_t **rows,
         return 0;
 }
 
-/* return all results from a SELECT - postgres */
+/* return all results from a SELECT - mysql */
 int db_fetch_all_my(db_t *db, char *sql, field_t *filter, row_t **rows,
         int *rowc)
 {
