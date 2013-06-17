@@ -25,6 +25,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
 #include "config.h"
@@ -735,6 +736,9 @@ int read_config(char *configfile)
         if (retval == 0)
                 config = config_new;
 
+        /* set syslog mask */
+        setlogmask(LOG_UPTO((config->debug) ? LOG_DEBUG : LOG_INFO));
+        
         return retval;
 }
 
