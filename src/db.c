@@ -257,7 +257,7 @@ int db_exec_sql(db_t *db, char *sql)
 int db_exec_sql_my(db_t *db, char *sql)
 {
         if (mysql_query(db->conn, sql) != 0) {
-                syslog(LOG_DEBUG, "%u: %s\n", mysql_errno(db->conn), 
+                syslog(LOG_ERR, "%u: %s\n", mysql_errno(db->conn), 
                                               mysql_error(db->conn));
                 return -1;
         }
@@ -271,7 +271,7 @@ int db_exec_sql_pg(db_t *db, char *sql)
 
         res = PQexec(db->conn, sql);
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-                syslog(LOG_DEBUG,
+                syslog(LOG_ERR,
                        "SQL exec failed: %s", PQerrorMessage(db->conn));
                 PQclear(res);
                 return -1;
