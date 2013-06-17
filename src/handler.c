@@ -171,7 +171,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
                         mtype = check_content_type(request, &err);
                         if (err != 0) {
-                                syslog(LOG_DEBUG,
+                                syslog(LOG_ERR,
                                         "Unsupported Media Type '%s'", mtype);
                                 http_response(sock, err);
                                 goto close_connection;
