@@ -203,11 +203,13 @@ char *http_get_header(http_request_t *r, char *key)
 url_t *http_match_url(http_request_t *r)
 {
         url_t *u;
+        char *ip;
 
-        syslog(LOG_DEBUG, "Searching for %s %s\n", r->method, r->res);
+        ip = (r->xforwardip) ? r->xforwardip : r->clientip;
+
+        syslog(LOG_INFO, "[%s] %s %s\n", ip, r->method, r->res);
         u = config->urls;
         while (u != NULL) {
-                syslog(LOG_DEBUG, "%s %s\n", u->method, u->url);
                 if ((fnmatch(u->url, r->res, 0) == 0) &&
                          (strcmp(r->method, u->method) == 0))
                 {

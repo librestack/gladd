@@ -85,7 +85,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         get_in_addr((struct sockaddr *)&their_addr),
                         s, sizeof s);
 
-        syslog(LOG_INFO, "server: got connection from %s", s);
+        syslog(LOG_DEBUG, "server: got connection from %s", s);
 
         /* What are we being asked to do? */
         byte_count = recv(sock, buf, sizeof buf, 0);
