@@ -414,8 +414,8 @@ int db_fetch_all_my(db_t *db, char *sql, field_t *filter, row_t **rows,
         }
 
         if (mysql_query(db->conn, sql) != 0) {
-                syslog(LOG_ERR, "%u: %s\n", mysql_errno(db->conn), 
-                                            mysql_error(db->conn));
+                syslog(LOG_ERR, "%u: %s\n%s", mysql_errno(db->conn), 
+                                              mysql_error(db->conn), sql);
                 return -1;
         }
 
