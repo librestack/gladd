@@ -113,3 +113,4 @@ leakcheck:
 
 install:
 	cp ${PROGRAM} ${INSTALLDIR}
+	chmod +s ${INSTALLDIR}${PROGRAM}

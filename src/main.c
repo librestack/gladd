@@ -23,6 +23,7 @@
 #define _GNU_SOURCE
 
 #include <errno.h>
+#include <grp.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -119,6 +120,21 @@ int main (int argc, char **argv)
                 syslog(LOG_ERR, "Failed to listen on port %li. Exiting.", 
                                                                 config->port);
                 free_config();
+                exit(EXIT_FAILURE);
+        }
+
+        /* drop privileges */
+        gid_t newgid = getgid();
+        setgroups(1, &newgid);
+        if (setuid(getuid()) != 0) {
+                fprintf(stderr,
+                        "ERROR: Failed to drop root privileges.  Exiting.\n");
+                exit(EXIT_FAILURE);
+        }
+        /* verify privileges cannot be restored */
+        if (setuid(0) != -1) {
+                fprintf(stderr,
+                        "ERROR: Regained root privileges.  Exiting.\n");
                 exit(EXIT_FAILURE);
         }
 
