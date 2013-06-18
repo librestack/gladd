@@ -47,6 +47,7 @@ int main (int argc, char **argv)
 
         int concounter = 0;
         int errsv;
+        int havelock = 0;
         int lockfd;
         int new_fd;
         int status;
@@ -59,7 +60,6 @@ int main (int argc, char **argv)
         char tcpport[5];
         char *errmsg;
         char buf[sizeof(long)];
-        char *lockfile;
 
         /* check commandline args */
         if (argc > 1) {
@@ -67,30 +67,8 @@ int main (int argc, char **argv)
         }
 
         /* obtain lockfile */
-        if (geteuid() == 0) {
-                /* we are root, put lockfile in /var/run */
-                asprintf(&lockfile, "%s", LOCKFILE_ROOT);
-        }
-        else {
-                /* not root, put pidfile in user home */
-                asprintf(&lockfile, "%s/%s", getenv("HOME"), LOCKFILE_USER);
-        }
-        lockfd = open(lockfile, O_RDWR | O_CREAT, 
-                S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH );
-        if (lockfd == -1) {
-                printf("Failed to open lockfile %s\n", lockfile);
-                free(lockfile);
-                exit(EXIT_FAILURE);
-        }
-        free(lockfile);
-        if (flock(lockfd, LOCK_EX|LOCK_NB) != 0) {
-                if (g_signal != 0) {
-                        /* signal (SIGHUP, SIGTERM etc.) requested */
-                        exit(signal_gladd(lockfd));
-                }
-                printf("%s already running\n", PROGRAM);
-                exit(EXIT_FAILURE);
-        }
+        if ((havelock = obtain_lockfile(&lockfd)) != 0)
+                exit(havelock);
 
         /* open syslogger */
         openlog(PROGRAM, LOG_CONS|LOG_PID, LOG_DAEMON);
@@ -196,4 +174,46 @@ int main (int argc, char **argv)
                         close(new_fd);
                 }
         }
+}
+
+/* return name of lockfile - free() after use */
+char *getlockfilename()
+{
+        char *lockfile;
+
+        if (geteuid() == 0) {
+                /* we are root, put lockfile in /var/run */
+                asprintf(&lockfile, "%s", LOCKFILE_ROOT);
+        }
+        else {
+                /* not root, put pidfile in user home */
+                asprintf(&lockfile, "%s/%s", getenv("HOME"), LOCKFILE_USER);
+        }
+        return lockfile;
+}
+
+/* obtain lockfile */
+int obtain_lockfile(int *lockfd)
+{
+        int retval = 0;
+        char *lockfile;
+
+        lockfile = getlockfilename();
+
+        *lockfd = open(lockfile, O_RDWR | O_CREAT, 
+                S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH );
+        if (*lockfd == -1) {
+                printf("Failed to open lockfile %s\n", lockfile);
+                retval = EXIT_FAILURE;
+        }
+        if (flock(*lockfd, LOCK_EX|LOCK_NB) != 0) {
+                if (g_signal != 0) {
+                        /* signal (SIGHUP, SIGTERM etc.) requested */
+                        exit(signal_gladd(*lockfd));
+                }
+                printf("%s already running\n", PROGRAM);
+                retval = EXIT_FAILURE;
+        }
+        free(lockfile);
+        return retval;
 }

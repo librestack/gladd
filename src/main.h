@@ -32,5 +32,7 @@
 int sockme;
 
 int main (int argc, char **argv);
+char *getlockfilename();
+int obtain_lockfile(int *lockfd);
 
 #endif /* __GLADD_MAIN_H__ */
