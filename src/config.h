@@ -25,12 +25,6 @@
 
 #include <stdio.h>
 
-#define BACKLOG 10  /* how many pending connectiong to hold in queue */
-#define BUFSIZE 8096
-#define LOCKFILE ".gladd.lock"
-#define PROGRAM "gladd"
-#define DEFAULT_CONFIG "/etc/gladd.conf"
-
 typedef struct acl_t {
         char *type; /* allow or deny */
         char *method;
