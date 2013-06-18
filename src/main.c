@@ -66,7 +66,6 @@ int main (int argc, char **argv)
         }
 
         /* obtain lockfile */
-        //lockfd = creat(LOCKFILE, 0644);
         lockfd = open(LOCKFILE, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         if (lockfd == -1) {
                 printf("Failed to open lockfile %s\n", LOCKFILE);
