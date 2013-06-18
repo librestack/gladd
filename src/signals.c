@@ -72,10 +72,10 @@ int signal_gladd (int lockfd)
                 return EXIT_FAILURE;
         }
         if (sscanf(buf, "%li", &lpid) == 1) {
-                return (kill(lpid, g_signal));
+                return kill(lpid, g_signal);
         }
         else {
                 fprintf(stderr, "Invalid pid\n");
-                return(EXIT_FAILURE);
+                return EXIT_FAILURE;
         }
 }

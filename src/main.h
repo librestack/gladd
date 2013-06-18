@@ -25,9 +25,9 @@
 
 #define BACKLOG 10  /* how many pending connectiong to hold in queue */
 #define BUFSIZE 8096
-#define LOCKFILE ".gladd.lock"
+#define LOCKFILE_USER ".gladd.pid"
+#define LOCKFILE_ROOT "/var/run/gladd.pid"
 #define PROGRAM "gladd"
-#define DEFAULT_CONFIG "/etc/gladd.conf"
 
 int sockme;
 

@@ -59,6 +59,7 @@ int main (int argc, char **argv)
         char tcpport[5];
         char *errmsg;
         char buf[sizeof(long)];
+        char *lockfile;
 
         /* check commandline args */
         if (argc > 1) {
@@ -66,11 +67,22 @@ int main (int argc, char **argv)
         }
 
         /* obtain lockfile */
-        lockfd = open(LOCKFILE, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+        if (geteuid() == 0) {
+                /* we are root, put lockfile in /var/run */
+                asprintf(&lockfile, "%s", LOCKFILE_ROOT);
+        }
+        else {
+                /* not root, put pidfile in user home */
+                asprintf(&lockfile, "%s/%s", getenv("HOME"), LOCKFILE_USER);
+        }
+        lockfd = open(lockfile, O_RDWR | O_CREAT, 
+                S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH );
         if (lockfd == -1) {
-                printf("Failed to open lockfile %s\n", LOCKFILE);
+                printf("Failed to open lockfile %s\n", lockfile);
+                free(lockfile);
                 exit(EXIT_FAILURE);
         }
+        free(lockfile);
         if (flock(lockfd, LOCK_EX|LOCK_NB) != 0) {
                 if (g_signal != 0) {
                         /* signal (SIGHUP, SIGTERM etc.) requested */

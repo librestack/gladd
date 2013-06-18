@@ -25,6 +25,8 @@
 
 #include <stdio.h>
 
+#define DEFAULT_CONFIG "/etc/gladd.conf"
+
 typedef struct acl_t {
         char *type; /* allow or deny */
         char *method;
