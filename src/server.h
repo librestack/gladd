@@ -1,5 +1,5 @@
-/*
- * signals.h - handle process signals
+/* 
+ * server.h
  *
  * this file is part of GLADD
  *
@@ -20,17 +20,14 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GLADD_SIGNALS_H__
-#define __GLADD_SIGNALS_H__ 1
+#ifndef __GLADD_SERVER_H__
+#define __GLADD_SERVER_H__ 1
 
-int sighandlers();
-void sigchld_handler (int signo);
-void sigint_handler (int signo);
-void sigterm_handler (int signo);
-void sighup_handler (int signo);
-void sigusr1_handler (int signo, siginfo_t *si, void *ucontext);
-void sigusr2_handler (int signo, siginfo_t *si, void *ucontext);
-int signal_gladd (int lockfd);
-void signal_wait();
+#define BACKLOG 10  /* how many pending connectiong to hold in queue */
 
-#endif /* __GLADD_SIGNALS_H__ */
+int sockme;
+
+int get_hits();
+int server_start(int lockfd);
+
+#endif /* __GLADD_SERVER_H__ */

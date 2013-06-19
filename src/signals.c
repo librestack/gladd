@@ -26,7 +26,31 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "config.h"
+#include "main.h"
+#include "server.h"
 #include "signals.h"
+
+/* set up signal handling */
+int sighandlers()
+{
+        int ret;
+        struct sigaction act1, act2, oldact;
+
+        signal(SIGCHLD, sigchld_handler);
+        signal(SIGINT, sigint_handler);
+        signal(SIGTERM, sigterm_handler);
+        signal(SIGHUP, sighup_handler);
+
+        act1.sa_flags = SA_SIGINFO;
+        act1.sa_sigaction = sigusr1_handler;
+        ret = sigaction(SIGUSR1, &act1, &oldact);
+
+        act2.sa_flags = SA_SIGINFO;
+        act2.sa_sigaction = sigusr2_handler;
+        ret = sigaction(SIGUSR2, &act2, &oldact);
+
+        return ret;
+}
 
 /* clean up zombie children */
 void sigchld_handler (int signo)
@@ -61,6 +85,28 @@ void sighup_handler (int signo)
         }
 }
 
+/* catch SIGUSR1 - request for status */
+void sigusr1_handler (int signo, siginfo_t *si, void *ucontext)
+{
+        int ret;
+        union sigval value;
+
+        syslog(LOG_INFO, "Client status request [%i]", si->si_pid);
+
+        /* respond to client */
+        value.sival_int = get_hits();
+        ret = sigqueue(si->si_pid, SIGUSR2, value);
+        if (ret == -1)
+                syslog(LOG_ERR, "ERROR: failed to send SIGUSR2");
+}
+
+/* catch SIGUSR2 - response to status enquiry */
+void sigusr2_handler (int signo, siginfo_t *si, void *ucontext)
+{
+        printf("%s running, %i hits\n", PROGRAM, si->si_int);
+        exit(EXIT_SUCCESS);
+}
+
 /* send signal to running gladd process */
 int signal_gladd (int lockfd)
 {
@@ -78,4 +124,11 @@ int signal_gladd (int lockfd)
                 fprintf(stderr, "Invalid pid\n");
                 return EXIT_FAILURE;
         }
+}
+
+/* catch response from server */
+void signal_wait() {
+        sleep(3); /* give up after 3s */
+        printf("Timeout.  No response from server\n");
+        exit(EXIT_FAILURE);
 }

@@ -21,6 +21,7 @@
  */
 
 #include "config.h"
+#include "help.h"
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,15 +30,26 @@ int g_signal = 0;
 
 int argue(int argc, char *arg)
 {
-
         if (argc == 2) {
-                if (strcmp(arg, "reload") == 0) {
+                if (strcmp(arg, "start") == 0) {
+                        return 0;
+                }
+                else if (strcmp(arg, "reload") == 0) {
                         g_signal = SIGHUP;
                         return 0;
                 }
-                if (strcmp(arg, "shutdown") == 0) {
+                else if ((strcmp(arg, "shutdown") == 0)
+                       ||(strcmp(arg, "stop") == 0)) 
+                {
                         g_signal = SIGTERM;
                         return 0;
+                }
+                else if (strcmp(arg, "status") == 0) {
+                        g_signal = SIGUSR1;
+                        return 0;
+                }
+                else {
+                        help();
                 }
         }
         else {
@@ -49,6 +61,11 @@ int argue(int argc, char *arg)
 int process_args(int argc, char **argv)
 {
         int i;
+
+        if (argc != 2) {
+                help();
+                return -1;
+        }
 
         for (i = 1; i < argc; i++) {
                 if (argue(argc, argv[i]) != 0) {

@@ -39,6 +39,10 @@ char *test_args()
         mu_assert("Ensure argue() accepts shutdown",argue(2, "shutdown") == 0);
         mu_assert("Ensure argue() only accepts shutdown as a solo argument",
                 argue(3, "shutdown") != 0);
+        mu_assert("Ensure argue() accepts stop",argue(2, "stop") == 0);
+        mu_assert("Ensure argue() accepts start",argue(2, "start") == 0);
+        mu_assert("Ensure argue() requires at least one argument",
+                argue(1, NULL) == -1);
 
         return 0;
 }

@@ -33,11 +33,12 @@
 #include <syslog.h>
 #include <unistd.h>
 
-#include "main.h"
+#include "args.h"
 #include "config.h"
 #include "handler.h"
+#include "main.h"
+#include "server.h"
 #include "signals.h"
-#include "args.h"
 
 int main (int argc, char **argv)
 {
@@ -46,26 +47,19 @@ int main (int argc, char **argv)
                         const struct addrinfo *hints,
                         struct addrinfo **res);
 
-        int concounter = 0;
-        int errsv;
         int havelock = 0;
         int lockfd;
-        int new_fd;
-        int status;
-        int yes=1;
-        pid_t pid;
-        socklen_t addr_size;
-        struct addrinfo *servinfo;
-        struct addrinfo hints;
-        struct sockaddr_storage their_addr;
-        char tcpport[5];
         char *errmsg;
-        char buf[sizeof(long)];
+
+        /* set up signal handlers */
+        if (sighandlers() == -1) {
+                fprintf(stderr, "Failed to set up signals. Exiting.\n");
+                exit(EXIT_FAILURE);
+        }
 
         /* check commandline args */
-        if (argc > 1) {
-                process_args(argc, argv);
-        }
+        if (process_args(argc, argv) == -1)
+                exit(EXIT_FAILURE);
 
         /* obtain lockfile */
         if ((havelock = obtain_lockfile(&lockfd)) != 0)
@@ -85,111 +79,7 @@ int main (int argc, char **argv)
                 exit(EXIT_FAILURE);
         }
 
-        memset(&hints, 0, sizeof hints);           /* zero memory */
-        hints.ai_family = AF_UNSPEC;               /* ipv4/ipv6 agnostic */
-        hints.ai_socktype = SOCK_STREAM;           /* TCP stream sockets */
-        hints.ai_flags = AI_PASSIVE;               /* get my ip */
-        snprintf(tcpport, 5, "%li", config->port); /* tcp port to listen on */
-
-        if ((status = getaddrinfo(NULL, tcpport, &hints, &servinfo)) != 0){
-                fprintf(stderr, "getaddrinfo error: %s\n",
-                                gai_strerror(status));
-                free_config();
-                exit(EXIT_FAILURE);
-        }
-
-        /* get a socket */
-        sockme = socket(servinfo->ai_family, servinfo->ai_socktype,
-                        servinfo->ai_protocol);
-
-        /* reuse socket if already in use */
-        setsockopt(sockme, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-
-        /* bind to a port */
-        bind(sockme, servinfo->ai_addr, servinfo->ai_addrlen);
-
-        freeaddrinfo(servinfo);
-
-        /* listening */
-        if (listen(sockme, BACKLOG) == 0) {
-                syslog(LOG_INFO, "Listening on port %li", config->port);
-        }
-        else {
-                errsv = errno;
-                fprintf(stderr, "ERROR: %s\n", strerror(errsv));
-                syslog(LOG_ERR, "Failed to listen on port %li. Exiting.", 
-                                                                config->port);
-                free_config();
-                exit(EXIT_FAILURE);
-        }
-
-        /* drop privileges */
-        gid_t newgid = getgid();
-        setgroups(1, &newgid);
-        if (setuid(getuid()) != 0) {
-                fprintf(stderr,
-                        "ERROR: Failed to drop root privileges.  Exiting.\n");
-                exit(EXIT_FAILURE);
-        }
-        /* verify privileges cannot be restored */
-        if (setuid(0) != -1) {
-                fprintf(stderr,
-                        "ERROR: Regained root privileges.  Exiting.\n");
-                exit(EXIT_FAILURE);
-        }
-
-        addr_size = sizeof their_addr;
-
-        /* daemonize */
-        if (config->daemon == 0) {
-                if (daemon(0, 0) == -1) {
-                        errsv = errno;
-                        fprintf(stderr, "ERROR: %s\n", strerror(errsv));
-                        syslog(LOG_ERR, "Failed to daemonize. Exiting.");
-                        free_config();
-                        exit(EXIT_FAILURE);
-                }
-        }
-
-        /* write pid to lockfile */
-        snprintf(buf, sizeof(long), "%ld\n", (long) getpid());
-        if (write(lockfd, buf, strlen(buf)) != strlen(buf)) {
-                fprintf(stderr, "Error writing to pidfile\n");
-                exit(EXIT_FAILURE);
-        }
-
-        /* set up child signal handler */
-        signal(SIGCHLD, sigchld_handler);
-
-        /* catch SIGINT for cleanup */
-        signal(SIGINT, sigint_handler);
-
-        /* catch SIGTERM for cleanup */
-        signal(SIGTERM, sigterm_handler);
-
-        /* catch HUP signal for config reload */
-        signal(SIGHUP, sighup_handler);
-
-        for (;;) {
-                /* incoming! */
-                ++concounter;
-                new_fd = accept(sockme, (struct sockaddr *)&their_addr,
-                                &addr_size);
-                pid = fork(); /* fork new process to handle connection */
-                if (pid == -1) {
-                        /* fork failed */
-                        return -1;
-                }
-                else if (pid == 0) {
-                        /* let the children play */
-                        close(sockme); /* children never listen */
-                        handle_connection(new_fd, their_addr);
-                }
-                else {
-                        /* parent can close connection */
-                        close(new_fd);
-                }
-        }
+        return server_start(lockfd);
 }
 
 /* return name of lockfile - free() after use */
@@ -225,10 +115,21 @@ int obtain_lockfile(int *lockfd)
         if (flock(*lockfd, LOCK_EX|LOCK_NB) != 0) {
                 if (g_signal != 0) {
                         /* signal (SIGHUP, SIGTERM etc.) requested */
-                        exit(signal_gladd(*lockfd));
+                        retval = signal_gladd(*lockfd);
+                        if (g_signal == SIGUSR1) {
+                                signal_wait(); /* wait for a response */
+                        }
+                        exit(retval);
                 }
                 printf("%s already running\n", PROGRAM);
                 retval = EXIT_FAILURE;
+        }
+        else if (g_signal != 0) {
+                /* wanted to send a signal, but daemon not running */
+                printf("%s not running\n", PROGRAM);
+                /* exit with success if we were asking status, else fail */
+                retval = g_signal == SIGUSR1 ? EXIT_SUCCESS : EXIT_FAILURE;
+                exit(retval);
         }
         free(lockfile);
         return retval;

@@ -1,5 +1,5 @@
 /*
- * signals.h - handle process signals
+ * help.h - output help text
  *
  * this file is part of GLADD
  *
@@ -20,17 +20,9 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GLADD_SIGNALS_H__
-#define __GLADD_SIGNALS_H__ 1
+#ifndef __GLADD_HELP_H__
+#define __GLADD_HELP_H__ 1
 
-int sighandlers();
-void sigchld_handler (int signo);
-void sigint_handler (int signo);
-void sigterm_handler (int signo);
-void sighup_handler (int signo);
-void sigusr1_handler (int signo, siginfo_t *si, void *ucontext);
-void sigusr2_handler (int signo, siginfo_t *si, void *ucontext);
-int signal_gladd (int lockfd);
-void signal_wait();
+void help();
 
-#endif /* __GLADD_SIGNALS_H__ */
+#endif /* __GLADD_HELP_H__ */

@@ -32,7 +32,7 @@ MYSQLFLAGS=`mysql_config --cflags --libs`
 LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lxslt -lpq ${MYSQLFLAGS} -lmysqlclient -lldap -lb64 -lcurl
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
-OBJECTFILES=args.o auth.o db.o config.o handler.o http.o mime.o signals.o string.o xml.o
+OBJECTFILES=args.o auth.o db.o config.o handler.o help.o http.o mime.o server.o signals.o string.o xml.o
 TESTFILES=test.o args_test.o auth_test.o db_test.o config_test.o http_test.o string_test.o xml_test.o
 
 ${PROGRAM}: ${PROGRAM}_test main.o
@@ -68,6 +68,9 @@ db_test.o: db_test.c db_test.h
 handler.o: handler.c handler.h http.h main.h mime.h config.h
 	${CC} ${CFLAGS} ${INCLUDES} -c handler.c ${LIBS}
 
+help.o: help.c help.h
+	${CC} ${CFLAGS} -c help.c
+
 http.o: http.c http.h main.h
 	${CC} ${CFLAGS} -c http.c
 
@@ -79,6 +82,9 @@ main.o: main.c main.h handler.h config.h
 
 mime.o: mime.c mime.h
 	${CC} ${CFLAGS} -c mime.c
+
+server.o: server.c server.h
+	${CC} ${CFLAGS} -c server.c
 
 signals.o: signals.c signals.h
 	${CC} ${CFLAGS} -c signals.c
