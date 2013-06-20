@@ -64,7 +64,7 @@ int server_start(int lockfd)
         memset(&hints, 0, sizeof hints);           /* zero memory */
         hints.ai_family = AF_UNSPEC;               /* ipv4/ipv6 agnostic */
         hints.ai_socktype = SOCK_STREAM;           /* TCP stream sockets */
-        hints.ai_flags = AI_PASSIVE;               /* get my ip */
+        hints.ai_flags = AI_PASSIVE;               /* ips we can bind to */
         snprintf(tcpport, 5, "%li", config->port); /* tcp port to listen on */
 
         if ((status = getaddrinfo(NULL, tcpport, &hints, &servinfo)) != 0){
