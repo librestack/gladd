@@ -710,6 +710,14 @@ int read_config(char *configfile)
         int lc = 0;
         int retval = 0;
 
+        /* reset list pointers */
+        prevacl = NULL;
+        prevauth = NULL;
+        prevdb = NULL;
+        prevsql = NULL;
+        prevurl = NULL;
+        prevuser = NULL;
+
         set_config_defaults();
         config_new = &config_default;
 
