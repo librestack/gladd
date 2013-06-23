@@ -80,13 +80,51 @@ char *test_db(db_t *db)
         mu_assert("db_connect()", db_connect(db) == 0);
         mu_assert("Test database connection", db->conn != NULL);
 
-        if (strcmp(db->type, "ldap") != 0) {
-                /* sql databases only */
+
+        if (strcmp(db->type, "tds") == 0) {
+                /* TDS databases */
 
                 mu_assert("db_exec_sql() invalid sql returns failure",
                         db_exec_sql(db, "invalidsql") != 0);
+
+                mu_assert("db_exec_sql() BEGIN TRANSACTION",
+                        db_exec_sql(db, "BEGIN TRANSACTION") == 0);
+
+                mu_assert("db_exec_sql() DROP TABLE", db_exec_sql(db,
+                "IF OBJECT_ID('test', 'U') IS NOT NULL DROP TABLE test;")==0);
+
+                mu_assert("db_exec_sql() CREATE TABLE", db_exec_sql(db,
+                "IF OBJECT_ID('test', 'U') IS NULL CREATE TABLE test(id integer, name char(32));"
+                )==0);
+
+                mu_assert("db_exec_sql() INSERT",
+                db_exec_sql(db,
+                "INSERT INTO test(id, name) VALUES (0, 'boris')") == 0);
+
+                mu_assert("db_exec_sql() INSERT",
+                db_exec_sql(db,
+                "INSERT INTO test(id, name) VALUES (5, 'ivan')") == 0);
+
+                mu_assert("db_exec_sql() COMMIT TRANSACTION",
+                        db_exec_sql(db, "COMMIT TRANSACTION") == 0);
+
+                mu_assert("db_exec_sql() SELECT (but don't process results)",
+                        db_exec_sql(db, "SELECT * FROM test") == 0);
+                /* tds won't allow a connection to be reused until
+                 * all results processed */
+                mu_assert("db_exec_sql() ensure we can SELECT again",
+                        db_exec_sql(db, "SELECT * FROM test") == 0);
+
+        }
+        else if ((strcmp(db->type, "my") == 0)||(strcmp(db->type, "pg") == 0)){
+                /* PG and MY databases */
+
+                mu_assert("db_exec_sql() invalid sql returns failure",
+                        db_exec_sql(db, "invalidsql") != 0);
+
                 mu_assert("db_exec_sql() BEGIN",
                         db_exec_sql(db, "BEGIN") == 0);
+
                 mu_assert("db_exec_sql() DROP TABLE",
                         db_exec_sql(db, "DROP TABLE IF EXISTS test") == 0);
 
@@ -166,7 +204,8 @@ char *test_db(db_t *db)
         asprintf(&data2->value, "66");
         data->next = data2;
         data2->next = NULL;
-        mu_assert("Test db_insert()", db_insert(db, "test", data) == 0);
+
+        mu_assert("Test db_insert()",db_insert(db, "test", data) == 0);
         free_keyval(data);
 
         /* db_update() */

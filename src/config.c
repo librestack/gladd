@@ -204,6 +204,16 @@ int add_db (char *value)
                 newdb->conn=NULL;
                 newdb->next=NULL;
         }
+        else if (strcmp(type, "tds") == 0) {
+                newdb->alias = strndup(alias, LINE_MAX);
+                newdb->type = strndup(type, LINE_MAX);
+                newdb->host = strndup(host, LINE_MAX);
+                newdb->db = strndup(db, LINE_MAX);
+                newdb->user = strndup(user, LINE_MAX);
+                newdb->pass = strndup(pass, LINE_MAX);
+                newdb->conn=NULL;
+                newdb->next=NULL;
+        }
         else if (strcmp(type, "ldap") == 0) {
                 newdb->alias = strndup(alias, LINE_MAX);
                 newdb->type = strndup(type, LINE_MAX);

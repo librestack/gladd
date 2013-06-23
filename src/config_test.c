@@ -226,6 +226,7 @@ char *test_config_read_sql()
         mu_assert("Reading 6th sql from config", s = s->next);
         mu_assert("Reading 7th sql from config", s = s->next);
         mu_assert("Reading 8th sql from config", s = s->next);
+        mu_assert("Reading 9th sql from config", s = s->next);
         
         mu_assert("Ensure final sql->next returns NULL", s->next == NULL);
 
@@ -355,6 +356,9 @@ char *test_config_db()
                                 strcmp(db->db, "dc=example,dc=com") == 0);
         mu_assert("Check 4th db->user", strcmp(db->user, "myuser") == 0);
         mu_assert("Check 4th db->pass", strcmp(db->pass, "mypass") == 0);
+
+        /* check next (tds db) */
+        mu_assert("Test reading next db (tdb) from config", db = db->next);
 
         /* ensure no more dbs */
         mu_assert("Ensure final db->next returns NULL", db->next == NULL);

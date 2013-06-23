@@ -24,6 +24,7 @@
 #define LDAP_DEPRECATED 1
 #include "db.h"
 #include "http.h"
+#include "tds.h"
 #include <ldap.h>
 #include <libpq-fe.h>
 #include <mysql.h>
@@ -47,6 +48,9 @@ int db_connect(db_t *db)
         }
         else if (strcmp(db->type, "my") == 0) {
                 return db_connect_my(db);
+        }
+        else if (strcmp(db->type, "tds") == 0) {
+                return db_connect_tds(db);
         }
         else if (strcmp(db->type, "ldap") == 0) {
                 return db_connect_ldap(db);
@@ -176,6 +180,9 @@ int db_disconnect(db_t *db)
         else if (strcmp(db->type, "my") == 0) {
                 return db_disconnect_my(db);
         }
+        else if (strcmp(db->type, "tds") == 0) {
+                return db_disconnect_tds(db);
+        }
         else if (strcmp(db->type, "ldap") == 0) {
                 return db_disconnect_ldap(db);
         }
@@ -240,6 +247,9 @@ int db_exec_sql(db_t *db, char *sql)
         else if (strcmp(db->type, "my") == 0) {
                 return db_exec_sql_my(db, sql);
         }
+        else if (strcmp(db->type, "tds") == 0) {
+                return db_exec_sql_tds(db, sql);
+        }
         else {
                 fprintf(stderr, 
                     "Invalid database type '%s' passed to db_exec_sql()\n",
@@ -295,6 +305,9 @@ int db_fetch_all(db_t *db, char *sql, field_t *filter, row_t **rows, int *rowc)
         }
         else if (strcmp(db->type, "my") == 0) {
                 return db_fetch_all_my(db, sql, filter, rows, rowc);
+        }
+        else if (strcmp(db->type, "tds") == 0) {
+                return db_fetch_all_tds(db, sql, filter, rows, rowc);
         }
         else if (strcmp(db->type, "ldap") == 0) {
                 return db_fetch_all_ldap(db, sql, filter, rows, rowc);
@@ -529,7 +542,9 @@ int db_insert(db_t *db, char *resource, keyval_t *data)
                 return -1;
         }
         /* TODO: field validation */
-        if ((strcmp(db->type, "pg") == 0) || (strcmp(db->type, "my") == 0)) {
+        if ((strcmp(db->type, "pg") == 0) || (strcmp(db->type, "my") == 0) ||
+            (strcmp(db->type, "tds") == 0))
+        {
                 return db_insert_sql(db, resource, data);
         }
         else if (strcmp(db->type, "ldap") == 0) {
