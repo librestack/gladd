@@ -76,7 +76,7 @@ int db_connect_tds(db_t *db)
 /* disconnect */
 int db_disconnect_tds(db_t *db)
 {
-        //if (db->conn != NULL) dbclose(db->conn);
+        if (db->conn != NULL) dbclose(db->conn);
         dbexit();
         return 0;
 }
@@ -220,6 +220,7 @@ int db_fetch_all_tds(db_t *db, char *sql, field_t *filter, row_t **rows,
                                         }
                                         ftmp = NULL;
                                         rtmp = r;
+                                        (*rowc)++;
                                         break;
 
                                 case BUF_FULL:
@@ -236,7 +237,11 @@ int db_fetch_all_tds(db_t *db, char *sql, field_t *filter, row_t **rows,
                         }
                 }
 
-                assert(row_code != BUF_FULL);
+                /* free metadata and data buffers */
+                for (pcol=columns; pcol - columns < ncols; pcol++) {
+                        free(pcol->buffer);
+                }
+                free(columns);
 
                 /* row count */
                 if (DBCOUNT(dbproc) > -1)

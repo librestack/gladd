@@ -50,7 +50,7 @@ char *test_dbs()
 char *test_db(db_t *db)
 {
         row_t *r = NULL;
-        int rowc;
+        int rowc = 0;
 
 #ifdef _NPG /* skip postgres tests */
         if (strcmp(db->type, "pg") == 0) {
