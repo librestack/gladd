@@ -63,6 +63,8 @@ int db_connect_tds(db_t *db)
                 return -1;
         }
 
+        dbloginfree(login);
+
         if (db->db  && (erc = dbuse(dbproc, db->db)) == FAIL) {
                 syslog(LOG_ERR, "unable to use to database %s", db->db);
                 return -1;
