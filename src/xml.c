@@ -26,6 +26,7 @@
 #include <libxslt/transform.h>
 #include <libxslt/xsltutils.h>
 #include <assert.h>
+#include <limits.h>
 #include <string.h>
 #include <syslog.h>
 #include "config.h"
@@ -35,6 +36,11 @@
 
 int flattenxml(xmlDocPtr doc, char **xml, int pretty);
 void xml_prepend_element(xmlDocPtr docxml, char *name, char *value);
+
+static void xmlSchemaValidityErrorFunc_impl(void __attribute__((unused)) *ctx,
+        const char *msg, ...);
+static void xmlSchemaValidityWarningFunc_impl(void __attribute__((unused))
+        *ctx, const char *msg, ...);
 
 int buildxml(char **xml)
 {
@@ -307,6 +313,11 @@ int xml_validate(const char *schema_filename, const char *xml)
                 xmlFreeDoc(docschema);
                 return -5;
         }
+
+        /* register error callbacks */
+        xmlSchemaSetValidErrors(valid_ctxt, &xmlSchemaValidityErrorFunc_impl,
+               &xmlSchemaValidityWarningFunc_impl, NULL);
+
         is_valid = (xmlSchemaValidateDoc(valid_ctxt, docxml) == 0);
 
         /* clean up */
@@ -320,4 +331,24 @@ int xml_validate(const char *schema_filename, const char *xml)
 
         /* force the return value to be non-negative on success */
         return is_valid ? 0 : 1;
+}
+
+static void xmlSchemaValidityErrorFunc_impl(void __attribute__((unused)) *ctx,
+const char *msg, ...) {
+        static char buffer[LINE_MAX];
+        va_list argp;
+        va_start(argp, msg);
+        vsprintf(buffer, msg, argp);
+        va_end(argp);
+        syslog(LOG_DEBUG, "%s", buffer);
+}
+
+static void xmlSchemaValidityWarningFunc_impl(void __attribute__((unused))
+*ctx, const char *msg, ...) {
+        static char buffer[LINE_MAX];
+        va_list argp;
+        va_start(argp, msg);
+        vsprintf(buffer, msg, argp);
+        va_end(argp);
+        syslog(LOG_DEBUG, "%s", buffer);
 }
