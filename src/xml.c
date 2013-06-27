@@ -29,6 +29,7 @@
 #include <limits.h>
 #include <string.h>
 #include <syslog.h>
+#include <unistd.h>
 #include "config.h"
 #include "http.h"
 #include "string.h"
@@ -193,7 +194,11 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
         xmlChar *sqlout;
         int doclen;
 
-        /* TODO: check stylesheet file actually exists first */
+        /* check stylesheet file exists */
+        if (access(xslt_filename, R_OK) != 0) {
+                syslog(LOG_ERR, "read access denied to '%s'", xslt_filename);
+                return -1;
+        }
 
         /* tell libxml2 parser to substitute entities */
         xmlSubstituteEntitiesDefault(1);
@@ -277,6 +282,7 @@ int xml_validate(const char *schema_filename, const char *xml)
                 return -1;
         }
 
+        syslog(LOG_DEBUG, "loading schema '%s'", schema_filename);
         docschema = xmlReadFile(schema_filename, NULL, XML_PARSE_NONET);
         if (docschema == NULL) {
                 /* the schema cannot be loaded or is not well-formed */
@@ -318,7 +324,19 @@ int xml_validate(const char *schema_filename, const char *xml)
         xmlSchemaSetValidErrors(valid_ctxt, &xmlSchemaValidityErrorFunc_impl,
                &xmlSchemaValidityWarningFunc_impl, NULL);
 
-        is_valid = (xmlSchemaValidateDoc(valid_ctxt, docxml) == 0);
+        syslog(LOG_DEBUG, "validating xml document");
+
+        is_valid = xmlSchemaValidateDoc(valid_ctxt, docxml);
+        if (is_valid == 0) {
+                syslog(LOG_DEBUG, "xml validates");
+        }
+        else if (is_valid < 0) {
+                syslog(LOG_DEBUG, "libxml2 internal or API error");
+        }
+        else if (is_valid > 0) {
+                syslog(LOG_DEBUG, "xmlSchemaValidateDoc() error code %i",
+                        is_valid);
+        }
 
         /* clean up */
         xmlSchemaFreeValidCtxt(valid_ctxt);
@@ -330,7 +348,7 @@ int xml_validate(const char *schema_filename, const char *xml)
         xmlCleanupParser();
 
         /* force the return value to be non-negative on success */
-        return is_valid ? 0 : 1;
+        return abs(is_valid);
 }
 
 static void xmlSchemaValidityErrorFunc_impl(void __attribute__((unused)) *ctx,
