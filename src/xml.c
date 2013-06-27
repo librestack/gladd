@@ -267,18 +267,23 @@ int xml_validate(const char *schema_filename, const char *xml)
         /* parse xml from memory */
         docxml = xmlReadMemory(xml, strlen(xml), "noname.xml", NULL, 0);
         if (docxml == NULL) {
+                syslog(LOG_DEBUG, "xmlReadMemory() failed");
                 return -1;
         }
 
         docschema = xmlReadFile(schema_filename, NULL, XML_PARSE_NONET);
         if (docschema == NULL) {
                 /* the schema cannot be loaded or is not well-formed */
+                syslog(LOG_DEBUG,
+                        "the schema cannot be loaded or is not well-formed");
                 return -2;
         }
 
         parser_ctxt = xmlSchemaNewDocParserCtxt(docschema);
         if (parser_ctxt == NULL) {
                 /* unable to create a parser context for the schema */
+                syslog(LOG_DEBUG,
+                        "unable to create a parser context for the schema");
                 xmlFreeDoc(docschema);
                 return -3;
         }
@@ -286,6 +291,7 @@ int xml_validate(const char *schema_filename, const char *xml)
         schema = xmlSchemaParse(parser_ctxt);
         if (schema == NULL) {
                 /* the schema itself is not valid */
+                syslog(LOG_DEBUG, "invalid schema");
                 xmlSchemaFreeParserCtxt(parser_ctxt);
                 xmlFreeDoc(docschema);
                 return -4;
@@ -294,6 +300,8 @@ int xml_validate(const char *schema_filename, const char *xml)
         xmlSchemaValidCtxtPtr valid_ctxt = xmlSchemaNewValidCtxt(schema);
         if (valid_ctxt == NULL) {
                 /* unable to create a validation context for the schema */
+                syslog(LOG_DEBUG, 
+                        "unable to create a validation context for the schema");
                 xmlSchemaFree(schema);
                 xmlSchemaFreeParserCtxt(parser_ctxt);
                 xmlFreeDoc(docschema);
