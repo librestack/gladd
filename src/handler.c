@@ -326,12 +326,16 @@ http_status_code_t response_xslpost(int sock, url_t *u)
 
         free(action);
 
+        syslog(LOG_DEBUG, "Performing XSLT Transformation");
+
         if (xmltransform(xsl, request->data->value, &sql) != 0) {
                 free(xsl);
                 syslog(LOG_ERR, "XSLT transform failed");
                 return HTTP_BAD_REQUEST;
         }
         free(xsl);
+
+        syslog(LOG_DEBUG, "Executing SQL");
 
         /* execute sql */
         if (db_exec_sql(db, sql) != 0) {
