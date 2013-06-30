@@ -150,12 +150,13 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         else {
                 if (strcmp(request->method, "POST") == 0) {
 
-                        /* FIXME: temp (begins) */
-                        FILE *fd;
-                        fd = fopen("/tmp/lastpost", "w");
-                        fprintf(fd, "%s", buf);
-                        fclose(fd);
-                        /* FIXME: temp (ends) */
+                        /* In debug mode, write request to file */
+                        if (config->debug == 1) {
+                                FILE *fd;
+                                fd = fopen("/tmp/lastpost", "w");
+                                fprintf(fd, "%s", buf);
+                                fclose(fd);
+                        }
 
                         /* POST requires Content-Length header */
                         http_status_code_t err;
