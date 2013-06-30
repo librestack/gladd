@@ -139,6 +139,7 @@ int check_content_length(http_request_t *r, http_status_code_t *err)
                 || (errno != 0 && len == 0))
         {
                 /* Invalid length - return 400 Bad Request */
+                syslog(LOG_DEBUG, "Invalid length");
                 *err = HTTP_BAD_REQUEST;
                 return -1;
         }
@@ -340,16 +341,19 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
 
         /* first line has http request */
         if (fgets(line, sizeof(line), in) == NULL) {
+                syslog(LOG_ERR, "HTTP request is NULL");
                 *err = HTTP_BAD_REQUEST;
                 return NULL;
         }
         if (sscanf(line, "%s %s HTTP/%s", method, resource, httpv) != 3) {
+                syslog(LOG_ERR, "HTTP request invalid");
                 *err = HTTP_BAD_REQUEST;
                 return NULL;
         }
         r->httpv = strdup(httpv);
 
         if ((strcmp(r->httpv, "1.0") != 0) && (strcmp(r->httpv, "1.1") != 0)) {
+                syslog(LOG_ERR, "HTTP version '%s' not supported", r->httpv);
                 *err = HTTP_VERSION_NOT_SUPPORTED;
                 return NULL;
         }
@@ -396,6 +400,8 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
                         size = fread(xmlbuf, 1, lclen, in);
                         if (size != lclen) {
                                 /* we have the wrong number of bytes */
+                                syslog(LOG_ERR,
+                                        "request body has unexpected length");
                                 *err = HTTP_BAD_REQUEST;
                                 return NULL;
                         }

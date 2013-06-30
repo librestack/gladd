@@ -344,11 +344,10 @@ int xml_validate(const char *schema_filename, const char *xml)
         xmlSchemaFreeParserCtxt(parser_ctxt);
         xmlFreeDoc(docschema);
         xmlFreeDoc(docxml);
-
         xmlCleanupParser();
 
-        /* force the return value to be non-negative on success */
-        return abs(is_valid);
+        /* 0 = success, -1 = failure */
+        return is_valid == 0 ? 0 : -1 ;
 }
 
 static void xmlSchemaValidityErrorFunc_impl(void __attribute__((unused)) *ctx,

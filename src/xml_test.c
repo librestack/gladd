@@ -75,7 +75,7 @@ char *test_xml_to_sql()
         char *sqlout = "BEGIN;INSERT INTO journal (transactdate, description, authuser, clientip) VALUES ('2013-02-08','My First Journal Entry','testuser','::1');INSERT INTO ledger (journal, account, debit) VALUES (currval(pg_get_serial_sequence('journal','id')),'1100','120.00');INSERT INTO ledger (journal, account, credit) VALUES (currval(pg_get_serial_sequence('journal','id')),'2222','20.00');INSERT INTO ledger (journal, account, credit) VALUES (currval(pg_get_serial_sequence('journal','id')),'4000','100.00');COMMIT;";
         
         mu_assert("Validate some broken xml",
-                xml_validate(schema, badxml) == 1);
+                xml_validate(schema, badxml) == -1);
 
         mu_assert("Validate some good xml",
                 xml_validate(schema, goodxml) == 0);
