@@ -397,11 +397,19 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
                         asprintf(&r->data->key, "text/xml");
                         r->data->next = NULL;
                         xmlbuf = calloc(1, lclen + 1);
+                        if (xmlbuf == NULL) {
+                                syslog(LOG_ERR,
+                                        "failed to allocate buffer for xml");
+                                *err = HTTP_INTERNAL_SERVER_ERROR;
+                                return NULL;
+                        }
                         size = fread(xmlbuf, 1, lclen, in);
                         if (size != lclen) {
                                 /* we have the wrong number of bytes */
                                 syslog(LOG_ERR,
-                                        "request body has unexpected length");
+                                    "request body has unexpected length.");
+                                syslog(LOG_DEBUG,
+                                    "expected: %li, got %li", lclen, size);
                                 *err = HTTP_BAD_REQUEST;
                                 return NULL;
                         }
