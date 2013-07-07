@@ -145,6 +145,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         u = http_match_url(request);
         if (u == NULL) {
                 /* Not found */
+                syslog(LOG_DEBUG, "failed to find matching url in config");
                 http_response(sock, HTTP_NOT_FOUND);
         }
         else {
