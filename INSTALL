@@ -13,6 +13,7 @@ apt-get install libxslt1.1
 apt-get install libpq5
 apt-get install libmysqlclient18
 apt-get install libcurl3
+apt-get install freetds-common libsybdb5
 
 # copy gladd to /usr/local/bin/gladd
 
