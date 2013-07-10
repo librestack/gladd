@@ -52,8 +52,11 @@ void get_mime_type(char *mimetype, char *filename)
                 else if (strncmp(fileext, "css", 3) == 0) {
                         strcpy(mimetype, "text/css");
                 }
-                else if (strncmp(fileext, "js", 3) == 0) {
+                else if (strncmp(fileext, "js", 2) == 0) {
                         strcpy(mimetype, "text/javascript");
+                }
+                else if (strncmp(fileext, "pdf", 3) == 0) {
+                        strcpy(mimetype, "application/pdf");
                 }
                 free(fileext);
         }
