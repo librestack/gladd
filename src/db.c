@@ -24,7 +24,11 @@
 #define LDAP_DEPRECATED 1
 #include "db.h"
 #include "http.h"
+
+#ifndef _NTDS
 #include "tds.h"
+#endif
+
 #include <ldap.h>
 #include <libpq-fe.h>
 #include <mysql.h>
@@ -49,9 +53,11 @@ int db_connect(db_t *db)
         else if (strcmp(db->type, "my") == 0) {
                 return db_connect_my(db);
         }
+#ifndef _NTDS
         else if (strcmp(db->type, "tds") == 0) {
                 return db_connect_tds(db);
         }
+#endif
         else if (strcmp(db->type, "ldap") == 0) {
                 return db_connect_ldap(db);
         }
@@ -180,9 +186,11 @@ int db_disconnect(db_t *db)
         else if (strcmp(db->type, "my") == 0) {
                 return db_disconnect_my(db);
         }
+#ifndef _NTDS
         else if (strcmp(db->type, "tds") == 0) {
                 return db_disconnect_tds(db);
         }
+#endif
         else if (strcmp(db->type, "ldap") == 0) {
                 return db_disconnect_ldap(db);
         }
@@ -247,9 +255,11 @@ int db_exec_sql(db_t *db, char *sql)
         else if (strcmp(db->type, "my") == 0) {
                 return db_exec_sql_my(db, sql);
         }
+#ifndef _NTDS
         else if (strcmp(db->type, "tds") == 0) {
                 return db_exec_sql_tds(db, sql);
         }
+#endif /* _NTDS */
         else {
                 fprintf(stderr, 
                     "Invalid database type '%s' passed to db_exec_sql()\n",
@@ -306,9 +316,11 @@ int db_fetch_all(db_t *db, char *sql, field_t *filter, row_t **rows, int *rowc)
         else if (strcmp(db->type, "my") == 0) {
                 return db_fetch_all_my(db, sql, filter, rows, rowc);
         }
+#ifndef _NTDS
         else if (strcmp(db->type, "tds") == 0) {
                 return db_fetch_all_tds(db, sql, filter, rows, rowc);
         }
+#endif
         else if (strcmp(db->type, "ldap") == 0) {
                 return db_fetch_all_ldap(db, sql, filter, rows, rowc);
         }

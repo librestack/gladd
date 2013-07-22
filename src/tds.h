@@ -23,6 +23,8 @@
 #ifndef __GLADD_TDS_H__
 #define __GLADD_TDS_H__ 1
 
+#ifndef _NTDS
+
 #include "db.h"
 #include "config.h"
 
@@ -31,5 +33,7 @@ int db_disconnect_tds(db_t *db);
 int db_exec_sql_tds(db_t *db, char *sql);
 int db_fetch_all_tds(db_t *db, char *sql, field_t *filter, row_t **rows,
         int *rowc);
+
+#endif /* _NTDS */
 
 #endif /* __GLADD_TDS_H__ */

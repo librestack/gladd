@@ -23,7 +23,7 @@ CC=gcc
 # the following are valid in CFLAGS:
 # -D_NPG   => compile without postgres support
 # -D_NMY   => compile without mysql support
-# -D_NTDS  => compile without freetds support (TODO)
+# -D_NTDS  => compile without freetds support
 # -D_NLDAP => compile without ldap support
 # -D_NXML  => compile without xml support
 CFLAGS=-g -Wall -Werror -Wno-unused-but-set-variable

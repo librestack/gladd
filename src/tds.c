@@ -20,6 +20,8 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef D_NTDS
+
 #define _GNU_SOURCE
 #include "db.h"
 #include "http.h"
@@ -304,3 +306,4 @@ int err_handler(DBPROCESS * dbproc, int severity, int dberr, int oserr,
         return INT_CANCEL;
 }
 
+#endif /* D_NTDS */

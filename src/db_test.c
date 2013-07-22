@@ -70,6 +70,12 @@ char *test_db(db_t *db)
                 return 0;
         }
 #endif /* _NLDAP */
+#ifdef _NTDS
+        if (strcmp(db->type, "tds") == 0) {
+                mu_assert("*** Skipping tds tests ***", 0 == 0);
+                return 0;
+        }
+#endif /* _NTDS */
 
         if (strcmp(db->alias, "ldap2") == 0) {
                 /* ldap2 is fake, skip it */
@@ -83,7 +89,7 @@ char *test_db(db_t *db)
 
         if (strcmp(db->type, "tds") == 0) {
                 /* TDS databases */
-
+#ifndef _NTDS
                 mu_assert("db_exec_sql() invalid sql returns failure",
                         db_exec_sql(db, "invalidsql") != 0);
 
@@ -114,7 +120,7 @@ char *test_db(db_t *db)
                  * all results processed */
                 mu_assert("db_exec_sql() ensure we can SELECT again",
                         db_exec_sql(db, "SELECT * FROM test") == 0);
-
+#endif /* _NTDS */
         }
         else if ((strcmp(db->type, "my") == 0)||(strcmp(db->type, "pg") == 0)){
                 /* PG and MY databases */
