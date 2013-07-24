@@ -19,12 +19,14 @@
  * along with this program (see the file COPYING in the distribution).
  * If not, see <http://www.gnu.org/licenses/>.
  */
+#define _GNU_SOURCE
 
 #include "auth.h"
 #include "config.h"
 #include "db.h"
 #include <fnmatch.h>
 #include <string.h>
+#include <stdlib.h>
 #include <syslog.h>
 
 /* 
@@ -36,6 +38,7 @@ int check_auth(http_request_t *r)
 {
         acl_t *a;
         int i;
+        int pass = 0;
 
         a = config->acls;
         while (a != NULL) {
@@ -80,6 +83,7 @@ int check_auth(http_request_t *r)
                                         syslog(LOG_DEBUG, "auth require fail");
                                         return i;
                                 }
+                                pass++;
                         }
                         else {
                                 syslog(LOG_DEBUG,
@@ -94,7 +98,7 @@ int check_auth(http_request_t *r)
                         return 0;
                 }
         }
-
+        if (pass > 0) return 0;
         syslog(LOG_DEBUG, "no acl matched");
         return HTTP_FORBIDDEN; /* default is to deny access */
 }
@@ -159,19 +163,21 @@ int check_auth_alias(char *alias, http_request_t *r)
 
         syslog(LOG_DEBUG, "checking alias %s", alias);
 
-        if ((strcmp(a->type, "ldap") == 0) || (strcmp(a->type, "user") == 0)) {
+        if ((strcmp(a->type, "ldap") == 0) || (strcmp(a->type, "user") == 0)
+        ||(strcmp(a->type, "group") == 0))
+        {
                 if ((r->authuser == NULL) || (r->authpass == NULL)) {
                         /* don't allow auth with blank credentials */
                         return HTTP_UNAUTHORIZED;
                 }
-                if (strncmp(a->type, "ldap", 4) == 0) {
+                if (strcmp(a->type, "ldap") == 0) {
                         /* test credentials against ldap */
                         syslog(LOG_DEBUG, "checking ldap users");
                         return db_test_bind(getdb(a->db),
                                 getsql(a->sql), a->bind,
                                         r->authuser, r->authpass);
                 }
-                else if (strncmp(a->type, "user", 4) == 0) {
+                else if (strcmp(a->type, "user") == 0) {
                         /* test credentials against users */
                         syslog(LOG_DEBUG, "checking static users");
                         user_t *u;
@@ -189,6 +195,21 @@ int check_auth_alias(char *alias, http_request_t *r)
                                 syslog(LOG_DEBUG, "password incorrect");
                                 return HTTP_UNAUTHORIZED;
                         }
+                }
+                else if (strcmp(a->type, "group") == 0) {
+                        if (strcmp(a->db, "*") != 0) {
+                                /* group is ldap or db - TODO */
+                                return HTTP_UNAUTHORIZED;
+                        }
+                        if (ingroup(r->authuser, a->alias)) {
+                                /* user in correct group, now check user */
+                                syslog(LOG_DEBUG, "user %s in group %s",
+                                        r->authuser, a->alias);
+                                int res;
+                                res = check_auth_alias("user", r);
+                                return res;
+                        }
+                        return HTTP_UNAUTHORIZED;
                 }
         }
         else {

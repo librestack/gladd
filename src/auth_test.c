@@ -165,7 +165,7 @@ char *test_auth_patterns()
         return 0;
 }
 
-char *test_auth_groups()
+char *test_auth_groups_00()
 {
         http_request_t *r;
         read_config("test_auth_groups_00.conf");
@@ -187,6 +187,36 @@ char *test_auth_groups()
         mu_assert("User alpha not in group3", !ingroup("alpha", "group3"));
         mu_assert("User bravo not in group3", !ingroup("bravo", "group3"));
         mu_assert("User charlie in group3", ingroup("charlie", "group3"));
+
+        free_request(r);
+        free_config();
+        
+        return 0;
+}
+
+char *test_auth_groups_01()
+{
+        http_request_t *r;
+
+        read_config("test_auth_groups_01.conf");
+        r = http_init_request();
+
+        asprintf(&r->method, "GET");
+        asprintf(&r->res, "/1.html");
+        asprintf(&r->authuser, "bravo");
+        asprintf(&r->authpass, "bravosecret");
+        mu_assert("User bravo not permitted access (not in required group)",
+                check_auth(r) == HTTP_UNAUTHORIZED);
+
+        asprintf(&r->authuser, "alpha");
+        asprintf(&r->authpass, "alphasecret");
+        mu_assert("User alpha permitted access (in required group)",
+                check_auth(r) == 0);
+
+        asprintf(&r->authuser, "alpha");
+        asprintf(&r->authpass, "wrongpassword");
+        mu_assert("User alpha denied access (in required group, wrong passwd)",
+                check_auth(r) == HTTP_UNAUTHORIZED);
 
         free_request(r);
         free_config();
