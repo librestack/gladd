@@ -105,6 +105,7 @@ char *test_xml_sqlvars()
         asprintf(&request->res, "/myinstance/mybusiness/collection/element");
         asprintf(&sql, "SELECT * FROM $1.$0.myview");
         sqlvars(&sql);
+        printf("sql: %s\n", sql);
         mu_assert("sql variable subsitution",
                 strcmp(sql,
                 "SELECT * FROM mybusiness.myinstance.myview") == 0);

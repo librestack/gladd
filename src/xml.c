@@ -146,8 +146,8 @@ void sqlvars(char **sql)
 
         tokens = tokenize(&toknum, &url, "/");
 
-        for (i=0; i <= toknum; i++) {
-                asprintf(&var, "$%i", i);
+        for (i=1; i <= toknum; i++) {
+                asprintf(&var, "$%i", i-1);
                 sqltmp = replaceall(*sql, var, tokens[i]);
                 free(var);
                 free(*sql);

@@ -86,15 +86,35 @@ char *test_string_tokenize()
         
         asprintf(&teststring, "/instance/business/collection/element");
         tokens = tokenize(&toknum, &teststring, "/");
-        mu_assert("Test string tokenizer - count tokens", toknum == 4);
+        mu_assert("Test string tokenizer - count tokens", toknum == 5);
+        mu_assert("Test string tokenizer - token #0",
+                strcmp(tokens[0], "") == 0);
         mu_assert("Test string tokenizer - token #1",
-                strcmp(tokens[0], "instance") == 0);
+                strcmp(tokens[1], "instance") == 0);
         mu_assert("Test string tokenizer - token #2",
-                strcmp(tokens[1], "business") == 0);
+                strcmp(tokens[2], "business") == 0);
         mu_assert("Test string tokenizer - token #3",
-                strcmp(tokens[2], "collection") == 0);
+                strcmp(tokens[3], "collection") == 0);
         mu_assert("Test string tokenizer - token #4",
-                strcmp(tokens[3], "element") == 0);
+                strcmp(tokens[4], "element") == 0);
+
+        free(tokens);
+        free(teststring);
+
+        /* multiple character delimiter */
+        toknum = 0;
+        asprintf(&teststring, "split***with***multichar***delimiter");
+        tokens = tokenize(&toknum, &teststring, "***");
+        mu_assert("Test string tokenizer (multicharacter delimiter)" \
+                " - count tokens", toknum == 4);
+        mu_assert("Test string tokenizer (multicharacter delimiter)" \
+                " - token #0", strcmp(tokens[0], "split") == 0);
+        mu_assert("Test string tokenizer (multicharacter delimiter)" \
+                " - token #1", strcmp(tokens[1], "with") == 0);
+        mu_assert("Test string tokenizer (multicharacter delimiter)" \
+                " - token #2", strcmp(tokens[2], "multichar") == 0);
+        mu_assert("Test string tokenizer (multicharacter delimiter)" \
+                " - token #3", strcmp(tokens[3], "delimiter") == 0);
 
         free(tokens);
         free(teststring);

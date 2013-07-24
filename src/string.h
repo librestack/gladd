@@ -29,6 +29,14 @@ char *replaceall(char *str, char *find, char *repl);
 char *rstrip(char *str);
 char *strip(char *str);
 char *strstrip(char *s);
+
+/* tokenize() - tokenize string into array
+ * NB: the string passed in is modified; each delimiter is replaced with 
+ * a null.
+ *  segments - returns number of segments created
+ *  stringp  - the string to split
+ *  delim    - the delimiter to search for
+ */
 char **tokenize(int *segments, char **stringp, char *delim);
 
 #endif /* __BACS_STRING_H__ */
