@@ -29,6 +29,7 @@
 #include <unistd.h>
 
 #include "config.h"
+#include "string.h"
 
 void    handle_url_static(char params[LINE_MAX]);
 void    handle_url_dynamic(char *type, char params[LINE_MAX]);
@@ -249,8 +250,12 @@ int add_group(char *value)
 {
         group_t *new;
         char name[LINE_MAX] = "";
-        char users[LINE_MAX] = "";
+        char *users = NULL;
+        char **members;
+        int i, j;
+        user_t *u, *tmp;
 
+        users = malloc(LINE_MAX);
         if (sscanf(value, "%s %[^\n]", name, users) != 2) {
                 return -1;
         }
@@ -258,8 +263,27 @@ int add_group(char *value)
         new = malloc(sizeof(struct group_t));
 
         new->name = strndup(name, LINE_MAX);
-        /* TODO: user list */
+
+        /* group members */
+        members = tokenize(&i, &users, ",");
+        for (j=0; j<i; j++) {
+                u = malloc(sizeof(user_t));
+                u->username = strdup(strip(members[j]));
+                u->password = NULL;
+                u->next = NULL;
+                if (j == 0) {
+                        new->members = u;
+                }
+                else {
+                        tmp->next = u;
+                }
+                tmp = u;
+                u = NULL;
+        }
         new->next = NULL;
+
+        free(users);
+        free(members);
 
         if (prevgroup != NULL)
                 prevgroup->next = new;
@@ -450,6 +474,7 @@ void free_groups(group_t *g)
 
         while (g != NULL) {
                 free(g->name);
+                free_users(g->members);
                 tmp = g;
                 g = g->next;
                 free(tmp);
