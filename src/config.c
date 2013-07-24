@@ -54,6 +54,7 @@ db_t   *prevdb;         /* pointer to last db  */
 sql_t  *prevsql;        /* pointer to last sql */
 url_t  *prevurl;        /* pointer to last url */
 user_t *prevuser;       /* pointer to last user */
+group_t *prevgroup;     /* pointer to last group */
 
 /* add acl */
 int add_acl (char *value)
@@ -243,6 +244,32 @@ int add_db (char *value)
         return 0;
 }
 
+/* store group in config */
+int add_group(char *value)
+{
+        group_t *new;
+        char name[LINE_MAX] = "";
+        char users[LINE_MAX] = "";
+
+        if (sscanf(value, "%s %[^\n]", name, users) != 2) {
+                return -1;
+        }
+
+        new = malloc(sizeof(struct group_t));
+
+        new->name = strndup(name, LINE_MAX);
+        /* TODO: user list */
+        new->next = NULL;
+
+        if (prevgroup != NULL)
+                prevgroup->next = new;
+        else
+                config_new->groups = new;
+        prevgroup = new;
+
+        return 0;
+}
+
 /* store sql in config */
 int add_sql(char *value)
 {
@@ -383,6 +410,7 @@ void free_config()
         free_sql();
         free_urls(config->urls);
         free_users(config->users);
+        free_groups(config->groups);
 
         config_new = NULL;
         prevacl = NULL;
@@ -391,6 +419,7 @@ void free_config()
         prevsql = NULL;
         prevurl = NULL;
         prevuser = NULL;
+        prevgroup = NULL;
 }
 
 /* free database struct */
@@ -412,6 +441,19 @@ void free_dbs()
                 free(tmp);
         }
         config->dbs = NULL;
+}
+
+/* clean up config->groups memory */
+void free_groups(group_t *g)
+{
+        group_t *tmp;
+
+        while (g != NULL) {
+                free(g->name);
+                tmp = g;
+                g = g->next;
+                free(tmp);
+        }
 }
 
 /* free keyvalue struct */
@@ -682,6 +724,9 @@ int process_config_line(char *line)
                 else if (strcmp(key, "user") == 0) {
                         return add_user(value);
                 }
+                else if (strcmp(key, "group") == 0) {
+                        return add_group(value);
+                }
                 else if (strcmp(key, "acl") == 0) {
                         return add_acl(value);
                 }
@@ -727,6 +772,7 @@ int read_config(char *configfile)
         prevsql = NULL;
         prevurl = NULL;
         prevuser = NULL;
+        prevgroup = NULL;
 
         set_config_defaults();
         config_new = &config_default;
@@ -763,14 +809,16 @@ int read_config(char *configfile)
 /* set config defaults if they haven't been set already */
 int set_config_defaults()
 {
-        //static int defaults_set = 0;
-
-        //if (defaults_set != 0)
-        //        return 1;
-
         config = &config_default;
 
-        //defaults_set = 1;
+        config->acls = NULL;
+        config->auth = NULL;
+        config->dbs = NULL;
+        config->sql = NULL;
+        config->urls = NULL;
+        config->users = NULL;
+        config->groups = NULL;
+
         return 0;
 }
 

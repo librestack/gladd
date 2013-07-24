@@ -154,6 +154,16 @@ char *test_config_read_users()
         return 0;
 }
 
+char *test_config_read_groups()
+{
+        //group_t *g;
+
+        mu_assert("Ensure group lines are read from config", 
+                config->groups != NULL);
+
+        return 0;
+}
+
 /* test successive reads of url->next */
 char *test_config_read_url()
 {

@@ -39,6 +39,7 @@ char *test_config_acl_allow_all();
 char *test_config_db();
 char *test_config_read_auth();
 char *test_config_read_users();
+char *test_config_read_groups();
 char *test_config_multiline();
 
 #endif /* __GLADD_CONFIG_TEST_H__ */

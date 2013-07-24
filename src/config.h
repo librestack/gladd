@@ -60,6 +60,7 @@ typedef struct config_t {
         struct sql_t *sql;
         struct url_t *urls;
         struct user_t *users;
+        struct group_t *groups;
 } config_t;
 
 typedef struct db_t {
@@ -78,6 +79,12 @@ typedef struct keyval_t {
         char *value;
         struct keyval_t *next;
 } keyval_t;
+
+typedef struct group_t {
+        char *name;
+        struct user_t *members;
+        struct group_t *next;
+} group_t;
 
 typedef struct sql_t {
         char *alias;
@@ -108,6 +115,7 @@ extern int sockme;
 int     add_acl (char *value);
 int     add_auth (char *value);
 int     add_db (char *value);
+int     add_group (char *value);
 int     add_sql (char *value);
 int     add_url_handler(char *value);
 int     add_user (char *value);
@@ -115,6 +123,7 @@ void    free_acls();
 void    free_auth();
 void    free_config();
 void    free_dbs();
+void    free_groups(group_t *g);
 void    free_keyval(keyval_t *h);
 void    free_sql();
 void    free_urls(url_t *u);
