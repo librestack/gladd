@@ -164,3 +164,32 @@ char *test_auth_patterns()
 
         return 0;
 }
+
+char *test_auth_groups()
+{
+        http_request_t *r;
+        read_config("test_auth_groups_00.conf");
+        r = http_init_request();
+
+        mu_assert("Check user in group (invalid group returns -1)",
+                ingroup("alpha", "invalid") == -1);
+
+        mu_assert("User alpha in group1", ingroup("alpha", "group1"));
+        mu_assert("User bravo not in group1", !ingroup("bravo", "group1"));
+        mu_assert("User charlie not in group1", !ingroup("charlie", "group1"));
+        mu_assert("Invalid user delta not in group1",
+                !ingroup("delta", "group1"));
+
+        mu_assert("User alpha in group2", ingroup("alpha", "group2"));
+        mu_assert("User bravo in group2", ingroup("bravo", "group2"));
+        mu_assert("User charlie not in group2", !ingroup("charlie", "group2"));
+
+        mu_assert("User alpha not in group3", !ingroup("alpha", "group3"));
+        mu_assert("User bravo not in group3", !ingroup("bravo", "group3"));
+        mu_assert("User charlie in group3", ingroup("charlie", "group3"));
+
+        free_request(r);
+        free_config();
+
+        return 0;
+}

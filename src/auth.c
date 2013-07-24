@@ -200,3 +200,23 @@ int check_auth_alias(char *alias, http_request_t *r)
 
         return 0;
 }
+
+int ingroup(char *user, char *group)
+{
+        group_t *g;
+        user_t *m;
+
+        g = getgroup(group);
+        if (!g) {
+                fprintf(stderr, "group not found\n");
+                return -1;
+        }
+
+        m = g->members;
+        while (m != NULL) {
+                if (strcmp(m->username, user) == 0) return 1;
+                m = m->next;
+        }
+
+        return 0;
+}

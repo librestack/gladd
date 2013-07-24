@@ -28,5 +28,6 @@ char *test_auth_deny();
 char *test_auth_allow();
 char *test_auth_require();
 char *test_auth_patterns();
+char *test_auth_groups();
 
 #endif /* __GLADD_AUTH_TEST_H__ */

@@ -156,10 +156,23 @@ char *test_config_read_users()
 
 char *test_config_read_groups()
 {
-        //group_t *g;
+        group_t *g;
 
         mu_assert("Ensure group lines are read from config", 
                 config->groups != NULL);
+
+        mu_assert("Fetch group by name", g = getgroup("test1"));
+        mu_assert("Check group member #1",
+                strcmp(g->members->username, "alpha") == 0);
+        mu_assert("Check group member #2",
+                strcmp(g->members->next->username, "bravo") == 0);
+
+        mu_assert("Fetch next group by name", g = getgroup("test2"));
+        mu_assert("Check group member #1",
+                strcmp(g->members->username, "bravo") == 0);
+        mu_assert("Check group member #2",
+                strcmp(g->members->next->username, "charlie") == 0);
+
 
         return 0;
 }

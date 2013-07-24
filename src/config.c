@@ -604,6 +604,21 @@ user_t *getuser(char *username)
         return NULL;
 }
 
+/* fetch group from config by group name */
+group_t *getgroup(char *name)
+{
+        group_t *g;
+
+        g = config->groups;
+        while (g != NULL) {
+                if (strcmp(name, g->name) == 0)
+                        return g;
+                g = g->next;
+        }
+
+        return NULL;
+}
+
 /* static url handler */
 void handle_url_static(char params[LINE_MAX])
 {

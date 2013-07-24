@@ -132,6 +132,7 @@ auth_t *getauth(char *alias);
 db_t   *getdb(char *alias);
 char   *getsql(char *alias);
 user_t *getuser(char *username);
+group_t *getgroup(char *name);
 FILE   *open_config(char *configfile);
 int     process_config_line(char *line);
 int     read_config(char *configfile);

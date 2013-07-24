@@ -86,6 +86,7 @@ static char * all_tests()
         mu_run_test(test_config_read_groups);
         free_config();
         mu_run_test(test_auth_patterns);
+        mu_run_test(test_auth_groups);
         printline("*", 80);
         return 0;
 }
