@@ -22,7 +22,7 @@
 
 #define _GNU_SOURCE
 
-#define BUFSIZE 8096
+#define BUFSIZE 32768
 
 #include "auth.h"
 #include "config.h"

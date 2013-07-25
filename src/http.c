@@ -330,6 +330,7 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
         char *stripped;
         FILE *in;
         char *xmlbuf;
+        int headlen = 0;
 
         *err = 0;
 
@@ -363,6 +364,7 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
 
         /* read headers */
         while (fgets(line, sizeof(line), in)) {
+                headlen = headlen + strlen(line);
                 /* we strip out any \r which jquery puts in, before matching */
                 stripped = replaceall(line, "\r", "");
                 if (sscanf(stripped, "%[^:]: %[^\n]",
@@ -382,6 +384,7 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
                 hlast = h;
                 (*hcount)++;
         }
+        syslog(LOG_DEBUG, "headers size: %i", headlen);
 
         /* only read body if we have a Content-Type and Content-Length */
         if ((ctype = http_get_header(r, "Content-Type"))

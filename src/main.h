@@ -24,7 +24,6 @@
 #define __GLADD_MAIN_H__ 1
 
 #define BACKLOG 10  /* how many pending connectiong to hold in queue */
-#define BUFSIZE 8096
 #define LOCKFILE_USER ".gladd.pid"
 #define LOCKFILE_ROOT "/var/run/gladd.pid"
 #define PROGRAM "gladd"
