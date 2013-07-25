@@ -223,3 +223,39 @@ char *test_auth_groups_01()
 
         return 0;
 }
+
+char *test_auth_groups_02()
+{
+        http_request_t *r;
+
+        read_config("test_auth_groups_02.conf");
+        r = http_init_request();
+
+        asprintf(&r->method, "GET");
+        asprintf(&r->res, "/1.html");
+
+        asprintf(&r->authuser, "charlie");
+        asprintf(&r->authpass, "charliesecret");
+        mu_assert("Two groups required, user in neither (deny)",
+                check_auth(r) == HTTP_UNAUTHORIZED);
+
+        asprintf(&r->authuser, "bravo");
+        asprintf(&r->authpass, "bravosecret");
+        mu_assert("Two groups required, user only in one (deny)",
+                check_auth(r) == HTTP_UNAUTHORIZED);
+
+        asprintf(&r->authuser, "alpha");
+        asprintf(&r->authpass, "wrongpassword");
+        mu_assert("Two groups required, user in both, wrong password (deny)",
+                check_auth(r) == HTTP_UNAUTHORIZED);
+
+        asprintf(&r->authuser, "alpha");
+        asprintf(&r->authpass, "alphasecret");
+        mu_assert("Two groups required, user in both, correct passwd (allow)",
+                check_auth(r) == 0);
+
+        free_request(r);
+        free_config();
+
+        return 0;
+}
