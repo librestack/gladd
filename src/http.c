@@ -311,7 +311,7 @@ void http_set_request_resource(http_request_t *r, char *res)
 }
 
 /* check & store http headers from client */
-http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
+http_request_t *http_read_request(int sock, int *hcount,
         http_status_code_t *err)
 {
         http_request_t *r;
@@ -331,8 +331,12 @@ http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
         FILE *in;
         char *xmlbuf;
         int headlen = 0;
+        char buf[BUFSIZE];
+        ssize_t bytes;
 
         *err = 0;
+
+        bytes = recv(sock, buf, sizeof buf, 0);
 
         r = http_init_request();
         r->bytes = bytes;

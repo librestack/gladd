@@ -22,8 +22,6 @@
 
 #define _GNU_SOURCE
 
-#define BUFSIZE 32768
-
 #include "auth.h"
 #include "config.h"
 #include "db.h"
@@ -70,14 +68,12 @@ void *get_in_addr(struct sockaddr *sa)
  */
 void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
-        char buf[BUFSIZE];
         char *mtype;
         char s[INET6_ADDRSTRLEN];
         http_status_code_t err;
         int auth = -1;
         int hcount = 0;
         int state;
-        ssize_t byte_count;
         url_t *u;
         long len;
 
@@ -87,11 +83,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
         syslog(LOG_DEBUG, "server: got connection from %s", s);
 
-        /* What are we being asked to do? */
-        byte_count = recv(sock, buf, sizeof buf, 0);
-
         /* read http client request */
-        request = http_read_request(buf, byte_count, &hcount, &err);
+        request = http_read_request(sock, &hcount, &err);
         if (err != 0) {
                 http_response(sock, err);
                 exit(EXIT_FAILURE);
@@ -152,12 +145,14 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 if (strcmp(request->method, "POST") == 0) {
 
                         /* In debug mode, write request to file */
+                        /*
                         if (config->debug == 1) {
                                 FILE *fd;
                                 fd = fopen("/tmp/lastpost", "w");
                                 fprintf(fd, "%s", buf);
                                 fclose(fd);
                         }
+                        */
 
                         /* POST requires Content-Length header */
                         http_status_code_t err;

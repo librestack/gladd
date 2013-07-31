@@ -26,6 +26,7 @@
 #define HTTPKEYS (sizeof httpcode / sizeof (struct http_status))
 #define HTTP_RESPONSE "HTTP/1.1 %1$i %2$s\nServer: gladd\nConnection: close\nContent-Type: %3$s%4$s\n\n<html><body><h1>%1$i %2$s</h1>\n</body>\n</html>\n"
 #define MAX_RESOURCE_LEN 256
+#define BUFSIZE 32768
 
 #include <sys/types.h>
 #include "config.h"
@@ -78,7 +79,7 @@ url_t  *http_match_url(http_request_t *r);
 keyval_t *http_set_keyval (char *key, char *value);
 void http_response(int sock, int code);
 char *http_get_header(http_request_t *r, char *key);
-http_request_t *http_read_request(char *buf, ssize_t bytes, int *hcount,
+http_request_t *http_read_request(int sock, int *hcount,
         http_status_code_t *err);
 void http_set_request_method(http_request_t *r, char *method);
 void http_set_request_resource(http_request_t *r, char *res);

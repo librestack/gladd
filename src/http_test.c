@@ -27,6 +27,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 char *test_http_read_request_get()
 {
@@ -34,13 +37,23 @@ char *test_http_read_request_get()
         char *clear;
         char *headers;
         http_status_code_t err;
+        int ret;
 
         keyval_t *h = NULL;
         http_request_t *r = NULL;
 
         asprintf(&headers, "GET /static/form.html?somequerystring=value HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
 
-        r = http_read_request(headers, sizeof(headers), &hcount, &err);
+        /* create a pair of connected sockets */
+        int sv[2];
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
+                perror("socketpair");
+        }
+        ret = write(sv[0], headers, strlen(headers));
+
+        r = http_read_request(sv[1], &hcount, &err);
+
+        close(sv[0]); close(sv[1]); /* close sockets */
         free(headers);
 
         mu_assert("Test http_read_headers() with GET", err == 0);
@@ -98,10 +111,20 @@ char *test_http_read_request_post()
 
         keyval_t *h = NULL;
         http_request_t *r = NULL;
+        int ret;
 
         char *headers = "POST /sqlview/ HTTP/1.1\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\nContent-Length: 49\nContent-Type: application/x-www-form-urlencoded\n\nname=boris+was+here%2For+there%3F&id=9999999%2622";
 
-        r = http_read_request(headers, sizeof(headers), &hcount, &err);
+        /* create a pair of connected sockets */
+        int sv[2];
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
+                perror("socketpair");
+        }
+        ret = write(sv[0], headers, strlen(headers));
+
+        r = http_read_request(sv[1], &hcount, &err);
+
+        close(sv[0]); close(sv[1]); /* close sockets */
 
         mu_assert("Test http_read_headers() with POST", err == 0);
 
@@ -196,6 +219,7 @@ char *test_http_read_request_post_xml()
 {
         http_request_t *r;
         int hcount = 0;
+        int ret;
         http_status_code_t err = 0;
 
         char *headers = "POST / HTTP/1.1\nHost: localhost:3000\nAccept: */*\nContent-Length: 227\nContent-Type: text/xml\n";
@@ -203,8 +227,19 @@ char *test_http_read_request_post_xml()
         char *xmlreq;
 
         asprintf(&xmlreq, "%s\n%s", headers, xml);
+
+        /* create a pair of connected sockets */
+        int sv[2];
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
+                perror("socketpair");
+        }
+        ret = write(sv[0], xmlreq, strlen(xmlreq));
+
         mu_assert("Read XML POST request",
-                r = http_read_request(xmlreq, sizeof(xmlreq), &hcount, &err));
+                r = http_read_request(sv[1], &hcount, &err));
+
+        close(sv[0]); close(sv[1]); /* close sockets */
+
         free(xmlreq);
 
         fprintf(stderr, "%s\n", r->data->value);
