@@ -207,11 +207,15 @@ char *test_auth_groups_01()
         asprintf(&r->authpass, "bravosecret");
         mu_assert("User bravo not permitted access (not in required group)",
                 check_auth(r) == HTTP_UNAUTHORIZED);
+        free(r->authuser);
+        free(r->authpass);
 
         asprintf(&r->authuser, "alpha");
         asprintf(&r->authpass, "alphasecret");
         mu_assert("User alpha permitted access (in required group)",
                 check_auth(r) == 0);
+        free(r->authuser);
+        free(r->authpass);
 
         asprintf(&r->authuser, "alpha");
         asprintf(&r->authpass, "wrongpassword");
@@ -238,16 +242,22 @@ char *test_auth_groups_02()
         asprintf(&r->authpass, "charliesecret");
         mu_assert("Two groups required, user in neither (deny)",
                 check_auth(r) == HTTP_UNAUTHORIZED);
+        free(r->authuser);
+        free(r->authpass);
 
         asprintf(&r->authuser, "bravo");
         asprintf(&r->authpass, "bravosecret");
         mu_assert("Two groups required, user only in one (deny)",
                 check_auth(r) == HTTP_UNAUTHORIZED);
+        free(r->authuser);
+        free(r->authpass);
 
         asprintf(&r->authuser, "alpha");
         asprintf(&r->authpass, "wrongpassword");
         mu_assert("Two groups required, user in both, wrong password (deny)",
                 check_auth(r) == HTTP_UNAUTHORIZED);
+        free(r->authuser);
+        free(r->authpass);
 
         asprintf(&r->authuser, "alpha");
         asprintf(&r->authpass, "alphasecret");
