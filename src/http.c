@@ -394,11 +394,12 @@ http_request_t *http_read_request(int sock, int *hcount,
         if ((ctype = http_get_header(r, "Content-Type"))
                 && (clen = http_get_header(r, "Content-Length")))
         {
+                fprintf(stderr, "reading body\n");
                 errno = 0;
                 lclen = strtol(clen, NULL, 10);
                 if (errno != 0)
                         return NULL;
-                if (strncmp(ctype, "text/xml", 8) == 0) {
+                if (strcmp(ctype, "text/xml") == 0) {
                         /* read xml body */
                         r->data = malloc(sizeof(keyval_t));
                         asprintf(&r->data->key, "text/xml");
