@@ -243,18 +243,7 @@ http_request_t *http_init_request()
 {
         http_request_t *r;
 
-        r = malloc(sizeof(http_request_t));
-        r->httpv = NULL;
-        r->method = NULL;
-        r->res = NULL;
-        r->querystr = NULL;
-        r->clientip = NULL;
-        r->xforwardip = NULL;
-        r->authtype = NULL;
-        r->authuser = NULL;
-        r->authpass = NULL;
-        r->headers = NULL;
-        r->data = NULL;
+        r = calloc(1, sizeof(http_request_t));
 
         asprintf(&r->authtype,"Basic");
         
@@ -331,7 +320,7 @@ http_request_t *http_read_request(int sock, int *hcount,
         FILE *in;
         char *xmlbuf;
         int headlen = 0;
-        char buf[BUFSIZE];
+        char buf[BUFSIZE] = "";
         ssize_t bytes;
 
         *err = 0;
