@@ -26,7 +26,7 @@ CC=gcc
 # -D_NTDS  => compile without freetds support
 # -D_NLDAP => compile without ldap support
 # -D_NXML  => compile without xml support
-CFLAGS=-g -Wall -Werror -Wno-unused-but-set-variable
+CFLAGS=-g -Wall -Werror -Wno-unused-but-set-variable -fno-builtin-strlen
 
 INCLUDES=-I/usr/include/libxml2 -I/usr/include/postgresql
 MYSQLFLAGS=`mysql_config --cflags --libs`

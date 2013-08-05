@@ -25,6 +25,7 @@
 #include <b64/cdecode.h>
 #include <curl/curl.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <fnmatch.h>
 #include <limits.h>
 #include <stdio.h>
@@ -77,6 +78,8 @@ struct http_status httpcode[] = {
 };
 
 http_request_t *request;
+char buf[BUFSIZE];
+size_t bytes = sizeof buf;
 
 /* 
  * bodyline() - Also known as Fast Leg Theory.
@@ -127,9 +130,12 @@ int check_content_length(http_request_t *r, http_status_code_t *err)
         long len;
         char *clength;
 
+        *err = 0;
+
         clength = http_get_header(r, "Content-Length");
         if (clength == NULL) {
                 /* 411 - Length Required */
+                syslog(LOG_ERR, "Error, no Content-Length header");
                 *err = HTTP_LENGTH_REQUIRED;
                 return -1;
         }
@@ -139,7 +145,7 @@ int check_content_length(http_request_t *r, http_status_code_t *err)
                 || (errno != 0 && len == 0))
         {
                 /* Invalid length - return 400 Bad Request */
-                syslog(LOG_DEBUG, "Invalid length");
+                syslog(LOG_ERR, "Error, Invalid Content-Length");
                 *err = HTTP_BAD_REQUEST;
                 return -1;
         }
@@ -299,51 +305,115 @@ void http_set_request_resource(http_request_t *r, char *res)
                 
 }
 
+void http_flush_buffer()
+{
+        buf[0] = '\0';
+        bytes = sizeof buf;
+}
+
+/* read a line from a socket.  NB: lines cannot be longer than BUFSIZE */
+char *http_readline(int sock)
+{
+        char *line = NULL;
+        char *nl;
+        int pos;
+
+        /* read into buffer */
+        if ((strlen(buf) == 0) && (bytes == sizeof buf)) {
+                bytes = recv(sock, buf, sizeof buf, 0);
+        }
+
+        if (!bytes) return NULL;
+
+        /* scan buffer for newline */
+        nl = memchr(buf, '\n', BUFSIZE);
+        if (nl != NULL) {
+                pos = nl - buf;
+                line = malloc(pos + 2);
+                strncpy(line, buf, pos + 1);
+                line[pos + 1] = '\0';
+        }
+
+        /* move unprocessed bytes to beginning of buffer */
+        if (nl) memmove(buf, nl + 1, BUFSIZE - pos);
+
+        return line;
+}
+
+/* read body of http request, returning bytes read */
+size_t http_read_body(int sock, char **body, long lclen)
+{
+        size_t size = 0;
+
+        /* first, grab any bytes already in buffer */
+        strcpy(*body, buf);
+
+        size = strlen(*body);
+
+        while (bytes == sizeof buf) {
+                /* read into buffer */
+                bytes = recv(sock, buf, lclen - size, 0);
+
+                if (!bytes) break; /* no bytes read */
+
+                /* append contents of buffer */
+                strncpy(*body + size, buf, bytes);
+                size = strlen(*body);
+        }
+
+        /* In debug mode, write request body to file */
+        if (config->debug == 1) {
+                FILE *fd;
+                fd = fopen("/tmp/lastpost", "w");
+                fprintf(fd, "%s", *body);
+                fclose(fd);
+        }
+
+        return size;
+}
+
 /* check & store http headers from client */
 http_request_t *http_read_request(int sock, int *hcount,
         http_status_code_t *err)
 {
-        http_request_t *r;
-        char *ctype;
         char *clen;
-        long lclen;
-        size_t size;
-        char line[LINE_MAX] = "";
+        char *ctype;
+        char *stripped;
+        char *body;
+        char httpv[16] = "";
         char key[256] = "";
-        char value[256] = "";
-        keyval_t *h = NULL;
-        keyval_t *hlast = NULL;
+        char *line;
         char method[16] = "";
         char resource[MAX_RESOURCE_LEN] = "";
-        char httpv[16] = "";
-        char *stripped;
-        FILE *in;
-        char *xmlbuf;
+        char value[256] = "";
+        http_request_t *r;
         int headlen = 0;
-        char buf[BUFSIZE] = "";
-        ssize_t bytes;
+        keyval_t *h = NULL;
+        keyval_t *hlast = NULL;
+        long lclen;
+        size_t size;
 
         *err = 0;
 
-        bytes = recv(sock, buf, sizeof buf, 0);
-
         r = http_init_request();
-        r->bytes = bytes;
-
-        in = fmemopen(buf, strlen(buf), "r");
-        assert (in != NULL);
 
         /* first line has http request */
-        if (fgets(line, sizeof(line), in) == NULL) {
+        http_flush_buffer(); /* make sure buffer is clear */
+        line = http_readline(sock);
+        if (line == NULL) {
                 syslog(LOG_ERR, "HTTP request is NULL");
                 *err = HTTP_BAD_REQUEST;
+                free(line);
                 return NULL;
         }
+        r->bytes = strlen(line);
         if (sscanf(line, "%s %s HTTP/%s", method, resource, httpv) != 3) {
                 syslog(LOG_ERR, "HTTP request invalid");
                 *err = HTTP_BAD_REQUEST;
+                free(line);
                 return NULL;
         }
+        free(line);
         r->httpv = strdup(httpv);
 
         if ((strcmp(r->httpv, "1.0") != 0) && (strcmp(r->httpv, "1.1") != 0)) {
@@ -356,13 +426,16 @@ http_request_t *http_read_request(int sock, int *hcount,
         http_set_request_resource(r, resource);
 
         /* read headers */
-        while (fgets(line, sizeof(line), in)) {
+        while ((line = http_readline(sock))) {
                 headlen = headlen + strlen(line);
                 /* we strip out any \r which jquery puts in, before matching */
+                if (strcmp(line, "\n") == 0) {
+                        free(line);
+                        break;
+                }
                 stripped = replaceall(line, "\r", "");
-                if (sscanf(stripped, "%[^:]: %[^\n]",
-                        key, value) != 2)
-                {
+                free(line);
+                if (sscanf(stripped, "%[^:]: %[^\n]", key, value) != 2) {
                         free(stripped);
                         break;
                 }
@@ -378,29 +451,31 @@ http_request_t *http_read_request(int sock, int *hcount,
                 (*hcount)++;
         }
         syslog(LOG_DEBUG, "headers size: %i", headlen);
+        r->bytes += headlen;
 
         /* only read body if we have a Content-Type and Content-Length */
         if ((ctype = http_get_header(r, "Content-Type"))
-                && (clen = http_get_header(r, "Content-Length")))
+          && (clen = http_get_header(r, "Content-Length")))
         {
-                fprintf(stderr, "reading body\n");
                 errno = 0;
                 lclen = strtol(clen, NULL, 10);
                 if (errno != 0)
                         return NULL;
-                if (strcmp(ctype, "text/xml") == 0) {
+                /* only match first 8 chars, ignoring charset */
+                if (strncmp(ctype, "text/xml", 8) == 0) {
                         /* read xml body */
                         r->data = malloc(sizeof(keyval_t));
                         asprintf(&r->data->key, "text/xml");
                         r->data->next = NULL;
-                        xmlbuf = calloc(1, lclen + 1);
-                        if (xmlbuf == NULL) {
+                        body = calloc(1, lclen + 1);
+                        if (body == NULL) {
                                 syslog(LOG_ERR,
                                         "failed to allocate buffer for xml");
                                 *err = HTTP_INTERNAL_SERVER_ERROR;
                                 return NULL;
                         }
-                        size = fread(xmlbuf, 1, lclen, in);
+                        size = http_read_body(sock, &body, lclen);
+                        r->bytes += size;
                         if (size != lclen) {
                                 /* we have the wrong number of bytes */
                                 syslog(LOG_ERR,
@@ -410,18 +485,17 @@ http_request_t *http_read_request(int sock, int *hcount,
                                 *err = HTTP_BAD_REQUEST;
                                 return NULL;
                         }
-                        r->data->value = strdup(xmlbuf);
-                        free(xmlbuf);
+                        r->data->value = body;
+                        syslog(LOG_DEBUG, "Body recorded");
                 }
                 else {
                         /* read body, after skipping the blank line */
-                        while (fgets(line, sizeof(line), in)) {
+                        while ((line = http_readline(sock))) {
                                 bodyline(r, line);
+                                free(line);
                         }
                 }
         }
-
-        fclose(in);
 
         return r;
 }

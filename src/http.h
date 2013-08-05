@@ -79,6 +79,9 @@ url_t  *http_match_url(http_request_t *r);
 keyval_t *http_set_keyval (char *key, char *value);
 void http_response(int sock, int code);
 char *http_get_header(http_request_t *r, char *key);
+void http_flush_buffer();
+char *http_readline(int sock);
+size_t http_read_body(int sock, char **body, long lclen);
 http_request_t *http_read_request(int sock, int *hcount,
         http_status_code_t *err);
 void http_set_request_method(http_request_t *r, char *method);

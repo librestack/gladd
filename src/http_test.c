@@ -50,10 +50,11 @@ char *test_http_read_request_get()
                 perror("socketpair");
         }
         ret = write(sv[0], headers, strlen(headers));
+        close(sv[0]); /* close write socket */
 
         r = http_read_request(sv[1], &hcount, &err);
 
-        close(sv[0]); close(sv[1]); /* close sockets */
+        close(sv[1]); /* close read socket */
         free(headers);
 
         mu_assert("Test http_read_headers() with GET", err == 0);
@@ -121,10 +122,10 @@ char *test_http_read_request_post()
                 perror("socketpair");
         }
         ret = write(sv[0], headers, strlen(headers));
+        close(sv[0]); /* close write socket */
 
         r = http_read_request(sv[1], &hcount, &err);
-
-        close(sv[0]); close(sv[1]); /* close sockets */
+        close(sv[1]); /* close read socket */
 
         mu_assert("Test http_read_headers() with POST", err == 0);
 
@@ -234,16 +235,67 @@ char *test_http_read_request_post_xml()
                 perror("socketpair");
         }
         ret = write(sv[0], xmlreq, strlen(xmlreq));
+        close(sv[0]); /* close write socket */
 
         mu_assert("Read XML POST request",
                 r = http_read_request(sv[1], &hcount, &err));
-
-        close(sv[0]); close(sv[1]); /* close sockets */
+        close(sv[1]); /* close read socket */
 
         free(xmlreq);
 
         fprintf(stderr, "%s\n", r->data->value);
 
+        free_request(r);
+
+        return 0;
+}
+
+/* POST data in excess of buffer size */
+char *test_http_read_request_post_large()
+{
+        char *databuf;
+        char *headers;
+        http_request_t *r;
+        http_status_code_t err = 0;
+        int buflen;
+        int datalen = BUFSIZE * 2 ;
+        int hcount = 0;
+        int headlen;
+        int i;
+        int ret;
+
+        /* create a pair of connected sockets */
+        int sv[2];
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
+                perror("socketpair");
+        }
+
+        /* write headers */
+        asprintf(&headers, "POST / HTTP/1.1\nHost: localhost:3000\nAccept: */*\nContent-Length: %i\nContent-Type: text/xml\n\n", datalen);
+        headlen = strlen(headers);
+        buflen = headlen + datalen;
+        databuf = calloc(buflen + 1, 1);
+        strcpy(databuf, headers);
+        free(headers);
+
+        /* write enough data to overfill recv buffer */
+        for (i=headlen; i<buflen; i++) {
+                strncpy(databuf + i, "0", 1);
+        }
+        ret = write(sv[0], databuf, strlen(databuf));
+        close(sv[0]); /* close write socket */
+
+        mu_assert("POST more data than buffer",
+                r = http_read_request(sv[1], &hcount, &err));
+
+        close(sv[1]); /* close read socket */
+
+        fprintf(stderr, "%i / %i bytes read\n",
+                (int)r->bytes, (int)strlen(databuf));
+        mu_assert("Ensure correct number of bytes read back",
+                r->bytes == strlen(databuf));
+
+        free(databuf);
         free_request(r);
 
         return 0;

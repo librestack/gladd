@@ -143,22 +143,12 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         }
         else {
                 if (strcmp(request->method, "POST") == 0) {
-
-                        /* In debug mode, write request to file */
-                        /*
-                        if (config->debug == 1) {
-                                FILE *fd;
-                                fd = fopen("/tmp/lastpost", "w");
-                                fprintf(fd, "%s", buf);
-                                fclose(fd);
-                        }
-                        */
-
                         /* POST requires Content-Length header */
                         http_status_code_t err;
 
                         len = check_content_length(request, &err);
                         if (err != 0) {
+                                syslog(LOG_DEBUG, "Incorrect content length");
                                 http_response(sock, err);
                                 goto close_connection;
                         }
@@ -174,6 +164,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                 goto close_connection;
                         }
                 }
+                syslog(LOG_DEBUG, "Type: %s", u->type);
                 if (strncmp(u->type, "static", 6) == 0) {
                         /* serve static files */
                         err = response_static(sock, u);
@@ -280,6 +271,8 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         char *action;
         int err;
         field_t *filter = NULL;
+
+        syslog(LOG_DEBUG, "response_xslpost()");
 
         if (strcmp(u->method, "POST") != 0) {
                 syslog(LOG_ERR, "xslpost method not POST");
