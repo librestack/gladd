@@ -109,7 +109,6 @@ void bodyline(http_request_t *r, char *line)
                 clear = curl_easy_unescape(handle, despaced, strlen(dtok), &l);
                 if (sscanf(clear, "%[^=]=%[^\n]", key, value) == 2) {
                         http_add_request_data(r, key, value);
-                        fprintf(stderr, "%s says %s\n", key, value);
                 }
                 free(clear);
                 free(despaced);
@@ -486,7 +485,6 @@ http_request_t *http_read_request(int sock, int *hcount,
                                 return NULL;
                         }
                         r->data->value = body;
-                        syslog(LOG_DEBUG, "Body recorded");
                 }
                 else {
                         /* read body, after skipping the blank line */
