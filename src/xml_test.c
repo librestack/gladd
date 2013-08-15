@@ -25,7 +25,6 @@
 #include "xml.h"
 #include "config.h"
 #include "http.h"
-#include "db.h"
 #include "minunit.h"
 #include <stdio.h>
 #include <stdlib.h>

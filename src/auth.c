@@ -23,7 +23,7 @@
 
 #include "auth.h"
 #include "config.h"
-#include "db.h"
+#include "gladdb/db.h"
 #include <fnmatch.h>
 #include <string.h>
 #include <stdlib.h>
@@ -153,6 +153,7 @@ int check_auth_require(char *alias, http_request_t *r)
 int check_auth_alias(char *alias, http_request_t *r)
 {
         auth_t *a;
+        int res;
 
         if (! (a = getauth(alias))) {
                 syslog(LOG_ERR, 
@@ -173,9 +174,12 @@ int check_auth_alias(char *alias, http_request_t *r)
                 if (strcmp(a->type, "ldap") == 0) {
                         /* test credentials against ldap */
                         syslog(LOG_DEBUG, "checking ldap users");
-                        return db_test_bind(getdb(a->db),
+                        res = db_test_bind(getdb(a->db),
                                 getsql(a->sql), a->bind,
-                                        r->authuser, r->authpass);
+                                r->authuser, r->authpass);
+                        if (res == -1) return HTTP_INTERNAL_SERVER_ERROR;
+                        if (res == -2) return HTTP_UNAUTHORIZED;
+                        return res;
                 }
                 else if (strcmp(a->type, "user") == 0) {
                         /* test credentials against users */

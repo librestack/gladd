@@ -23,7 +23,8 @@
 #ifndef __GLADD_DB_TEST_H__
 #define __GLADD_DB_TEST_H__ 1
 
-#include "db.h"
+#include "gladdb/db.h"
+#include "config.h"
 
 char *test_dbs();               /* loop through all test dbs */
 char *test_db(db_t *db);        /* test one db */

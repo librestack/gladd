@@ -24,6 +24,7 @@
 #define __GLADD_CONFIG_H__ 1
 
 #include <stdio.h>
+#include "gladdb/db.h"
 
 #define DEFAULT_CONFIG "/etc/gladd.conf"
 
@@ -62,23 +63,6 @@ typedef struct config_t {
         struct user_t *users;
         struct group_t *groups;
 } config_t;
-
-typedef struct db_t {
-        char *alias; /* a convenient handle to refer to this db by */
-        char *type;  /* "pg" = postgres only supported at present */
-        char *host;  /* hostname or ip for this database eg. "localhost" */
-        char *db;    /* name of the database */
-        char *user;  /* username (mysql) */
-        char *pass;  /* password (mysql) */
-        void *conn;  /* pointer to open db connection */
-        struct db_t *next; /* pointer to next db so we can loop through them */
-} db_t;
-
-typedef struct keyval_t {
-        char *key;
-        char *value;
-        struct keyval_t *next;
-} keyval_t;
 
 typedef struct group_t {
         char *name;

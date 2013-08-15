@@ -23,7 +23,7 @@
 #ifndef __GLADD_XML_H__
 #define __GLADD_XML_H__ 1
 
-#include "db.h"
+#include "gladdb/db.h"
 
 int buildxml(char **xmldoc);
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty);
