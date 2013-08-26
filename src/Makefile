@@ -30,7 +30,8 @@ CFLAGS=-g -Wall -Werror -Wno-unused-but-set-variable
 
 INCLUDES=-I/usr/include/libxml2 -I/usr/include/postgresql -L/usr/local/lib
 MYSQLFLAGS=`mysql_config --cflags --libs`
-LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lxslt -lpq ${MYSQLFLAGS} -lsybdb -lmysqlclient -lldap -lb64 -lcurl -lgladdb
+## LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lxslt -lpq ${MYSQLFLAGS} -lsybdb -lmysqlclient -lldap -lb64 -lcurl -lgladdb
+LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lxslt -lcurl -lldap -lb64 -lgladdb -lrt -lpq -lsybdb ${MYSQLFLAGS}
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
 OBJECTFILES=args.o auth.o config.o handler.o help.o http.o mime.o server.o signals.o string.o xml.o
