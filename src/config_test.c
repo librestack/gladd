@@ -219,6 +219,10 @@ char *test_config_read_url()
         mu_assert("... method", strcmp(u->method, "POST") == 0);
         mu_assert("... db", strcmp(u->db, "db1") == 0);
         mu_assert("... view", strcmp(u->view, "journal") == 0);
+        mu_assert("Reading 8th url from config", u = u->next);
+        mu_assert("... method", strcmp(u->method, "GET") == 0);
+        mu_assert("... db", strcmp(u->db, "db1") == 0);
+        mu_assert("... view", strcmp(u->view, "someview") == 0);
 
         mu_assert("Ensure final url->next returns NULL", u->next == NULL);
 
