@@ -182,6 +182,11 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         if (err != 0)
                                 http_response(sock, err);
                 }
+                else if (strcmp(u->type, "xslt") == 0) {
+                        err = response_xslt(sock, u);
+                        if (err != 0)
+                                http_response(sock, err);
+                }
                 else {
                         syslog(LOG_ERR, "Unknown url type '%s'", u->type);
                 }
@@ -336,6 +341,77 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         free(sql);
 
         http_response(sock, HTTP_OK);
+
+        return 0;
+}
+
+http_status_code_t response_xslt(int sock, url_t *u)
+{
+        char *r;
+        char *sql;
+        char *xml;
+        char *xsl;
+        char *html;
+        int err;
+        db_t *db;
+        field_t *filter = NULL;
+
+        syslog(LOG_DEBUG, "response_xslt()");
+
+        /* ensure method is GET */
+        if (strcmp(u->method, "GET") != 0) {
+                syslog(LOG_ERR, "xslt method not GET");
+                return HTTP_METHOD_NOT_ALLOWED;
+        }
+       
+        /* ensure we have a valid database */
+        if (!(db = getdb(u->db))) {
+                syslog(LOG_ERR, "db '%s' not in config", u->db);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        /* ensure we have some sql to work with */
+        if (!(sql = getsql(u->view))) {
+                syslog(LOG_ERR, "sql '%s' not in config", u->view);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        /* fetch element id as filter, if applicable */
+        filter = get_element(&err);
+        if (err != 0) {
+                return err;
+        }
+
+        /* fetch data as xml */
+        if (sqltoxml(db, sql, filter, &xml, 1) != 0) {
+                free(sql);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        /* ensure XSLT file exists */
+        assert(asprintf(&xsl, "%s/%s/view.xsl", config->xmlpath, u->view)
+                != -1);
+
+        /* transform xml data into html */
+        syslog(LOG_DEBUG, "Performing XSLT Transformation");
+        if (xmltransform(xsl, xml, &html) != 0) {
+                free(xsl); free(xml);
+                syslog(LOG_ERR, "XSLT transform failed");
+                return HTTP_BAD_REQUEST;
+        }
+        free(xsl); free(xml);
+
+        /* build response */
+        if (asprintf(&r, RESPONSE_200, MIME_HTML, html) == -1)
+        {
+                free(html);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        /* return html response */
+        respond(sock, r);
+        free(r);
+        free(html);
 
         return 0;
 }
