@@ -58,6 +58,9 @@ void get_mime_type(char *mimetype, char *filename)
                 else if (strncmp(fileext, "pdf", 3) == 0) {
                         strcpy(mimetype, "application/pdf");
                 }
+                else if (strncmp(fileext, "ogv", 3) == 0) {
+                        strcpy(mimetype, "video/ogg");
+                }
                 free(fileext);
         }
 }
