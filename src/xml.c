@@ -61,6 +61,7 @@ int buildxml(char **xml)
 
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 {
+        int isconn = 0;
         int rowc;
         row_t *rows = NULL;
         row_t *r = NULL;
@@ -74,9 +75,14 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
         char *fvalue;
         char *newsql;
 
-        if (db_connect(db) != 0) {
-                syslog(LOG_ERR, "Failed to connect to db on %s", db->host);
-                return -1;
+        /* connect if we aren't already */
+        if (db->conn == NULL) {
+                if (db_connect(db) != 0) {
+                        syslog(LOG_ERR, "Failed to connect to db on %s",
+                                db->host);
+                        return -1;
+                }
+                isconn = 1;
         }
 
         /* do variable substitution */
@@ -127,7 +133,9 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
         xmlFreeDoc(doc);
         xmlCleanupParser();
 
-        db_disconnect(db);
+        /* leave the connection how we found it */
+        if (isconn == 1)
+                db_disconnect(db);
 
         return 0;
 }

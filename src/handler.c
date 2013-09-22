@@ -270,9 +270,11 @@ http_status_code_t response_sqlview(int sock, url_t *u)
 http_status_code_t response_xslpost(int sock, url_t *u)
 {
         db_t *db;
+        char *xml;
         char *xsd;
         char *xsl;
         char *sql;
+        char *r;
         char *action;
         int err;
         field_t *filter = NULL;
@@ -319,16 +321,17 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         assert(asprintf(&xsl, "%s/%s/%s.xsl", config->xmlpath, u->view, action)
                 != -1);
 
-        free(action);
-
         syslog(LOG_DEBUG, "Performing XSLT Transformation");
 
         if (xmltransform(xsl, request->data->value, &sql) != 0) {
                 free(xsl);
                 syslog(LOG_ERR, "XSLT transform failed");
-                return HTTP_BAD_REQUEST;
+                return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(xsl);
+
+        /* connect to database */
+        db_connect(db);
 
         syslog(LOG_DEBUG, "Executing SQL");
 
@@ -336,11 +339,40 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         if (db_exec_sql(db, sql) != 0) {
                 free(sql);
                 syslog(LOG_ERR, "xsltpost sql execution failed");
-                return HTTP_BAD_REQUEST;
+                return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(sql);
 
-        http_response(sock, HTTP_OK);
+        /* check if we have results to return (created.xsl / updated.xsl) */
+        assert(asprintf(&xsl, "%s/%s/%sd.xsl", config->xmlpath, u->view,
+                action) != -1);
+        free(action);
+        if (access(xsl, R_OK) != 0) {
+                /* No xsl for result, just return OK */
+                http_response(sock, HTTP_OK);
+        }
+        else {
+                /* return row(s) as result */
+                if (xmltransform(xsl, request->data->value, &sql) != 0) {
+                        free(xsl);
+                        syslog(LOG_ERR, "XSLT transform failed");
+                        return HTTP_INTERNAL_SERVER_ERROR;
+                }
+                if (sqltoxml(db, sql, filter, &xml, 1) != 0) {
+                        free(sql);
+                        return HTTP_INTERNAL_SERVER_ERROR;
+                }
+                free(sql);
+                if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1)
+                {
+                        free(xml);
+                        return HTTP_INTERNAL_SERVER_ERROR;
+                }
+                respond(sock, r);
+                free(r);
+        }
+        free(xsl);
+        db_disconnect(db);
 
         return 0;
 }
