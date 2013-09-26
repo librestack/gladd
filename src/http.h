@@ -61,15 +61,18 @@ typedef struct http_request_t {
         char *authtype;         /* Basic, or Silent                      */
         char *authuser;         /* username supplied for http basic auth */
         char *authpass;         /* password    "      "   "     "    "   */
+        char *boundary;         /* boundary for multipart data           */
         keyval_t *headers;      /* client request headers                */
         keyval_t *data;         /* client request data                   */
 } http_request_t;
 
 extern http_request_t *request;
+extern char buf[BUFSIZE];
+extern size_t bytes;
 
 void bodyline(http_request_t *r, char *line);
 int check_content_length(http_request_t *r, http_status_code_t *err);
-char *check_content_type(http_request_t *r, http_status_code_t *err);
+char *check_content_type(http_request_t *r, http_status_code_t *err, char *type);
 void free_request(http_request_t *r);
 char *decode64(char *str);
 struct http_status get_status(int code);

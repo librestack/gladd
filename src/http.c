@@ -79,7 +79,7 @@ struct http_status httpcode[] = {
 
 http_request_t *request;
 char buf[BUFSIZE];
-size_t bytes = sizeof buf;
+size_t bytes = 0;
 
 /* 
  * bodyline() - Also known as Fast Leg Theory.
@@ -156,13 +156,20 @@ int check_content_length(http_request_t *r, http_status_code_t *err)
  * returns content-type string or NULL on error
  * err is set to the appropriate http status code on error
  */
-char *check_content_type(http_request_t *r, http_status_code_t *err)
+char *check_content_type(http_request_t *r, http_status_code_t *err, char *type)
 {
         char *mtype;
 
         mtype = http_get_header(request, "Content-Type");
         if ((strcmp(mtype, "application/x-www-form-urlencoded") == 0)
         || (strncmp(mtype, "text/xml", 8) == 0))
+        {
+                return mtype;
+        }
+        else if ((strncmp(mtype, "multipart/form-data",
+                strlen("multipart/form-data")) == 0) &&
+                (strcmp(type, "upload") == 0)
+        )
         {
                 return mtype;
         }
@@ -307,7 +314,7 @@ void http_set_request_resource(http_request_t *r, char *res)
 void http_flush_buffer()
 {
         buf[0] = '\0';
-        bytes = sizeof buf;
+        bytes = 0;
 }
 
 /* read a line from a socket.  NB: lines cannot be longer than BUFSIZE */
@@ -316,25 +323,34 @@ char *http_readline(int sock)
         char *line = NULL;
         char *nl;
         int pos;
+        static int bmore = 1;
+        size_t fillbytes;
 
-        /* read into buffer */
-        if ((strlen(buf) == 0) && (bytes == sizeof buf)) {
-                bytes = recv(sock, buf, sizeof buf, 0);
+        /* fill buffer */
+        if ((bytes < sizeof buf) && (bmore)) {
+                fillbytes = BUFSIZE-bytes; /* bytes req'd to top up buffer */
+                bytes = recv(sock, buf + bytes, fillbytes, 0);
         }
-
-        if (!bytes) return NULL;
+        if (bytes == -1) {
+                syslog(LOG_ERR, "Error reading from socket: %s", 
+                        strerror(errno));
+                return NULL;
+        }
+        if (bytes < fillbytes) bmore = 0; /* no more to read */
+        if (bytes == 0) return NULL;
 
         /* scan buffer for newline */
         nl = memchr(buf, '\n', BUFSIZE);
         if (nl != NULL) {
                 pos = nl - buf;
                 line = malloc(pos + 2);
-                strncpy(line, buf, pos + 1);
+                memcpy(line, buf, pos + 1);
                 line[pos + 1] = '\0';
         }
 
         /* move unprocessed bytes to beginning of buffer */
-        if (nl) memmove(buf, nl + 1, BUFSIZE - pos);
+        bytes = bmore ? BUFSIZE - pos - 1 : bytes - pos - 1;
+        if (nl) memmove(buf, nl + 1, bytes);
 
         return line;
 }
@@ -460,16 +476,16 @@ http_request_t *http_read_request(int sock, int *hcount,
                 lclen = strtol(clen, NULL, 10);
                 if (errno != 0)
                         return NULL;
-                /* only match first 8 chars, ignoring charset */
+                /* only match first part of mime type, ignoring charset etc. */
                 if (strncmp(ctype, "text/xml", 8) == 0) {
-                        /* read xml body */
+                        /* read request body */
                         r->data = malloc(sizeof(keyval_t));
                         asprintf(&r->data->key, "text/xml");
                         r->data->next = NULL;
                         body = calloc(1, lclen + 1);
                         if (body == NULL) {
                                 syslog(LOG_ERR,
-                                        "failed to allocate buffer for xml");
+                                "failed to allocate buffer for request body");
                                 *err = HTTP_INTERNAL_SERVER_ERROR;
                                 return NULL;
                         }
@@ -485,6 +501,16 @@ http_request_t *http_read_request(int sock, int *hcount,
                                 return NULL;
                         }
                         r->data->value = body;
+                }
+                /* multipart form data */
+                else if (strncmp(ctype, "multipart/form-data",
+                        strlen("multipart/form-data")) == 0)
+                {
+                        /* get boundary */
+                        r->boundary = strdup(ctype +
+                                strlen("multipart/form-data; boundary="));
+                        syslog(LOG_DEBUG, "multipart boundary: %s",
+                                r->boundary);
                 }
                 else {
                         /* read body, after skipping the blank line */
@@ -594,6 +620,7 @@ void free_request(http_request_t *r)
         free(r->authtype);
         free(r->authuser);
         free(r->authpass);
+        free(r->boundary);
         free(r);
         r = NULL;
 }

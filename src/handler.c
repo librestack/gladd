@@ -28,6 +28,7 @@
 #include "handler.h"
 #include "main.h"
 #include "mime.h"
+#include "string.h"
 #include "xml.h"
 
 #include <arpa/inet.h>
@@ -36,6 +37,8 @@
 #include <libxml/parser.h>
 #include <limits.h>
 #include <netinet/tcp.h>
+#include <openssl/evp.h>
+#include <openssl/sha.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -156,7 +159,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                 syslog(LOG_DEBUG, "Content-Length: %li", len);
                         }
 
-                        mtype = check_content_type(request, &err);
+                        mtype = check_content_type(request, &err, u->type);
                         if (err != 0) {
                                 syslog(LOG_ERR,
                                         "Unsupported Media Type '%s'", mtype);
@@ -184,6 +187,11 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 }
                 else if (strcmp(u->type, "xslt") == 0) {
                         err = response_xslt(sock, u);
+                        if (err != 0)
+                                http_response(sock, err);
+                }
+                else if (strcmp(u->type, "upload") == 0) {
+                        err = response_upload(sock, u);
                         if (err != 0)
                                 http_response(sock, err);
                 }
@@ -446,6 +454,169 @@ http_status_code_t response_xslt(int sock, url_t *u)
         free(html);
 
         return 0;
+}
+
+/* receive uploaded files */
+http_status_code_t response_upload(int sock, url_t *u)
+{
+        EVP_MD_CTX *mdctx;
+        char **tokens;
+        char *b = request->boundary;
+        char *clen;
+        char *filename;
+        char *pbuf;
+        char *ptmp;
+        char *url;
+        char hash[SHA_DIGEST_LENGTH*2];
+        char template[] = "/var/tmp/upload-XXXXXX";
+        const EVP_MD *md;
+        http_status_code_t err = 0;
+        int fd;
+        int toknum;
+        long lclen;
+        size_t size = 0;
+        struct timeval tv;
+        unsigned char md_value[EVP_MAX_MD_SIZE];
+        unsigned int md_len, i;
+
+        /* get expected length of body */
+        clen = http_get_header(request, "Content-Length");
+        lclen = strtol(clen, NULL, 10);
+
+        /* first, grab any bytes already in buffer */
+        size = bytes;
+        syslog(LOG_DEBUG, "I already have %i bytes", (int) size);
+
+        /* find boundary */
+        pbuf = memsearch(buf, b, BUFSIZE);
+        if (pbuf == NULL) {
+                syslog(LOG_ERR, "No boundary found in data");
+                return HTTP_BAD_REQUEST;
+        }
+        pbuf += strlen(b) + 2; /* skip boundary and CRLF */
+
+        /* skip headers => find blank line (search for 2xCRLF) */
+        pbuf = memsearch(pbuf, "\r\n\r\n", BUFSIZE-(pbuf-buf));
+        if (pbuf == NULL) {
+                syslog(LOG_ERR, "Blank line required after multipart headers");
+                return HTTP_BAD_REQUEST;
+        }
+        pbuf += 4;
+
+        /* open file for writing */
+        fd = mkstemp(template);
+
+        /* start building SHA1 */
+        OpenSSL_add_all_digests();
+        md = EVP_get_digestbyname("SHA1");
+        if(!md) {
+                syslog(LOG_ERR, "SHA1 digest unavailable");
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        mdctx = EVP_MD_CTX_create();
+        EVP_DigestInit_ex(mdctx, md, NULL);
+
+        ptmp = memsearch(pbuf, b, BUFSIZE-(pbuf-buf)); /* check for boundary */
+        if (ptmp != NULL) {
+                /* boundary found - short write */
+                syslog(LOG_DEBUG, "end boundary found in initial buffer");
+                write(fd, pbuf, ptmp - pbuf - 4);
+                EVP_DigestUpdate(mdctx, pbuf, ptmp - pbuf - 4);
+        }
+        else {
+                syslog(LOG_DEBUG, "end boundary NOT found in initial buffer");
+                write(fd, pbuf, BUFSIZE - (pbuf - buf) - 2);
+                EVP_DigestUpdate(mdctx, pbuf, BUFSIZE - (pbuf - buf) - 2);
+        }
+
+        if (lclen > sizeof buf) { 
+                http_flush_buffer();
+                bytes = sizeof buf;
+
+                /* set socket timeout */
+                tv.tv_sec = 1;
+                tv.tv_usec = 0;
+                setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                        (char *)&tv, sizeof(struct timeval));
+                while (bytes > 0) {
+                        /* read into buffer */
+                        errno = 0;
+                        bytes = recv(sock, buf, BUFSIZE, MSG_WAITALL);
+                        if (bytes == -1) {
+                                syslog(LOG_ERR,"Error reading from socket: %s",
+                                        strerror(errno));
+                                        
+                        }
+                        if (bytes == 0) break; /* no bytes read */
+                        size += bytes;
+                        syslog(LOG_DEBUG, "Read %i bytes", (int)bytes);
+
+                        /* check for boundary */
+                        pbuf = memsearch(buf, b, bytes);
+                        if (pbuf != NULL) {
+                                /* boundary reached, we're done here */
+                                syslog(LOG_DEBUG, "boundary reached, we're done here");
+                                write(fd, buf, pbuf - buf - 4);
+                                EVP_DigestUpdate(mdctx, buf, pbuf - buf - 4);
+                                break;
+                        }
+
+                        /* write contents of buffer out to file */
+                        write(fd, buf, (int) bytes);
+                        EVP_DigestUpdate(mdctx, buf, bytes);
+                }
+        }
+
+        if (lclen != size) {
+                syslog(LOG_ERR, "ERROR: Read %li/%li bytes",
+                        (long) size, lclen);
+                syslog(LOG_ERR, "ERROR: Expected another %li bytes",
+                        lclen - (long)size);
+                return HTTP_BAD_REQUEST;
+        }
+
+        syslog(LOG_DEBUG, "Read %li bytes total", (long)size);
+
+        EVP_DigestFinal_ex(mdctx, md_value, &md_len);
+        EVP_MD_CTX_destroy(mdctx);
+
+        for (i=0; i < SHA_DIGEST_LENGTH; i++) {
+                sprintf((char*)&(hash[i*2]), "%02x", md_value[i]);
+        }
+
+        syslog(LOG_DEBUG, "hash: %s", hash);
+
+        /* TODO: deal with other data parts */
+
+        /* set permissions */
+        if (fchmod(fd, 0644) == -1) {
+                syslog(LOG_ERR, "Failed to set file permissions on upload");
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        /* close file */
+        close(fd);
+
+        /* rename to <path>/<instance>/<sha1sum> */
+        url = strdup(request->res);
+        tokens = tokenize(&toknum, &url, "/");
+        asprintf(&filename, "%s/%s/%s", u->path, tokens[2], hash);
+        free(tokens);
+        free(url);
+        syslog(LOG_ERR, "filename: %s", filename);
+        if (rename(template, filename) == -1) {
+                syslog(LOG_ERR, "Failed to rename uploaded file: %s",
+                        strerror(errno));
+                free(filename);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        free(filename);
+
+        /* return hash of uploaded file */
+        respond(sock, hash);
+
+        return err;
 }
 
 /* serve static files */

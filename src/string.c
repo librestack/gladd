@@ -24,7 +24,6 @@
 #include "string.h"
 #include <ctype.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 /* trim leading spaces from string */
@@ -34,6 +33,25 @@ char *lstrip(char *str)
         while (isspace(*str)) str++;
 
         return str;
+}
+
+/* binary search.  Returns pointer to first occurance of string in binary data,
+ * or NULL if not found */
+char *memsearch(char *hay, char *pin, size_t size)
+{
+        char *ptr;
+
+        for (ptr = hay; ptr != NULL; ptr++) {
+                ptr = memchr(ptr, pin[0], size-(ptr-hay));
+                if (ptr == NULL) break;                    /* not found */
+                if (ptr + strlen(pin) > hay + size)
+                        return NULL; /* end reached */
+                if (memcmp(ptr, pin, strlen(pin)) == 0) {
+                        break;
+                }
+        }
+
+        return ptr;
 }
 
 /* search and replace 

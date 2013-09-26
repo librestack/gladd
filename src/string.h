@@ -23,7 +23,10 @@
 #ifndef __BACS_STRING_H__
 #define __BACS_STRING_H__ 1
 
+#include <stdlib.h>
+
 char *lstrip(char *str);
+char *memsearch(char *hay, char *pin, size_t size);
 char *replace(char *str, char *find, char *repl);
 char *replaceall(char *str, char *find, char *repl);
 char *rstrip(char *str);

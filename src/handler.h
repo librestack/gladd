@@ -36,6 +36,7 @@ void respond (int fd, char *response);
 int send_file(int sock, char *path, http_status_code_t *err);
 http_status_code_t response_sqlview(int sock, url_t *u);
 http_status_code_t response_static(int sock, url_t *u);
+http_status_code_t response_upload(int sock, url_t *u);
 http_status_code_t response_xslt(int sock, url_t *u);
 
 #endif /* __GLADD_HANDLER_H__ */

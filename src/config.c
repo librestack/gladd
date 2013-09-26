@@ -31,7 +31,7 @@
 #include "config.h"
 #include "string.h"
 
-void    handle_url_static(char params[LINE_MAX]);
+void    handle_url_static(char *type, char params[LINE_MAX]);
 void    handle_url_dynamic(char *type, char params[LINE_MAX]);
 
 /* set config defaults */
@@ -336,7 +336,7 @@ int add_url_handler(char *value)
 
         if (sscanf(value, "%s %[^\n]", type, params) == 2) {
                 if (strncmp(type, "static", 6) == 0) {
-                        handle_url_static(params);
+                        handle_url_static("static", params);
                 }
                 else if (strcmp(type, "sqlview") == 0) {
                         handle_url_dynamic("sqlview", params);
@@ -349,6 +349,9 @@ int add_url_handler(char *value)
                 }
                 else if (strcmp(type, "xslt") == 0) {
                         handle_url_dynamic("xslt", params);
+                }
+                else if (strcmp(type, "upload") == 0) {
+                        handle_url_static("upload", params);
                 }
                 else {
                         fprintf(stderr, "skipping unhandled url type '%s'\n", 
@@ -631,7 +634,7 @@ group_t *getgroup(char *name)
 }
 
 /* static url handler */
-void handle_url_static(char params[LINE_MAX])
+void handle_url_static(char *type, char params[LINE_MAX])
 {
         url_t *newurl;
         char url[LINE_MAX];
@@ -641,7 +644,7 @@ void handle_url_static(char params[LINE_MAX])
         newurl = malloc(sizeof(struct url_t));
 
         if (sscanf(params, "%s %s %s", method, url, path) == 3) {
-                newurl->type = "static";
+                newurl->type = strdup(type);
                 newurl->method = strdup(method);
                 newurl->url = strdup(url);
                 newurl->path = strdup(path);
@@ -662,7 +665,7 @@ void handle_url_static(char params[LINE_MAX])
         }
 }
 
-/* handle sqlview type urls */
+/* handle dynamic type urls */
 void handle_url_dynamic(char *type, char params[LINE_MAX])
 {
         url_t *newurl;
