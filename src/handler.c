@@ -597,12 +597,26 @@ http_status_code_t response_upload(int sock, url_t *u)
         /* close file */
         close(fd);
 
-        /* rename to <path>/<instance>/<sha1sum> */
+        /* ensure destination directory exists */
         url = strdup(request->res);
         tokens = tokenize(&toknum, &url, "/");
+        free(url);
+        umask(022);
+        asprintf(&filename, "%s/%s", u->path, tokens[2] );
+        if (mkdir(filename, 0755) != 0) {
+                if (errno != EEXIST) {
+                        syslog(LOG_ERR, "Error creating directory '%s': %s",
+                                filename, strerror(errno));
+                        free(tokens);
+                        free(filename);
+                        return HTTP_INTERNAL_SERVER_ERROR;
+                }
+        }
+        free(filename);
+
+        /* rename to <path>/<instance>/<sha1sum> */
         asprintf(&filename, "%s/%s/%s", u->path, tokens[2], hash);
         free(tokens);
-        free(url);
         syslog(LOG_ERR, "filename: %s", filename);
         if (rename(template, filename) == -1) {
                 syslog(LOG_ERR, "Failed to rename uploaded file: %s",
@@ -610,7 +624,6 @@ http_status_code_t response_upload(int sock, url_t *u)
                 free(filename);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
-
         free(filename);
 
         /* return hash of uploaded file */
