@@ -106,6 +106,7 @@ char *test_auth_require()
         mu_assert("check_auth_require() - fail on invalid alias",
                 check_auth_require("invalid", r) != 0);
 
+#ifndef _NLDAP
         asprintf(&r->authuser, "betty");
         asprintf(&r->authpass, "false");
         mu_assert("check_auth_require() - fail with invalid credentials",
@@ -118,6 +119,7 @@ char *test_auth_require()
         mu_assert("check_auth_require() - successful ldap bind",
                 check_auth_require("ldap", r) == 0);
         free_request(r);
+#endif /* _NLDAP */
 
         r = http_init_request();
         asprintf(&r->authuser, "bravo");
