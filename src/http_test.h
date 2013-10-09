@@ -28,6 +28,7 @@
 char *test_http_read_request_get();
 char *test_http_read_request_post();
 char *test_http_read_request_data();
+char *test_http_readline();
 char *test_http_postdata_invalid();
 char *test_http_postdata_checks();
 char *test_http_read_request_post_xml();

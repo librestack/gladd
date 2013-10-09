@@ -24,6 +24,7 @@
 #include "config.h"
 #include "http_test.h"
 #include "minunit.h"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -105,6 +106,45 @@ char *test_http_read_request_get()
 
         return 0;
 }
+
+/* ensure http_readline() behaves correctly */
+char *test_http_readline()
+{
+        char *data = "POST /sqlview/ HTTP/1.1\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\nContent-Length: 49\nContent-Type: application/x-www-form-urlencoded\n\nname=boris+was+here%2For+there%3F&id=9999999%2622";
+        char *line;
+        int ret;
+        int sv[2];
+
+        /* create a pair of connected sockets */
+        fprintf(stderr, "Creating test sockets.\n");
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
+                perror("socketpair");
+        }
+
+        /* write some data */
+        fprintf(stderr, "Writing some data to test socket\n");
+        ret = write(sv[0], data, strlen(data));
+        if (ret == -1) {
+                perror("Error writing to socket");
+        }
+        close(sv[0]); /* close write socket */
+
+        /* read a line */
+        fprintf(stderr, "flushing buffer\n");
+        http_flush_buffer(); /* make sure buffer is clear */
+        fprintf(stderr, "http_readline() - entering\n");
+        line = http_readline(sv[1]);
+        free(line);
+        fprintf(stderr, "http_readline() done\n");
+
+        close(sv[1]); /* close read socket */
+
+        /* test we got what we expected */
+        mu_assert("http_readline()", line != NULL);
+
+        return 0;
+}
+
 char *test_http_read_request_post()
 {
         int hcount = 0;

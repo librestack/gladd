@@ -80,6 +80,7 @@ struct http_status httpcode[] = {
 http_request_t *request;
 char buf[BUFSIZE];
 size_t bytes = 0;
+int bmore = 1;
 
 /* 
  * bodyline() - Also known as Fast Leg Theory.
@@ -315,32 +316,49 @@ void http_flush_buffer()
 {
         buf[0] = '\0';
         bytes = 0;
+        bmore = 1;
 }
 
-/* read a line from a socket.  NB: lines cannot be longer than BUFSIZE */
+/* top up http buffer, returning number of bytes read or -1 on error */
+size_t fillhttpbuffer(int sock)
+{
+        size_t fillbytes;
+        size_t newbytes;
+
+        fillbytes = BUFSIZE-bytes; /* bytes req'd to top up buffer */
+        newbytes = recv(sock, buf + bytes, fillbytes, 0);
+        if (newbytes == -1) {
+                syslog(LOG_ERR, "Error reading from socket: %s", 
+                        strerror(errno));
+                bmore = 0;
+                return -1;
+        }
+        if (newbytes < fillbytes) bmore = 0; /* no more to read */
+
+        bytes += newbytes;
+
+        return newbytes;
+}
+
+/* Read a line from the http buffer, filling the buffer as required.
+ * returns either the line or NULL if no lines found
+ * NB: lines cannot be longer than BUFSIZE and the returned char array
+ * must be free'd after use.
+ */
 char *http_readline(int sock)
 {
         char *line = NULL;
         char *nl;
         int pos;
-        static int bmore = 1;
-        size_t fillbytes;
 
         /* fill buffer */
         if ((bytes < sizeof buf) && (bmore)) {
-                fillbytes = BUFSIZE-bytes; /* bytes req'd to top up buffer */
-                bytes = recv(sock, buf + bytes, fillbytes, 0);
+                if (fillhttpbuffer(sock) == -1) return NULL;
         }
-        if (bytes == -1) {
-                syslog(LOG_ERR, "Error reading from socket: %s", 
-                        strerror(errno));
-                return NULL;
-        }
-        if (bytes < fillbytes) bmore = 0; /* no more to read */
         if (bytes == 0) return NULL;
 
         /* scan buffer for newline */
-        nl = memchr(buf, '\n', BUFSIZE);
+        nl = memchr(buf, '\n', bytes);
         if (nl != NULL) {
                 pos = nl - buf;
                 line = malloc(pos + 2);
@@ -350,7 +368,10 @@ char *http_readline(int sock)
 
         /* move unprocessed bytes to beginning of buffer */
         bytes = bmore ? BUFSIZE - pos - 1 : bytes - pos - 1;
-        if (nl) memmove(buf, nl + 1, bytes);
+        if (nl) {
+                memmove(buf, nl + 1, bytes);
+                memset(buf + bytes, '\0', BUFSIZE-bytes);
+        }
 
         return line;
 }
@@ -358,23 +379,14 @@ char *http_readline(int sock)
 /* read body of http request, returning bytes read */
 size_t http_read_body(int sock, char **body, long lclen)
 {
-        size_t size = 0;
+        size_t size = bytes;
 
         /* first, grab any bytes already in buffer */
-        strcpy(*body, buf);
+        memcpy(*body, buf, bytes);
 
-        size = strlen(*body);
-
-        while (bytes == sizeof buf) {
-                /* read into buffer */
-                bytes = recv(sock, buf, lclen - size, 0);
-
-                if (!bytes) break; /* no bytes read */
-
-                /* append contents of buffer */
-                strncpy(*body + size, buf, bytes);
-                size = strlen(*body);
-        }
+        /* read remaining body data */
+        bytes = recv(sock, *body + size, lclen - size, 0);
+        size += bytes;
 
         /* In debug mode, write request body to file */
         if (config->debug == 1) {

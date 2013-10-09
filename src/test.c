@@ -72,6 +72,7 @@ static char * all_tests()
 #endif /* _NXML */
         mu_run_test(test_string_trimstr);
         mu_run_test(test_http_read_request_get);
+        mu_run_test(test_http_readline);
         mu_run_test(test_http_read_request_post);
         mu_run_test(test_http_read_request_data);
         mu_run_test(test_http_postdata_invalid);
