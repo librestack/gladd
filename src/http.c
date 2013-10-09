@@ -385,8 +385,10 @@ size_t http_read_body(int sock, char **body, long lclen)
         memcpy(*body, buf, bytes);
 
         /* read remaining body data */
-        bytes = recv(sock, *body + size, lclen - size, 0);
-        size += bytes;
+        if (bytes < lclen) {
+                bytes = recv(sock, *body + size, lclen - size, 0);
+                size += bytes;
+        }
 
         /* In debug mode, write request body to file */
         if (config->debug == 1) {
