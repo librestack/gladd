@@ -28,6 +28,7 @@
 #include "auth_test.h"
 #include "config_test.h"
 #include "db_test.h"
+#include "handler_test.h"
 #include "http_test.h"
 #include "string_test.h"
 #include "xml_test.h"
@@ -91,6 +92,7 @@ static char * all_tests()
         mu_run_test(test_auth_groups_01);
         mu_run_test(test_auth_groups_02);
         mu_run_test(test_http_read_request_post_large);
+        mu_run_test(test_handler_plugin);
         printline("*", 80);
         return 0;
 }

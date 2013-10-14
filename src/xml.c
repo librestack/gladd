@@ -87,7 +87,7 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 
         /* do variable substitution */
         newsql = strdup(sql);
-        sqlvars(&newsql);
+        sqlvars(&newsql, request->res);
         syslog(LOG_DEBUG, "SQL: %s\n", newsql);
 
         if (db_fetch_all(db, newsql, filter, &rows, &rowc) < 0) {
@@ -141,16 +141,13 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 }
 
 /* subsitute variables in sql for their values */
-void sqlvars(char **sql)
+void sqlvars(char **sql, char *url)
 {
         char **tokens;
         int toknum;
-        char *url;
         char *sqltmp;
         char *var;
         int i;
-
-        url = strdup(request->res);
 
         tokens = tokenize(&toknum, &url, "/");
 
@@ -164,7 +161,6 @@ void sqlvars(char **sql)
         }
 
         free(tokens);
-        free(url);
 }
 
 int flattenxml(xmlDocPtr doc, char **xml, int pretty)

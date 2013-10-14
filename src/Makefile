@@ -35,7 +35,7 @@ LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lxslt -lcurl -lldap -lb64 -lgladdb -lrt
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
 OBJECTFILES=args.o auth.o config.o handler.o help.o http.o mime.o server.o signals.o string.o xml.o
-TESTFILES=test.o args_test.o auth_test.o db_test.o config_test.o http_test.o string_test.o xml_test.o
+TESTFILES=test.o args_test.o auth_test.o db_test.o config_test.o handler_test.o http_test.o string_test.o xml_test.o
 
 ${PROGRAM}: ${PROGRAM}_test main.o
 	${CC} ${CFLAGS} ${INCLUDES} -o ${PROGRAM} ${OBJECTFILES} main.o ${LIBS}
@@ -63,6 +63,9 @@ config_test.o: minunit.h config_test.c config_test.h
 
 db_test.o: db_test.c db_test.h
 	${CC} ${CFLAGS} -c db_test.c
+
+handler_test.o: handler_test.c handler_test.h
+	${CC} ${CFLAGS} -c handler_test.c
 
 handler.o: handler.c handler.h http.h main.h mime.h config.h
 	${CC} ${CFLAGS} ${INCLUDES} -c handler.c ${LIBS}

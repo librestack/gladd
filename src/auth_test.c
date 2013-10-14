@@ -101,12 +101,12 @@ char *test_auth_require()
 {
         http_request_t *r;
 
+#ifndef _NLDAP
         r = http_init_request();
 
         mu_assert("check_auth_require() - fail on invalid alias",
                 check_auth_require("invalid", r) != 0);
 
-#ifndef _NLDAP
         asprintf(&r->authuser, "betty");
         asprintf(&r->authpass, "false");
         mu_assert("check_auth_require() - fail with invalid credentials",

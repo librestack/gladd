@@ -195,6 +195,11 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         if (err != 0)
                                 http_response(sock, err);
                 }
+                else if (strcmp(u->type, "plugin") == 0) {
+                        err = response_plugin(sock, u);
+                        if (err != 0)
+                                http_response(sock, err);
+                }
                 else {
                         syslog(LOG_ERR, "Unknown url type '%s'", u->type);
                 }
@@ -628,6 +633,44 @@ http_status_code_t response_upload(int sock, url_t *u)
 
         /* return hash of uploaded file */
         respond(sock, hash);
+
+        return err;
+}
+
+/* call a plugin */
+http_status_code_t response_plugin(int sock, url_t *u)
+{
+        FILE *fd;
+        char pbuf[BUFSIZE] = "";
+        http_status_code_t err = 0;
+        int ret;
+        ssize_t ibytes = 0;
+        char *cmd;
+
+
+        cmd = strdup(u->path);
+        sqlvars(&cmd, request->res);
+        syslog(LOG_DEBUG, "executing plugin: %s", cmd);
+        fd = popen(cmd, "r");
+        if (fd == NULL) {
+                syslog(LOG_ERR, "popen(): %s", strerror(errno));
+        }
+        free(cmd);
+
+        /* TODO: write data to plugin */
+
+        /* TODO: keep reading until done */
+        ibytes = fread(pbuf, 1, BUFSIZE, fd);
+
+        *(buf + ibytes) = '\0';  /* null terminate */
+
+        ret = pclose(fd);
+        if (ret == -1) {
+                syslog(LOG_ERR, "pclose(): %s", strerror(errno));
+        }
+
+        //write(sock, pbuf, ibytes);
+        respond(sock, pbuf);
 
         return err;
 }

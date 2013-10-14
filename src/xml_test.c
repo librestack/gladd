@@ -103,7 +103,7 @@ char *test_xml_sqlvars()
         request = http_init_request();
         asprintf(&request->res, "/myinstance/mybusiness/collection/element");
         asprintf(&sql, "SELECT * FROM $1.$0.myview");
-        sqlvars(&sql);
+        sqlvars(&sql, request->res);
         printf("sql: %s\n", sql);
         mu_assert("sql variable subsitution",
                 strcmp(sql,

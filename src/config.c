@@ -353,6 +353,9 @@ int add_url_handler(char *value)
                 else if (strcmp(type, "upload") == 0) {
                         handle_url_static("upload", params);
                 }
+                else if (strcmp(type, "plugin") == 0) {
+                        handle_url_static("plugin", params);
+                }
                 else {
                         fprintf(stderr, "skipping unhandled url type '%s'\n", 
                                                                         type);
@@ -643,8 +646,8 @@ void handle_url_static(char *type, char params[LINE_MAX])
 
         newurl = malloc(sizeof(struct url_t));
 
-        if (sscanf(params, "%s %s %s", method, url, path) == 3) {
-                newurl->type = strdup(type);
+        if (sscanf(params, "%s %s %[^\n]", method, url, path) == 3) {
+                newurl->type = type;
                 newurl->method = strdup(method);
                 newurl->url = strdup(url);
                 newurl->path = strdup(path);

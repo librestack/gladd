@@ -1,5 +1,5 @@
-/*
- * xml.h - produce xml output
+/* 
+ * handler_test.h
  *
  * this file is part of GLADD
  *
@@ -20,15 +20,11 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GLADD_XML_H__
-#define __GLADD_XML_H__ 1
+#ifndef __GLADD_HANDLER_TEST_H__
+#define __GLADD_HANDLER_TEST_H__ 1
 
-#include "gladdb/db.h"
+#include "handler.h"
 
-int buildxml(char **xmldoc);
-int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty);
-void sqlvars(char **sql, char *url);
-int xmltransform(const char *xslt_filename, const char *xml, char **output);
-int xml_validate(const char *schema_filename, const char *xml);
+char *test_handler_plugin();
 
-#endif /* __GLADD_XML_H__ */
+#endif /* __GLADD_HANDLER_TEST_H__ */
