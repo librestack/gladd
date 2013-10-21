@@ -644,9 +644,9 @@ http_status_code_t response_plugin(int sock, url_t *u)
         char pbuf[BUFSIZE] = "";
         http_status_code_t err = 0;
         int ret;
-        ssize_t ibytes = 0;
+        ssize_t ibytes = BUFSIZE;
         char *cmd;
-
+        int state;
 
         cmd = strdup(u->path);
         sqlvars(&cmd, request->res);
@@ -654,23 +654,32 @@ http_status_code_t response_plugin(int sock, url_t *u)
         fd = popen(cmd, "r");
         if (fd == NULL) {
                 syslog(LOG_ERR, "popen(): %s", strerror(errno));
+                return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(cmd);
 
         /* TODO: write data to plugin */
 
-        /* TODO: keep reading until done */
-        ibytes = fread(pbuf, 1, BUFSIZE, fd);
+        /* TODO: write HTTP headers */
 
-        *(buf + ibytes) = '\0';  /* null terminate */
+        /* keep reading from plugin and sending output back to HTTP client */
+        while (ibytes == BUFSIZE) {
+                ibytes = fread(pbuf, 1, BUFSIZE, fd);
+                syslog(LOG_DEBUG, "writing %i bytes to socket", (int) ibytes);
+                send(sock, pbuf, ibytes, 0);
+        }
 
+        /* pop TCP cork */
+        state = 0;
+        setsockopt(sock, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
+
+        /* TODO: handle exit codes */
         ret = pclose(fd);
         if (ret == -1) {
                 syslog(LOG_ERR, "pclose(): %s", strerror(errno));
+                //return HTTP_INTERNAL_SERVER_ERROR;
         }
 
-        //write(sock, pbuf, ibytes);
-        respond(sock, pbuf);
 
         return err;
 }
