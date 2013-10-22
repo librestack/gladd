@@ -380,13 +380,18 @@ char *http_readline(int sock)
 size_t http_read_body(int sock, char **body, long lclen)
 {
         size_t size = bytes;
+        struct timeval tv;
 
         /* first, grab any bytes already in buffer */
         memcpy(*body, buf, bytes);
 
         /* read remaining body data */
         if (bytes < lclen) {
-                bytes = recv(sock, *body + size, lclen - size, 0);
+                tv.tv_sec = 1;
+                tv.tv_usec = 0;
+                setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                        (char *)&tv, sizeof(struct timeval));
+                bytes = recv(sock, *body + size, lclen - size, MSG_WAITALL);
                 size += bytes;
         }
 
