@@ -25,9 +25,52 @@
 #include "config.h"
 #include "gladdb/db.h"
 #include <fnmatch.h>
+#include <security/pam_appl.h>
+#include <security/pam_misc.h>
 #include <string.h>
 #include <stdlib.h>
 #include <syslog.h>
+
+struct pam_response *r;
+
+int null_conv(int num_msg, const struct pam_message **msg,
+struct pam_response **resp, void *appdata_ptr)
+{
+         *resp = r;
+        return PAM_SUCCESS;
+}
+
+static struct pam_conv conv = {
+        null_conv,
+        NULL
+};
+
+int check_auth_pam(char *service, char *username, char *password)
+{
+        int ret;
+        pam_handle_t *pamh = NULL;
+        char *pass = strdup(password);
+
+        ret = pam_start(service, username, &conv, &pamh);
+        if (ret == PAM_SUCCESS) {
+                r = (struct pam_response *)malloc(sizeof(struct pam_response));
+                r[0].resp = pass;
+                r[0].resp_retcode = 0;
+
+                ret = pam_authenticate(pamh, 0);
+                if (ret == PAM_SUCCESS) {
+                        syslog(LOG_DEBUG,
+                               "PAM authentication successful for user %s", username);
+                }
+                else {
+                        syslog(LOG_ERR,
+                               "PAM authentication failure for user %s", username);
+                }
+
+        }
+        pam_end(pamh, ret);
+        return ( ret == PAM_SUCCESS ? 0:HTTP_UNAUTHORIZED );
+}
 
 /* 
  * check if authorized for requested method and url
@@ -165,7 +208,7 @@ int check_auth_alias(char *alias, http_request_t *r)
         syslog(LOG_DEBUG, "checking alias %s", alias);
 
         if ((strcmp(a->type, "ldap") == 0) || (strcmp(a->type, "user") == 0)
-        ||(strcmp(a->type, "group") == 0))
+        || (strcmp(a->type, "pam") == 0) || (strcmp(a->type, "group") == 0))
         {
                 if ((r->authuser == NULL) || (r->authpass == NULL)) {
                         /* don't allow auth with blank credentials */
@@ -199,6 +242,11 @@ int check_auth_alias(char *alias, http_request_t *r)
                                 syslog(LOG_DEBUG, "password incorrect");
                                 return HTTP_UNAUTHORIZED;
                         }
+                }
+                else if (strcmp(a->type, "pam") == 0) {
+                        /* use pam authentication */
+                        syslog(LOG_DEBUG, "checking PAM authentication");
+                        return check_auth_pam(a->db, r->authuser, r->authpass);
                 }
                 else if (strcmp(a->type, "group") == 0) {
                         if (strcmp(a->db, "*") != 0) {

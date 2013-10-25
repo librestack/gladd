@@ -145,6 +145,14 @@ int add_auth (char *value)
                 newauth->bind = strdup(bind);
                 newauth->next = NULL;
         }
+        else if (strcmp(type, "pam") == 0) {
+                newauth->alias = strdup(alias);
+                newauth->type = strdup(type);
+                newauth->db = strdup(db);
+                newauth->sql = strdup(sql);
+                newauth->bind = strdup(bind);
+                newauth->next = NULL;
+        }
         else if (strcmp(type, "group") == 0) {
                 newauth->alias = strdup(alias);
                 newauth->type = strdup(type);

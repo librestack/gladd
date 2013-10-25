@@ -135,6 +135,29 @@ char *test_auth_require()
                 check_auth_require("user", r) == 0);
         free_request(r);
 
+        /* PAM */
+        r = http_init_request();
+        asprintf(&r->authuser, "bravo");
+        asprintf(&r->authpass, "wrongpassword");
+        mu_assert("check_auth_require() - invalid user/pass combo (PAM)",
+                check_auth_require("pam", r) == HTTP_UNAUTHORIZED);
+        free_request(r);
+
+        mu_assert("check_auth_pam() - valid credentials",
+            check_auth_pam("login", "bravo", "invalid") == HTTP_UNAUTHORIZED);
+
+        /*
+        mu_assert("check_auth_pam() - valid credentials",
+                check_auth_pam("login", "bravo", "bravosecret") == 0);
+
+        r = http_init_request();
+        asprintf(&r->authuser, "bravo");
+        asprintf(&r->authpass, "bravosecret");
+        mu_assert("check_auth_require() - successful user/pass combo (PAM)",
+                check_auth_require("pam", r) == 0);
+        free_request(r);
+        */
+
         return 0;
 }
 
