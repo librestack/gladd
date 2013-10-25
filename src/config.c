@@ -390,8 +390,8 @@ int add_user(char *value)
 
         newuser = malloc(sizeof(struct user_t));
 
-        newuser->username = strndup(username, LINE_MAX);
-        newuser->password = strndup(password, LINE_MAX);
+        newuser->username = strndup(username, strlen(username));
+        newuser->password = strndup(password, strlen(password));
         newuser->next = NULL;
 
         if (prevuser != NULL)

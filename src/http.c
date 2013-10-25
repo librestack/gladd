@@ -195,6 +195,7 @@ char *decode64(char *str)
         base64_init_decodestate(d);
 
         r = base64_decode_block(str, strlen(str), plain, d);
+        plain[r] = '\0';
 
         free(d);
 
