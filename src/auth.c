@@ -235,8 +235,9 @@ int check_auth_alias(char *alias, http_request_t *r)
                                 return HTTP_UNAUTHORIZED;
                         }
                         syslog(LOG_DEBUG, "matched static user");
-                        if (strncmp(r->authpass, u->password,
-                        strlen(u->password)) != 0) 
+                        if ((strncmp(r->authpass, u->password,
+                        strlen(u->password)) != 0)
+                        || (strlen(r->authpass) != strlen(u->password)))
                         {
                                 /* password incorrect */
                                 syslog(LOG_DEBUG, "password incorrect");

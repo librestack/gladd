@@ -130,6 +130,13 @@ char *test_auth_require()
 
         r = http_init_request();
         asprintf(&r->authuser, "bravo");
+        asprintf(&r->authpass, "bravosecretwithtrailingchars");
+        mu_assert("check_auth_require() - ensure trailing chars return fail ",
+                check_auth_require("user", r) == HTTP_UNAUTHORIZED);
+        free_request(r);
+
+        r = http_init_request();
+        asprintf(&r->authuser, "bravo");
         asprintf(&r->authpass, "bravosecret");
         mu_assert("check_auth_require() - successful user/pass combo",
                 check_auth_require("user", r) == 0);
