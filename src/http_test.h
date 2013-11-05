@@ -27,11 +27,13 @@
 
 char *test_http_read_request_get();
 char *test_http_read_request_post();
-char *test_http_read_request_data();
-char *test_http_readline();
-char *test_http_postdata_invalid();
 char *test_http_postdata_checks();
-char *test_http_read_request_post_xml();
+char *test_http_postdata_invalid();
+char *test_http_proxy_request();
+char *test_http_rewrite_request();
+char *test_http_read_request_data();
 char *test_http_read_request_post_large();
+char *test_http_read_request_post_xml();
+char *test_http_readline();
 
 #endif /* __GLADD_HTTP_TEST__H__ */

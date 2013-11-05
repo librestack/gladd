@@ -200,6 +200,13 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         if (err != 0)
                                 http_response(sock, err);
                 }
+                else if ((strcmp(u->type, "proxy") == 0)
+                || (strcmp(u->type, "rewrite") == 0))
+                {
+                        err = http_response_proxy(sock, u);
+                        if (err != 0)
+                                http_response(sock, err);
+                }
                 else {
                         syslog(LOG_ERR, "Unknown url type '%s'", u->type);
                 }

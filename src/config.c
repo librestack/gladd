@@ -342,6 +342,7 @@ int add_url_handler(char *value)
         char type[8];
         char params[LINE_MAX];
 
+        /* TODO: refactor this */
         if (sscanf(value, "%s %[^\n]", type, params) == 2) {
                 if (strncmp(type, "static", 6) == 0) {
                         handle_url_static("static", params);
@@ -363,6 +364,12 @@ int add_url_handler(char *value)
                 }
                 else if (strcmp(type, "plugin") == 0) {
                         handle_url_static("plugin", params);
+                }
+                else if (strcmp(type, "proxy") == 0) {
+                        handle_url_static("proxy", params);
+                }
+                else if (strcmp(type, "rewrite") == 0) {
+                        handle_url_static("rewrite", params);
                 }
                 else {
                         fprintf(stderr, "skipping unhandled url type '%s'\n", 

@@ -89,6 +89,7 @@ http_request_t *http_read_request(int sock, int *hcount,
         http_status_code_t *err);
 void http_set_request_method(http_request_t *r, char *method);
 void http_set_request_resource(http_request_t *r, char *res);
+http_status_code_t http_response_proxy(int sock, url_t *u);
 int http_validate_headers(http_request_t *r, http_status_code_t *err);
 
 #endif /* __GLADD_HTTP_H__ */

@@ -35,6 +35,7 @@
 #include "handler.h"
 #include "http.h"
 #include "string.h"
+#include "xml.h"
 
 /* 
  * HTTP response codes from:
@@ -564,6 +565,39 @@ void http_response(int sock, int code)
         syslog(LOG_INFO, "%i - %s", code, status);
         free(response);
         free(headers);
+}
+
+size_t http_curl_write(void *ptr, size_t size, size_t nmemb, void *stream)
+{
+        fwrite(ptr, size, nmemb, stream);
+        return size*nmemb;
+}
+
+http_status_code_t http_response_proxy(int sock, url_t *u)
+{
+        http_status_code_t err = 0;
+        CURL *curl = curl_easy_init();
+        FILE *f;
+        char *url;
+
+        /* build url */
+        if (strcmp(u->type, "proxy") == 0) {
+                asprintf(&url, "%s%s", u->path, request->res + strlen(u->url) - 1);
+        }
+        else if (strcmp(u->type, "rewrite") == 0) {
+                asprintf(&url, "%s", u->path);
+                sqlvars(&url, request->res);
+        }
+
+        f = fdopen(sock, "w");
+        curl_easy_setopt(curl, CURLOPT_URL, url); 
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_curl_write);
+        curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        fclose(f);
+
+        return err;
 }
 
 /* find http status by numerical code */

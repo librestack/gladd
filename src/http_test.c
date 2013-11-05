@@ -340,3 +340,81 @@ char *test_http_read_request_post_large()
 
         return 0;
 }
+
+char *test_http_proxy_request()
+{
+        char *url = "http://www.gladserv.com/";
+        char *checkstring = "<!DOCTYPE HTML PUBLIC";
+        char buf[1024];
+        http_status_code_t r;
+        url_t u;
+        size_t size = 0;
+
+        /* create a pair of connected sockets */
+        int sv[2];
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
+                perror("socketpair");
+        }
+
+        request = http_init_request();
+        request->res = strdup("/report/index.html");
+
+        /* build a url */
+        asprintf(&u.type, "proxy");
+        asprintf(&u.method, "GET");
+        u.url = strdup("/report/*");
+        u.path = strdup(url);
+
+        /* fetch file */
+        r = http_response_proxy(sv[0], &u);
+        close(sv[0]); /* close write socket */
+        size = recv(sv[1], buf, sizeof buf, 0);
+        buf[size] = '\0';
+
+        /* compare checksum */
+        mu_assert("fetch file and compare checksum",
+                strncmp(buf, checkstring, strlen(checkstring)) == 0);
+
+        close(sv[1]); /* close read socket */
+
+        return 0;
+}
+
+char *test_http_rewrite_request()
+{
+        char *url = "http://www.gladserv.com/$2/$3/$4";
+        char *checkstring = "<!DOCTYPE HTML";
+        char buf[1024];
+        http_status_code_t r;
+        url_t u;
+        size_t size = 0;
+
+        /* create a pair of connected sockets */
+        int sv[2];
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
+                perror("socketpair");
+        }
+
+        request = http_init_request();
+        request->res = strdup("/reports/customers/42/2013-08-01/2013-09-30/");
+
+        /* build a url */
+        asprintf(&u.type, "rewrite");
+        asprintf(&u.method, "GET");
+        u.url = strdup("/report/*/*/*/*/");
+        u.path = strdup(url);
+
+        /* fetch file */
+        r = http_response_proxy(sv[0], &u);
+        close(sv[0]); /* close write socket */
+        size = recv(sv[1], buf, sizeof buf, 0);
+        buf[size] = '\0';
+
+        /* compare checksum */
+        mu_assert("fetch file and compare checksum",
+                strncmp(buf, checkstring, strlen(checkstring)) == 0);
+
+        close(sv[1]); /* close read socket */
+
+        return 0;
+}

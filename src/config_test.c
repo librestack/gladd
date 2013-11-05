@@ -237,6 +237,14 @@ char *test_config_read_url()
         mu_assert("... method", strcmp(u->method, "POST") == 0);
         mu_assert("... url", strcmp(u->url, "/plugin2/") == 0);
         mu_assert("... path", strcmp(u->path, "/usr/bin/sort") == 0);
+        mu_assert("Reading 12th url from config", u = u->next);
+        mu_assert("... method", strcmp(u->method, "GET") == 0);
+        mu_assert("... url", strcmp(u->url, "/report/*") == 0);
+        mu_assert("... path", strcmp(u->path, "http://192.168.0.1/") == 0);
+        mu_assert("Reading 13th url from config", u = u->next);
+        mu_assert("... method", strcmp(u->method, "GET") == 0);
+        mu_assert("... url", strcmp(u->url, "/report2/*/*/") == 0);
+        mu_assert("... path", strcmp(u->path, "http://192.168.0.1/$1") == 0);
 
         mu_assert("Ensure final url->next returns NULL", u->next == NULL);
 
