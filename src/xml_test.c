@@ -66,8 +66,8 @@ char *test_xml_doc()
 
 char *test_xml_to_sql()
 {
-        char *schema = "/home/bacs/dev/gladd/testdata/journal.xsd";
-        char *xslt = "/home/bacs/dev/gladd/testdata/journal.xsl";
+        char *schema = "test.xsd";
+        char *xslt = "test.xsl";
         char *badxml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><journal transactdate=\"2013-02-08\" description=\"My First Journal Entry\"><debit account=\"1100\">100.00</debit><credit account=\"4000\">100.00</credit></journal>";
         char *goodxml = "<?xml version=\"1.0\" encoding=\"utf-8\"?> <request><data><journal transactdate=\"2013-02-08\" description=\"My First Journal Entry\"> <debit account=\"1100\" amount=\"120.00\" /> <credit account=\"2222\" amount=\"20.00\" /> <credit account=\"4000\" amount=\"100.00\" /> </journal></data></request>";
         char *sql;
