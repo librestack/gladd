@@ -326,6 +326,12 @@ size_t fillhttpbuffer(int sock)
 {
         size_t fillbytes;
         size_t newbytes;
+        struct timeval tv;
+
+        /* set socket timeout */
+        tv.tv_sec = 1; tv.tv_usec = 0;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                (char *)&tv, sizeof(struct timeval));
 
         fillbytes = BUFSIZE-bytes; /* bytes req'd to top up buffer */
         newbytes = recv(sock, buf + bytes, fillbytes, MSG_WAITALL);
