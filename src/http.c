@@ -328,7 +328,7 @@ size_t fillhttpbuffer(int sock)
         size_t newbytes;
 
         fillbytes = BUFSIZE-bytes; /* bytes req'd to top up buffer */
-        newbytes = recv(sock, buf + bytes, fillbytes, 0);
+        newbytes = recv(sock, buf + bytes, fillbytes, MSG_WAITALL);
         if (newbytes == -1) {
                 syslog(LOG_ERR, "Error reading from socket: %s", 
                         strerror(errno));
