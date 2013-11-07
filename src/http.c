@@ -583,6 +583,8 @@ http_status_code_t http_response_proxy(int sock, url_t *u)
 {
         http_status_code_t err = 0;
         CURL *curl = curl_easy_init();
+        CURLcode r;
+        char curlerr[CURL_ERROR_SIZE];
         FILE *f;
         char *url;
 
@@ -597,10 +599,15 @@ http_status_code_t http_response_proxy(int sock, url_t *u)
         syslog(LOG_DEBUG, "proxying %s", url);
 
         f = fdopen(sock, "w");
-        curl_easy_setopt(curl, CURLOPT_URL, url); 
+        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curlerr);
+        curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_curl_write);
-        curl_easy_perform(curl);
+        r = curl_easy_perform(curl);
+        if (r != CURLE_OK) {
+                syslog(LOG_ERR, "%s", curlerr);
+                err = HTTP_INTERNAL_SERVER_ERROR;
+        }
         curl_easy_cleanup(curl);
         fclose(f);
 
