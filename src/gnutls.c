@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
 gnutls_certificate_credentials_t x509_cred;
@@ -38,6 +39,7 @@ int generate_dh_params(void)
             gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH, GNUTLS_SEC_PARAM_LOW);
 
           fprintf(stderr, "Generating Diffie-Hellman params...");
+          syslog(LOG_INFO, "Generating Diffie-Hellman params...");
 
           /* Generate Diffie-Hellman parameters - for use with DHE
            * kx algorithms. When short bit length is used, it might
@@ -47,6 +49,7 @@ int generate_dh_params(void)
           gnutls_dh_params_generate2(dh_params, bits);
 
           fprintf(stderr, "done\n");
+          syslog(LOG_INFO, "Diffie-Hellman generated.");
 
           return 0;
 }
@@ -66,15 +69,19 @@ void do_tls_handshake(int fd)
                 gnutls_deinit(session);
                 fprintf (stderr, "*** Handshake has failed (%s)\n\n",
                         gnutls_strerror(ret));
+                syslog(LOG_ERR, "SSL handshake failed (%s)", 
+                        gnutls_strerror(ret));
                 _exit(EXIT_FAILURE);
         }
         else {
                 char* desc;
                 desc = gnutls_session_get_desc(session);
                 printf ("- Session info: %s\n", desc);
+                syslog(LOG_DEBUG, "- Session info: %s", desc);
                 gnutls_free(desc);
         }
         printf ("- Handshake was completed\n");
+        syslog(LOG_DEBUG, "SSL Handshake completed");
 }
 
 /* set a TCP cork the gnutls way */
@@ -97,6 +104,7 @@ int sendfile_ssl(int sock, int fd, size_t size)
         int offset = 0;
 
         fprintf(stderr, "Sending file...");
+        syslog(LOG_DEBUG, "Sending file...");
 
         /* read from file descriptor and send to ssl socket */
         do {
@@ -116,6 +124,7 @@ int sendfile_ssl(int sock, int fd, size_t size)
         } while (sent < size);
         fprintf(stderr, "done.\n");
         fprintf(stderr, "%i/%i bytes sent\n", (int)sent, (int)size);
+        syslog(LOG_DEBUG, "%i/%i bytes sent", (int)sent, (int)size);
         
         return sent;
 }
@@ -152,6 +161,7 @@ size_t ssl_send(char *msg, ...)
 
         if (ret < 0) {
                 fprintf(stderr, "%s\n", gnutls_strerror(ret));
+                syslog(LOG_ERR, "gnutls error: %s", gnutls_strerror(ret));
         }
 
         return sent;
@@ -184,6 +194,7 @@ void ssl_setup()
                 config->sslkey, GNUTLS_X509_FMT_PEM);
         if (ret < 0) {
                 fprintf(stderr, "No certificate or key were found\n");
+                syslog(LOG_ERR, "No certificate or key were found");
                 _exit(EXIT_FAILURE);
         }
         generate_dh_params();
@@ -196,6 +207,7 @@ void ssl_setup()
         gnutls_certificate_server_set_request(session, GNUTLS_CERT_IGNORE);
 
         fprintf(stderr, "SSL setup complete\n");
+        syslog(LOG_DEBUG, "SSL setup complete");
 }
 
 void ssl_cleanup(int fd)
