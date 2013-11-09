@@ -52,6 +52,10 @@ typedef struct config_t {
         long debug;
         char *encoding;      /* encoding to use - default UTF-8 */
         long port;
+        long ssl;            /* 0 = disable ssl (default), 1 = enable ssl */
+        char *sslkey;
+        char *sslcert;
+        char *sslcrl;
         char *urldefault;
         long xforward;
         char *xmlpath;       /* path to xml, xsl and xsd files */
@@ -124,6 +128,7 @@ int     set_config_defaults();
 int     set_config_long(long *confset, char *keyname, long i, long min,
                 long max);
 int     set_encoding(char *value);
+int     set_ssl(char *key, char *value);
 int     set_xmlpath(char *value);
 
 #endif /* __GLADD_CONFIG_H__ */

@@ -42,6 +42,7 @@ config_t config_default = {
         .encoding       = "UTF-8",
         .xmlpath        = ".",
         .port           = 8080,
+        .ssl            = 0,
         .xforward       = 0,
         .urldefault     = "index.html"
 };
@@ -460,6 +461,12 @@ void free_config()
         config->urldefault = NULL;
         free(config->xmlpath);
         config->xmlpath = NULL;
+        free(config->sslkey);
+        config->sslkey = NULL;
+        free(config->sslcert);
+        config->sslcert = NULL;
+        free(config->sslcrl);
+        config->sslcrl = NULL;
         free_acls();
         free_auth();
         free_dbs();
@@ -776,7 +783,11 @@ int process_config_line(char *line)
                 }
                 else if (strcmp(key, "daemon") == 0) {
                         return set_config_long(&config_new->daemon, 
-                                                "port", i, 0, 1);
+                                                "daemon", i, 0, 1);
+                }
+                else if (strcmp(key, "ssl") == 0) {
+                        return set_config_long(&config_new->ssl, 
+                                                "ssl", i, 0, 1);
                 }
                 else if (strcmp(key, "x-forward") == 0) {
                         return set_config_long(&config_new->xforward, 
@@ -816,6 +827,15 @@ int process_config_line(char *line)
                 }
                 else if (strcmp(key, "sql") == 0) {
                         return add_sql(value);
+                }
+                else if (strcmp(key, "ssl-key") == 0) {
+                        return set_ssl(key, value);
+                }
+                else if (strcmp(key, "ssl-cert") == 0) {
+                        return set_ssl(key, value);
+                }
+                else if (strcmp(key, "ssl-crl") == 0) {
+                        return set_ssl(key, value);
                 }
                 else if (strcmp(key, "xmlpath") == 0) {
                         return set_xmlpath(value);
@@ -917,6 +937,21 @@ int set_encoding(char *value)
                 fprintf(stderr, "Ignoring invalid encoding '%s'\n", value);
                 return -1;
         }
+}
+
+int set_ssl(char *key, char *value)
+{
+        /* TODO: check validity of these files */
+        if (strcmp(key, "ssl-key") == 0) {
+                return asprintf(&config->sslkey, "%s", value);
+        }
+        if (strcmp(key, "ssl-cert") == 0) {
+                return asprintf(&config->sslcert, "%s", value);
+        }
+        if (strcmp(key, "ssl-crl") == 0) {
+                return asprintf(&config->sslcrl, "%s", value);
+        }
+        return -1;
 }
 
 /* set path to xml, xsl and xsd files */
