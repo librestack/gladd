@@ -32,8 +32,11 @@
 
 void *get_in_addr(struct sockaddr *sa);
 void handle_connection(int sock, struct sockaddr_storage their_addr);
+size_t rcv(int sock, void *buf, size_t len, int flags);
+ssize_t snd(int sock, void *buf, size_t len, int flags);
 void respond (int fd, char *response);
 int send_file(int sock, char *path, http_status_code_t *err);
+void setcork(int sock, int state);
 http_status_code_t response_plugin(int sock, url_t *u);
 http_status_code_t response_sqlview(int sock, url_t *u);
 http_status_code_t response_static(int sock, url_t *u);

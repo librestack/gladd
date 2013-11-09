@@ -40,6 +40,8 @@ char *test_http_read_request_get()
         http_status_code_t err;
         int ret;
 
+        config->ssl = 0;
+
         keyval_t *h = NULL;
         http_request_t *r = NULL;
 

@@ -828,6 +828,9 @@ int process_config_line(char *line)
                 else if (strcmp(key, "sql") == 0) {
                         return add_sql(value);
                 }
+                else if (strcmp(key, "ssl-ca") == 0) {
+                        return set_ssl(key, value);
+                }
                 else if (strcmp(key, "ssl-key") == 0) {
                         return set_ssl(key, value);
                 }
@@ -942,6 +945,9 @@ int set_encoding(char *value)
 int set_ssl(char *key, char *value)
 {
         /* TODO: check validity of these files */
+        if (strcmp(key, "ssl-ca") == 0) {
+                return asprintf(&config->sslca, "%s", value);
+        }
         if (strcmp(key, "ssl-key") == 0) {
                 return asprintf(&config->sslkey, "%s", value);
         }

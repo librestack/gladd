@@ -37,6 +37,7 @@
 #include "config.h"
 #include "handler.h"
 #include "main.h"
+#include "gnutls.h"
 #include "server.h"
 #include "signals.h"
 
@@ -60,6 +61,8 @@ int server_start(int lockfd)
         struct sockaddr_storage their_addr;
         char tcpport[5];
         char buf[sizeof(long)];
+
+        if (config->ssl == 1) ssl_setup();
 
         memset(&hints, 0, sizeof hints);           /* zero memory */
         hints.ai_family = AF_UNSPEC;               /* ipv4/ipv6 agnostic */

@@ -53,6 +53,7 @@ typedef struct config_t {
         char *encoding;      /* encoding to use - default UTF-8 */
         long port;
         long ssl;            /* 0 = disable ssl (default), 1 = enable ssl */
+        char *sslca;
         char *sslkey;
         char *sslcert;
         char *sslcrl;

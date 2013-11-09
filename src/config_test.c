@@ -98,6 +98,8 @@ char *test_config_set()
         mu_assert("Ensure ssl is set from config", config->ssl == 1);
         mu_assert("Ensure encoding is set from config", 
                 strcmp(config->encoding, "ISO-8859-1") == 0);
+        mu_assert("Ensure sslca is set from config", 
+            strcmp(config->sslca, "/etc/ssl/certs/ca-certificates.crt") == 0);
         mu_assert("Ensure sslkey is set from config", 
                 strcmp(config->sslkey, "/path/to/ssl.key") == 0);
         mu_assert("Ensure sslcert is set from config", 

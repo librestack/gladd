@@ -34,6 +34,7 @@
 #include <syslog.h>
 #include "handler.h"
 #include "http.h"
+#include "gnutls.h"
 #include "string.h"
 #include "xml.h"
 
@@ -334,7 +335,8 @@ size_t fillhttpbuffer(int sock)
                 (char *)&tv, sizeof(struct timeval));
 
         fillbytes = BUFSIZE-bytes; /* bytes req'd to top up buffer */
-        newbytes = recv(sock, buf + bytes, fillbytes, MSG_WAITALL);
+
+        newbytes = rcv(sock, buf + bytes, fillbytes, MSG_WAITALL);
         if (newbytes == -1) {
                 syslog(LOG_ERR, "Error reading from socket: %s", 
                         strerror(errno));
@@ -399,7 +401,7 @@ size_t http_read_body(int sock, char **body, long lclen)
                 tv.tv_usec = 0;
                 setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
                         (char *)&tv, sizeof(struct timeval));
-                bytes = recv(sock, *body + size, lclen - size, MSG_WAITALL);
+                bytes = rcv(sock, *body + size, lclen - size, MSG_WAITALL);
                 size += bytes;
         }
 
@@ -575,7 +577,10 @@ void http_response(int sock, int code)
 
 size_t http_curl_write(void *ptr, size_t size, size_t nmemb, void *stream)
 {
-        fwrite(ptr, size, nmemb, stream);
+        if (config->ssl)
+                ssl_send(ptr);
+        else
+                fwrite(ptr, size, nmemb, stream);
         return size*nmemb;
 }
 

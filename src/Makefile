@@ -30,11 +30,11 @@ CFLAGS=-g -Wall -Werror #-Wno-unused-but-set-variable
 
 INCLUDES=-I/usr/include/libxml2 -I/usr/include/postgresql -L/usr/local/lib
 MYSQLFLAGS=`mysql_config --cflags --libs`
-## LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lxslt -lpq ${MYSQLFLAGS} -lsybdb -lmysqlclient -lldap -lb64 -lcurl -lgladdb
-LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lxslt -lcurl -lldap -lb64 -lgladdb -lrt -lpq -lsybdb ${MYSQLFLAGS} -lssl -lpam -lpam_misc
+GNUTLSFLAGS=`pkg-config gnutls --cflags --libs`
+LIBS=-L/usr/lib/x86_64-linux-gnu -lxml2 -lxslt -lcurl -lldap -lb64 -lgladdb -lrt -lpq -lsybdb ${MYSQLFLAGS} -lssl -lpam -lpam_misc ${GNUTLSFLAGS}
 PROGRAM=gladd
 INSTALLDIR=/usr/local/bin/
-OBJECTFILES=args.o auth.o config.o handler.o help.o http.o mime.o server.o signals.o string.o xml.o
+OBJECTFILES=args.o auth.o config.o gnutls.o handler.o help.o http.o mime.o server.o signals.o string.o xml.o
 TESTFILES=test.o args_test.o auth_test.o db_test.o config_test.o handler_test.o http_test.o string_test.o xml_test.o
 
 ${PROGRAM}: ${PROGRAM}_test main.o
@@ -63,6 +63,9 @@ config_test.o: minunit.h config_test.c config_test.h
 
 db_test.o: db_test.c db_test.h
 	${CC} ${CFLAGS} -c db_test.c
+
+gnutls.o: gnutls.h gnutls.c
+	${CC} ${CFLAGS} -c gnutls.c ${GNUTLSFLAGS}
 
 handler_test.o: handler_test.c handler_test.h
 	${CC} ${CFLAGS} -c handler_test.c

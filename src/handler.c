@@ -25,6 +25,7 @@
 #include "auth.h"
 #include "config.h"
 #include "gladdb/db.h"
+#include "gnutls.h"
 #include "handler.h"
 #include "main.h"
 #include "mime.h"
@@ -76,7 +77,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         http_status_code_t err;
         int auth = -1;
         int hcount = 0;
-        int state;
         url_t *u;
         long len;
 
@@ -85,6 +85,8 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         s, sizeof s);
 
         syslog(LOG_DEBUG, "server: got connection from %s", s);
+
+        if (config->ssl) do_tls_handshake(sock);
 
         /* read http client request */
         request = http_read_request(sock, &hcount, &err);
@@ -121,8 +123,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         /* Return HTTP response */
 
         /* put a cork in it */
-        state = 1;
-        setsockopt(sockme, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
+        setcork(sockme, 1);
 
         /* if / requested, substitute default */
         if (strcmp(request->res, "/") == 0) {
@@ -214,6 +215,11 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
 close_connection:
 
+        if (config->ssl)
+                ssl_cleanup(sock);
+        else
+                close(sock);
+
         /* close client connection */
         close(sock);
 
@@ -227,7 +233,7 @@ close_connection:
 
 void respond (int fd, char *response)
 {
-        send(fd, response, strlen(response), 0);
+        snd(fd, response, strlen(response), 0);
 }
 
 /* handle sqlview */
@@ -553,7 +559,7 @@ http_status_code_t response_upload(int sock, url_t *u)
                 while (bytes > 0) {
                         /* read into buffer */
                         errno = 0;
-                        bytes = recv(sock, buf, BUFSIZE, MSG_WAITALL);
+                        bytes = rcv(sock, buf, BUFSIZE, MSG_WAITALL);
                         if (bytes == -1) {
                                 syslog(LOG_ERR,"Error reading from socket: %s",
                                         strerror(errno));
@@ -653,7 +659,6 @@ http_status_code_t response_plugin(int sock, url_t *u)
         int ret;
         ssize_t ibytes = BUFSIZE;
         char *cmd;
-        int state;
 
         cmd = strdup(u->path);
         sqlvars(&cmd, request->res);
@@ -673,12 +678,11 @@ http_status_code_t response_plugin(int sock, url_t *u)
         while (ibytes == BUFSIZE) {
                 ibytes = fread(pbuf, 1, BUFSIZE, fd);
                 syslog(LOG_DEBUG, "writing %i bytes to socket", (int) ibytes);
-                send(sock, pbuf, ibytes, 0);
+                snd(sock, pbuf, ibytes, 0);
         }
 
         /* pop TCP cork */
-        state = 0;
-        setsockopt(sock, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
+        setcork(sock, 0);
 
         /* TODO: handle exit codes */
         ret = pclose(fd);
@@ -719,7 +723,6 @@ int send_file(int sock, char *path, http_status_code_t *err)
         int f;
         int rc;
         off_t offset;
-        int state;
         struct stat stat_buf;
 
         *err = 0;
@@ -759,9 +762,15 @@ int send_file(int sock, char *path, http_status_code_t *err)
         /* send the file */
         errno = 0;
         offset = 0;
-        rc = sendfile(sock, f, &offset, stat_buf.st_size);
-        if (rc == -1) {
-                syslog(LOG_ERR, "error from sendfile: %s\n", strerror(errno));
+        if (config->ssl) {
+                rc = sendfile_ssl(sock, f, stat_buf.st_size);
+        }
+        else {
+                rc = sendfile(sock, f, &offset, stat_buf.st_size);
+                if (rc == -1) {
+                        syslog(LOG_ERR, "error from sendfile: %s\n",
+                                strerror(errno));
+                }
         }
         syslog(LOG_DEBUG, "Sent %i bytes", rc);
 
@@ -773,8 +782,7 @@ int send_file(int sock, char *path, http_status_code_t *err)
         }
 
         /* pop my cork */
-        state = 0;
-        setsockopt(sockme, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
+        setcork(sock, 0);
 
         close(f);
 
@@ -810,3 +818,29 @@ field_t * get_element(int *err) {
         }
         return filter;
 }
+
+size_t rcv(int sock, void *buf, size_t len, int flags)
+{
+        if (config->ssl)
+                return ssl_recv(buf, len);
+        else
+                return recv(sock, buf, len, flags);
+}
+
+ssize_t snd(int sock, void *buf, size_t len, int flags)
+{
+        if (config->ssl)
+                return ssl_send(buf);
+        else
+                return send(sock, buf, len, flags);
+}
+
+void setcork(int sock, int state)
+{
+        if (config->ssl)
+                setcork_ssl(state);
+        else
+                setsockopt(sock, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
+        
+}
+
