@@ -129,34 +129,26 @@ int sendfile_ssl(int sock, int fd, size_t size)
         return sent;
 }
 
-size_t ssl_send(char *msg, ...)
+size_t ssl_send(char *msg, size_t len)
 {
-        char s[4096];
-        va_list args;
         int ret;
-
-        /* build message */
-        va_start(args, msg);
-        int size = vsnprintf(s, LINE_MAX, msg, args);
-        va_end(args);
-        if (size < 0) return -1;
-
         size_t sent = 0;
         int offset = 0;
+
         /* "Begin at the beginning," the King said gravely, */
         do {
-                ret = gnutls_record_send(session, s+offset, size-offset);
+                ret = gnutls_record_send(session, msg+offset, len-offset);
                 while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
                         ret = gnutls_record_send(session, 0, 0);
                 }
                 if (ret >= 0) {
                         sent += ret;
-                        offset = size - sent;
+                        offset = len - sent;
                 }
                 else if (gnutls_error_is_fatal(ret) == 1) {
                         break;
                 }
-        } while (sent < size);
+        } while (sent < len);
         /* "and go on till you come to the end: then stop." */
 
         if (ret < 0) {
@@ -170,8 +162,6 @@ size_t ssl_send(char *msg, ...)
 size_t ssl_recv(char *b, int bytes)
 {
         int ret;
-        /* TODO: loop until done */
-        /* TODO: MSG_WAITALL */
         ret = gnutls_record_recv(session, b, bytes);
         while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
                 ret = gnutls_record_recv(session, 0, 0);

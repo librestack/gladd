@@ -32,7 +32,7 @@ int generate_dh_params(void);
 void do_tls_handshake(int fd);
 void setcork_ssl(int state);
 int sendfile_ssl(int sock, int fd, size_t size);
-size_t ssl_send(char *msg, ...);
+size_t ssl_send(char *msg, size_t len);
 size_t ssl_recv(char *b, int bytes);
 void ssl_setup();
 void ssl_cleanup();

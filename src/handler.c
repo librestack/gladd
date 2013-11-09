@@ -493,7 +493,6 @@ http_status_code_t response_upload(int sock, url_t *u)
         int toknum;
         long lclen;
         size_t size = 0;
-        struct timeval tv;
         unsigned char md_value[EVP_MAX_MD_SIZE];
         unsigned int md_len, i;
 
@@ -551,11 +550,6 @@ http_status_code_t response_upload(int sock, url_t *u)
                 http_flush_buffer();
                 bytes = sizeof buf;
 
-                /* set socket timeout */
-                tv.tv_sec = 1;
-                tv.tv_usec = 0;
-                setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
-                        (char *)&tv, sizeof(struct timeval));
                 while (bytes > 0) {
                         /* read into buffer */
                         errno = 0;
@@ -821,18 +815,25 @@ field_t * get_element(int *err) {
 
 size_t rcv(int sock, void *buf, size_t len, int flags)
 {
-        if (config->ssl)
+        if (config->ssl) {
                 return ssl_recv(buf, len);
-        else
+        }
+        else {
+                /* set socket timeout */
+                struct timeval tv;
+                tv.tv_sec = 1; tv.tv_usec = 0;
+                setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                        (char *)&tv, sizeof(struct timeval));
                 return recv(sock, buf, len, flags);
+        }
 }
 
-ssize_t snd(int sock, void *buf, size_t len, int flags)
+ssize_t snd(int sock, void *data, size_t len, int flags)
 {
         if (config->ssl)
-                return ssl_send(buf);
+                return ssl_send(data, len);
         else
-                return send(sock, buf, len, flags);
+                return send(sock, data, len, flags);
 }
 
 void setcork(int sock, int state)
