@@ -79,7 +79,12 @@ ssize_t ssl_pull(gnutls_transport_ptr_t ptr, void *data, size_t len)
 void do_tls_handshake(int fd)
 {
         int ret;
-        gnutls_transport_set_int(session, fd);
+
+#if GNUTLS_VERSION_NUMBER >= 0x030109
+        gnutls_transport_set_int(session, fd); /* 3.1.9+ */
+#else
+	gnutls_transport_set_ptr(session, &fd);
+#endif
         gnutls_transport_set_pull_function(session, ssl_pull);
         gnutls_transport_set_push_function(session, ssl_push);
         do
@@ -97,13 +102,15 @@ void do_tls_handshake(int fd)
                         gnutls_strerror(ret));
                 _exit(EXIT_FAILURE);
         }
+#if GNUTLS_VERSION_NUMBER >= 0x030110
         else {
                 char* desc;
-                desc = gnutls_session_get_desc(session);
+                desc = gnutls_session_get_desc(session); /* 3.1.10+ */
                 printf ("- Session info: %s\n", desc);
                 syslog(LOG_DEBUG, "- Session info: %s", desc);
                 gnutls_free(desc);
         }
+#endif
         printf ("- Handshake was completed\n");
         syslog(LOG_DEBUG, "SSL Handshake completed");
 }
@@ -111,12 +118,14 @@ void do_tls_handshake(int fd)
 /* set a TCP cork the gnutls way */
 void setcork_ssl(int state)
 {
+#if GNUTLS_VERSION_NUMBER >= 0x030109
         if (state == 0) {
                 gnutls_record_cork(session);
         }
         else {
                 gnutls_record_uncork(session, 0);
         }
+#endif
 }
 
 int sendfile_ssl(int sock, int fd, size_t size)
