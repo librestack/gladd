@@ -80,7 +80,6 @@ void do_tls_handshake(int fd)
 {
         int ret;
         gnutls_transport_set_int(session, fd);
-        syslog(LOG_DEBUG, "handshaking on %i", fd);
         gnutls_transport_set_pull_function(session, ssl_pull);
         gnutls_transport_set_push_function(session, ssl_push);
         do

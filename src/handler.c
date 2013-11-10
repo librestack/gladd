@@ -492,7 +492,9 @@ http_status_code_t response_upload(int sock, url_t *u)
         int fd;
         int toknum;
         long lclen;
+        ssize_t ret;
         size_t size = 0;
+        size_t written = 0;
         unsigned char md_value[EVP_MAX_MD_SIZE];
         unsigned int md_len, i;
 
@@ -537,46 +539,49 @@ http_status_code_t response_upload(int sock, url_t *u)
         if (ptmp != NULL) {
                 /* boundary found - short write */
                 syslog(LOG_DEBUG, "end boundary found in initial buffer");
-                write(fd, pbuf, ptmp - pbuf - 4);
+                ret = write(fd, pbuf, ptmp - pbuf - 4);
                 EVP_DigestUpdate(mdctx, pbuf, ptmp - pbuf - 4);
+                written += ret;
         }
         else {
                 syslog(LOG_DEBUG, "end boundary NOT found in initial buffer");
-                write(fd, pbuf, BUFSIZE - (pbuf - buf) - 2);
-                EVP_DigestUpdate(mdctx, pbuf, BUFSIZE - (pbuf - buf) - 2);
+                ret = write(fd, pbuf, size - (pbuf - buf));
+                EVP_DigestUpdate(mdctx, pbuf, size - (pbuf - buf));
+                written += ret;
         }
+        while(lclen > size) {
+                /* read into buffer */
+                errno = 0;
+                bytes = rcv(sock, buf, BUFSIZE, MSG_WAITALL);
+                if (bytes == -1) {
+                        syslog(LOG_ERR,"Error reading from socket: %s",
+                                strerror(errno));
+                        break;
+                                
+                }
+                if (bytes == 0) break; /* no bytes read */
+                size += bytes;
 
-        if (lclen > sizeof buf) { 
-                http_flush_buffer();
-                for(;;) {
-                        /* read into buffer */
-                        errno = 0;
-                        bytes = rcv(sock, buf, BUFSIZE, MSG_WAITALL);
-                        if (bytes == -1) {
-                                syslog(LOG_ERR,"Error reading from socket: %s",
-                                        strerror(errno));
-                                        
+                /* check for boundary */
+                pbuf = memsearch(buf, b, bytes);
+                if (pbuf != NULL) {
+                        /* boundary reached, we're done here */
+                        syslog(LOG_DEBUG, "boundary reached, we're done here");
+                        ret = write(fd, buf, pbuf - buf - 4);
+                        if (ret > 0) {
+                                written += ret;
+                                EVP_DigestUpdate(mdctx, buf, pbuf-buf-4);
                         }
-                        if (bytes == 0) break; /* no bytes read */
-                        size += bytes;
-                        syslog(LOG_DEBUG, "Read %i bytes", (int)bytes);
-
-                        /* check for boundary */
-                        pbuf = memsearch(buf, b, bytes);
-                        if (pbuf != NULL) {
-                                /* boundary reached, we're done here */
-                                syslog(LOG_DEBUG, "boundary reached, we're done here");
-                                write(fd, buf, pbuf - buf - 4);
-                                EVP_DigestUpdate(mdctx, buf, pbuf - buf - 4);
-                                break;
-                        }
-
+                }
+                else {
                         /* write contents of buffer out to file */
-                        write(fd, buf, (int) bytes);
-                        EVP_DigestUpdate(mdctx, buf, bytes);
+                        ret = write(fd, buf, (int) bytes);
+                        if (ret > 0) {
+                                written += ret;
+                                EVP_DigestUpdate(mdctx, buf, bytes);
+                        }
                 }
         }
-
         if (lclen != size) {
                 syslog(LOG_ERR, "ERROR: Read %li/%li bytes",
                         (long) size, lclen);
@@ -584,8 +589,8 @@ http_status_code_t response_upload(int sock, url_t *u)
                         lclen - (long)size);
                 return HTTP_BAD_REQUEST;
         }
-
         syslog(LOG_DEBUG, "Read %li bytes total", (long)size);
+        syslog(LOG_DEBUG, "Wrote %li bytes total", (long)written);
 
         EVP_DigestFinal_ex(mdctx, md_value, &md_len);
         EVP_MD_CTX_destroy(mdctx);
