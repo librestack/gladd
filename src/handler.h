@@ -32,7 +32,7 @@
 
 void *get_in_addr(struct sockaddr *sa);
 void handle_connection(int sock, struct sockaddr_storage their_addr);
-size_t rcv(int sock, void *buf, size_t len, int flags);
+size_t rcv(int sock, void *data, size_t len, int flags);
 ssize_t snd(int sock, void *data, size_t len, int flags);
 void respond (int fd, char *response);
 int send_file(int sock, char *path, http_status_code_t *err);

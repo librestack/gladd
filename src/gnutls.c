@@ -22,13 +22,19 @@
 
 #include "gnutls.h"
 #include "config.h"
+#include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <syslog.h>
 #include <unistd.h>
+
+#define GNUTLS_POINTER_TO_INT_CAST (long)
+#define GNUTLS_POINTER_TO_INT(_) ((int) GNUTLS_POINTER_TO_INT_CAST (_))
 
 gnutls_certificate_credentials_t x509_cred;
 gnutls_priority_t priority_cache;
@@ -54,10 +60,29 @@ int generate_dh_params(void)
           return 0;
 }
 
+ssize_t ssl_push(gnutls_transport_ptr_t ptr, const void *data, size_t len)
+{
+        int sock = GNUTLS_POINTER_TO_INT(ptr);
+        return send(sock, data, len, MSG_DONTWAIT);
+}
+
+ssize_t ssl_pull(gnutls_transport_ptr_t ptr, void *data, size_t len)
+{
+        int sock = GNUTLS_POINTER_TO_INT(ptr);
+        struct timeval tv;
+        tv.tv_sec = 1; tv.tv_usec = 0;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                (char *)&tv, sizeof(struct timeval));
+        return recv(sock, data, len, MSG_DONTWAIT);
+}
+
 void do_tls_handshake(int fd)
 {
         int ret;
         gnutls_transport_set_int(session, fd);
+        syslog(LOG_DEBUG, "handshaking on %i", fd);
+        gnutls_transport_set_pull_function(session, ssl_pull);
+        gnutls_transport_set_push_function(session, ssl_push);
         do
         {       
                 ret = gnutls_handshake(session);
@@ -98,7 +123,7 @@ void setcork_ssl(int state)
 int sendfile_ssl(int sock, int fd, size_t size)
 {
         char buf[4096];
-        size_t bytes;
+        size_t len;
         size_t sent = 0;
         int ret;
         int offset = 0;
@@ -108,14 +133,14 @@ int sendfile_ssl(int sock, int fd, size_t size)
 
         /* read from file descriptor and send to ssl socket */
         do {
-                if (offset == 0) bytes = read(fd, buf, sizeof buf);
-                ret = gnutls_record_send(session, buf+offset, bytes-offset);
+                if (offset == 0) len = read(fd, buf, sizeof buf);
+                ret = gnutls_record_send(session, buf+offset, len-offset);
                 while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
                         ret = gnutls_record_send(session, 0, 0);
                 }
                 if (ret >= 0) {
                         sent += ret;
-                        offset = bytes - ret;
+                        offset = len - ret;
                 }
                 else if (gnutls_error_is_fatal(ret) == 1) {
                         break;
@@ -153,21 +178,23 @@ size_t ssl_send(char *msg, size_t len)
 
         if (ret < 0) {
                 fprintf(stderr, "%s\n", gnutls_strerror(ret));
-                syslog(LOG_ERR, "gnutls error: %s", gnutls_strerror(ret));
+                syslog(LOG_ERR, "gnutls send error: %s", gnutls_strerror(ret));
         }
 
         return sent;
 }
 
-size_t ssl_recv(char *b, int bytes)
+size_t ssl_recv(char *b, int len)
 {
         int ret;
-        ret = gnutls_record_recv(session, b, bytes);
+        ret = gnutls_record_recv(session, b, len);
         while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
-                ret = gnutls_record_recv(session, 0, 0);
+                ret = gnutls_record_recv(session, b, len);
         }
-        b[ret] = '\0';
-        return ret;
+        if (ret < 0) {
+                syslog(LOG_ERR, "gnutls recv error: %s", gnutls_strerror(ret));
+        }
+        return  (ret >= 0) ? ret : -1;
 }
 
 void ssl_setup()

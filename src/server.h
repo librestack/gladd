@@ -23,8 +23,6 @@
 #ifndef __GLADD_SERVER_H__
 #define __GLADD_SERVER_H__ 1
 
-#define BACKLOG 10  /* how many pending connectiong to hold in queue */
-
 int sockme;
 
 int get_hits();

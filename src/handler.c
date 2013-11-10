@@ -548,9 +548,7 @@ http_status_code_t response_upload(int sock, url_t *u)
 
         if (lclen > sizeof buf) { 
                 http_flush_buffer();
-                bytes = sizeof buf;
-
-                while (bytes > 0) {
+                for(;;) {
                         /* read into buffer */
                         errno = 0;
                         bytes = rcv(sock, buf, BUFSIZE, MSG_WAITALL);
@@ -813,10 +811,10 @@ field_t * get_element(int *err) {
         return filter;
 }
 
-size_t rcv(int sock, void *buf, size_t len, int flags)
+size_t rcv(int sock, void *data, size_t len, int flags)
 {
         if (config->ssl) {
-                return ssl_recv(buf, len);
+                return ssl_recv(data, len);
         }
         else {
                 /* set socket timeout */
@@ -824,7 +822,7 @@ size_t rcv(int sock, void *buf, size_t len, int flags)
                 tv.tv_sec = 1; tv.tv_usec = 0;
                 setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
                         (char *)&tv, sizeof(struct timeval));
-                return recv(sock, buf, len, flags);
+                return recv(sock, data, len, flags);
         }
 }
 
@@ -844,4 +842,3 @@ void setcork(int sock, int state)
                 setsockopt(sock, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
         
 }
-

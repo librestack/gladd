@@ -43,6 +43,47 @@
 
 int hits = 0;
 
+int get_socket(struct addrinfo **servinfo)
+{
+        struct addrinfo hints;
+        int sock;
+        int status;
+        int yes=1;
+        char tcpport[5];
+
+        /* set up hints */
+        memset(&hints, 0, sizeof hints);           /* zero memory */
+        hints.ai_family = AF_UNSPEC;               /* ipv4/ipv6 agnostic */
+        hints.ai_socktype = SOCK_STREAM;           /* TCP stream sockets */
+        hints.ai_flags = AI_PASSIVE;               /* ips we can bind to */
+
+        /* set up addrinfo */
+        snprintf(tcpport, 5, "%li", config->port);
+        status = getaddrinfo(NULL, tcpport, &hints, servinfo);
+        if (status != 0) {
+                fprintf(stderr, "getaddrinfo error: %s\n",
+                        gai_strerror(status));
+                _exit(EXIT_FAILURE);
+        }
+
+        /* get a socket */
+        sock = socket((*servinfo)->ai_family, (*servinfo)->ai_socktype,
+                (*servinfo)->ai_protocol);
+        if (sock == -1) {
+                perror("socket");
+                freeaddrinfo(*servinfo);
+                _exit(EXIT_FAILURE);
+        }
+
+        /* reuse socket if already in use */
+        if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int))==-1){
+                perror("setsockopt SO_REUSEADDR");
+                freeaddrinfo(*servinfo);
+                _exit(EXIT_FAILURE);
+        }
+        return sock;
+}
+
 int server_start(int lockfd)
 {
         int getaddrinfo(const char *node,
@@ -52,41 +93,17 @@ int server_start(int lockfd)
 
         int errsv;
         int new_fd;
-        int status;
-        int yes=1;
         pid_t pid;
         socklen_t addr_size;
         struct addrinfo *servinfo;
-        struct addrinfo hints;
         struct sockaddr_storage their_addr;
-        char tcpport[5];
         char buf[sizeof(long)];
 
         if (config->ssl == 1) ssl_setup();
 
-        memset(&hints, 0, sizeof hints);           /* zero memory */
-        hints.ai_family = AF_UNSPEC;               /* ipv4/ipv6 agnostic */
-        hints.ai_socktype = SOCK_STREAM;           /* TCP stream sockets */
-        hints.ai_flags = AI_PASSIVE;               /* ips we can bind to */
-        snprintf(tcpport, 5, "%li", config->port); /* tcp port to listen on */
-
-        if ((status = getaddrinfo(NULL, tcpport, &hints, &servinfo)) != 0){
-                fprintf(stderr, "getaddrinfo error: %s\n",
-                                gai_strerror(status));
-                free_config();
-                exit(EXIT_FAILURE);
-        }
-
-        /* get a socket */
-        sockme = socket(servinfo->ai_family, servinfo->ai_socktype,
-                        servinfo->ai_protocol);
-
-        /* reuse socket if already in use */
-        setsockopt(sockme, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-
-        /* bind to a port */
+        /* get a socket and bind */
+        sockme = get_socket(&servinfo);
         bind(sockme, servinfo->ai_addr, servinfo->ai_addrlen);
-
         freeaddrinfo(servinfo);
 
         /* listening */

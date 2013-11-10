@@ -578,7 +578,7 @@ void http_response(int sock, int code)
 size_t http_curl_write(void *ptr, size_t size, size_t nmemb, void *stream)
 {
         if (config->ssl)
-                ssl_send(ptr);
+                ssl_send(ptr, size*nmemb);
         else
                 fwrite(ptr, size, nmemb, stream);
         return size*nmemb;
