@@ -42,7 +42,7 @@ gnutls_priority_t priority_cache;
 int generate_dh_params(void)
 {
           unsigned int bits = 
-            gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH, GNUTLS_SEC_PARAM_LOW);
+            gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH, GNUTLS_SEC_PARAM_NORMAL);
 
           fprintf(stderr, "Generating Diffie-Hellman params...");
           syslog(LOG_INFO, "Generating Diffie-Hellman params...");
@@ -73,7 +73,11 @@ ssize_t ssl_pull(gnutls_transport_ptr_t ptr, void *data, size_t len)
         tv.tv_sec = 1; tv.tv_usec = 0;
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
                 (char *)&tv, sizeof(struct timeval));
-        return recv(sock, data, len, MSG_WAITALL);
+        int ret = recv(sock, data, len, MSG_WAITALL);
+	if (ret == -1 && config->debug) {
+		syslog(LOG_DEBUG, "%s", strerror(errno));
+	}
+	return ret;
 }
 
 void do_tls_handshake(int fd)
@@ -83,7 +87,7 @@ void do_tls_handshake(int fd)
 #if GNUTLS_VERSION_NUMBER >= 0x030109
         gnutls_transport_set_int(session, fd); /* 3.1.9+ */
 #else
-	gnutls_transport_set_ptr(session, (gnutls_transport_ptr_t)&fd);
+	gnutls_transport_set_ptr(session, (gnutls_transport_ptr_t)(long)fd);
 #endif
         gnutls_transport_set_pull_function(session, ssl_pull);
         gnutls_transport_set_push_function(session, ssl_push);
