@@ -25,6 +25,8 @@
 
 #include <gnutls/gnutls.h>
 
+#define GNUTLS_DEBUG_LEVEL 10 /* 0 = off, 10+ = all debug enabled */
+
 gnutls_dh_params_t dh_params;
 gnutls_session_t session;
 

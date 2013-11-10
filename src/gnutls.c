@@ -63,7 +63,7 @@ int generate_dh_params(void)
 ssize_t ssl_push(gnutls_transport_ptr_t ptr, const void *data, size_t len)
 {
         int sock = GNUTLS_POINTER_TO_INT(ptr);
-        return send(sock, data, len, MSG_DONTWAIT);
+        return send(sock, data, len, 0);
 }
 
 ssize_t ssl_pull(gnutls_transport_ptr_t ptr, void *data, size_t len)
@@ -73,7 +73,7 @@ ssize_t ssl_pull(gnutls_transport_ptr_t ptr, void *data, size_t len)
         tv.tv_sec = 1; tv.tv_usec = 0;
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
                 (char *)&tv, sizeof(struct timeval));
-        return recv(sock, data, len, MSG_DONTWAIT);
+        return recv(sock, data, len, MSG_WAITALL);
 }
 
 void do_tls_handshake(int fd)
@@ -83,7 +83,7 @@ void do_tls_handshake(int fd)
 #if GNUTLS_VERSION_NUMBER >= 0x030109
         gnutls_transport_set_int(session, fd); /* 3.1.9+ */
 #else
-	gnutls_transport_set_ptr(session, &fd);
+	gnutls_transport_set_ptr(session, (gnutls_transport_ptr_t)&fd);
 #endif
         gnutls_transport_set_pull_function(session, ssl_pull);
         gnutls_transport_set_push_function(session, ssl_push);
@@ -205,10 +205,19 @@ size_t ssl_recv(char *b, int len)
         return  (ret >= 0) ? ret : -1;
 }
 
+void ssl_log_debug(int level, const char *msg)
+{
+	syslog(LOG_DEBUG, "%s", msg);
+}
+
 void ssl_setup()
 {
         int ret;
 
+	if (GNUTLS_DEBUG_LEVEL > 0) {
+		gnutls_global_set_log_level(GNUTLS_DEBUG_LEVEL);
+		gnutls_global_set_log_function(ssl_log_debug);
+	}
         gnutls_global_init();
         gnutls_certificate_allocate_credentials (&x509_cred);
         gnutls_certificate_set_x509_trust_file (x509_cred, config->sslca,
