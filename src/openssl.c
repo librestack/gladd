@@ -60,7 +60,8 @@ void do_tls_handshake(int fd)
                 syslog(LOG_ERR, "SSL handshake failed (%s)", ssl_err(ret));
                 _exit(EXIT_FAILURE);
         }
-        syslog(LOG_DEBUG, "SSL Handshake completed");
+        syslog(LOG_DEBUG, "SSL Handshake completed (%s)",
+                SSL_get_cipher_name(ssl));
 }
 
 int generate_dh_params(void)
@@ -123,13 +124,13 @@ size_t ssl_recv(char *b, int len)
                         nread += ret;
                         break;
                 case SSL_ERROR_ZERO_RETURN:
-                        //syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
+                        syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
                         break;
                 case SSL_ERROR_SYSCALL:
                         //syslog(LOG_DEBUG,"I/O Error: %s",ssl_err(ret));
                         break;
                 default:
-                        //syslog(LOG_DEBUG,"ssl_recv() %s",ssl_err(ret));
+                        syslog(LOG_DEBUG,"ssl_recv() %s",ssl_err(ret));
                         break;
                 }
         } while(ret > 0);
