@@ -1,5 +1,5 @@
 /* 
- * gnutls.c
+ * tls.h
  *
  * this file is part of GLADD
  *
@@ -20,22 +20,20 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GLADD_GNUTLS_H__
-#define __GLADD_GNUTLS_H__ 1
+#ifndef __GLADD_TLS_H__
+#define __GLADD_TLS_H__ 1
 
-#include <gnutls/gnutls.h>
+#define TLS_DEBUG_LEVEL 10 /* 0 = off, 10+ = all debug enabled */
 
-#define GNUTLS_DEBUG_LEVEL 10 /* 0 = off, 10+ = all debug enabled */
+#include <sys/types.h>
 
-gnutls_dh_params_t dh_params;
-gnutls_session_t session;
-
-int generate_dh_params(void);
 void do_tls_handshake(int fd);
-void setcork_ssl(int state);
+int generate_dh_params(void);
 int sendfile_ssl(int sock, int fd, size_t size);
+void setcork_ssl(int state);
+void ssl_cleanup(int fd);
+size_t ssl_recv(char *b, int len);
 size_t ssl_send(char *msg, size_t len);
-size_t ssl_recv(char *b, int bytes);
 void ssl_setup();
-void ssl_cleanup();
-#endif /* __GLADD_GNUTLS_H__ */
+
+#endif /* __GLADD_TLS_H__ */

@@ -1,0 +1,174 @@
+/* 
+ * openssl.c
+ *
+ * this file is part of GLADD
+ *
+ * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program (see the file COPYING in the distribution).
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "tls.h"
+#include "config.h"
+#include <arpa/inet.h>
+#include <netinet/tcp.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/ssl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <syslog.h>
+#include <unistd.h>
+
+SSL_CTX *ctx;
+SSL_METHOD *method;
+SSL_SESSION session;
+SSL *ssl;
+
+char *ssl_err(int errcode)
+{
+        static char errstr[120];
+        ERR_error_string(errcode, errstr);
+        return errstr;
+}
+
+void do_tls_handshake(int fd)
+{
+        int ret;
+        ssl = SSL_new(ctx);
+        ret = SSL_set_fd(ssl, fd);
+        if (ret != 1) {
+                syslog(LOG_ERR, "failed to connect SSL object");
+                _exit(EXIT_FAILURE);
+        }
+        ret = SSL_accept(ssl);
+        if (ret != 1) {
+                syslog(LOG_ERR, "SSL handshake failed (%s)", ssl_err(ret));
+                _exit(EXIT_FAILURE);
+        }
+        syslog(LOG_DEBUG, "SSL Handshake completed");
+}
+
+int generate_dh_params(void)
+{
+        return 0;
+}
+
+int sendfile_ssl(int sock, int fd, size_t size)
+{
+        char buf[4096];
+        size_t len;
+        size_t sent = 0;
+        int ret;
+        int offset = 0;
+
+        fprintf(stderr, "Sending file...");
+        syslog(LOG_DEBUG, "Sending file...");
+
+        /* read from file descriptor and send to ssl socket */
+        do {
+                if (offset == 0) len = read(fd, buf, sizeof buf);
+                ret = SSL_write(ssl, buf+offset, len-offset);
+                if (ret >= 0) {
+                        sent += ret;
+                        offset = len - ret;
+                }
+                else {
+                        syslog(LOG_ERR, "Error in ssl_send(): %s",
+                                ssl_err(ret));
+                }
+
+        } while (sent < size);
+        fprintf(stderr, "done.\n");
+        fprintf(stderr, "%i/%i bytes sent\n", (int)sent, (int)size);
+        syslog(LOG_DEBUG, "%i/%i bytes sent", (int)sent, (int)size);
+
+        return sent;
+}
+
+void setcork_ssl(int state)
+{
+        int sock = SSL_get_fd(ssl);
+        setsockopt(sock, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
+}
+
+void ssl_cleanup(int fd)
+{
+        SSL_free(ssl);
+        close(fd);
+}
+
+size_t ssl_recv(char *b, int len)
+{
+        int ret;
+        int nread = 0;
+        do {
+                ret = SSL_read(ssl, b+nread, len-nread);
+                switch (SSL_get_error(ssl, ret)) {
+                case SSL_ERROR_NONE:
+                        nread += ret;
+                        break;
+                case SSL_ERROR_ZERO_RETURN:
+                        //syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
+                        break;
+                case SSL_ERROR_SYSCALL:
+                        //syslog(LOG_DEBUG,"I/O Error: %s",ssl_err(ret));
+                        break;
+                default:
+                        //syslog(LOG_DEBUG,"ssl_recv() %s",ssl_err(ret));
+                        break;
+                }
+        } while(ret > 0);
+        return nread;
+}
+
+size_t ssl_send(char *msg, size_t len)
+{
+        int ret;
+        ret =  SSL_write(ssl, msg, len);
+        if (ret <= 0) {
+                syslog(LOG_ERR, "Error in ssl_send(): %s", ssl_err(ret));
+        }
+        return  (ret >= 0) ? ret : -1;
+}
+
+void ssl_setup()
+{
+        int ret;
+        SSL_load_error_strings();
+        SSL_library_init();
+        OpenSSL_add_all_algorithms();
+        ctx = SSL_CTX_new(SSLv3_server_method());
+        ret = SSL_CTX_use_certificate_chain_file(ctx, config->sslcert);
+        if (ret != 1) {
+                fprintf(stderr, "Error loading certificate: %s.\n",
+                        ssl_err(ret));
+                _exit(EXIT_FAILURE);
+        }
+        ret = SSL_CTX_use_PrivateKey_file(ctx,config->sslkey,SSL_FILETYPE_PEM);
+        if (ret != 1) {
+                fprintf(stderr, "Error loading private key: %s\n",
+                        ssl_err(ret));
+                _exit(EXIT_FAILURE);
+        }
+        if (SSL_CTX_check_private_key(ctx) != 1) {
+                fprintf(stderr, "Private key verification failure: %s.\n",
+                        ssl_err(ret));
+                _exit(EXIT_FAILURE);
+        }
+        SSL_CTX_set_mode(ctx, SSL_MODE_AUTO_RETRY);
+}
