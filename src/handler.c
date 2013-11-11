@@ -25,7 +25,7 @@
 #include "auth.h"
 #include "config.h"
 #include "gladdb/db.h"
-#include "gnutls.h"
+#include "tls.h"
 #include "handler.h"
 #include "main.h"
 #include "mime.h"

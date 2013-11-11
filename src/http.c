@@ -34,7 +34,7 @@
 #include <syslog.h>
 #include "handler.h"
 #include "http.h"
-#include "gnutls.h"
+#include "tls.h"
 #include "string.h"
 #include "xml.h"
 

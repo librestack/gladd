@@ -20,7 +20,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gnutls.h"
+#include "tls.h"
 #include "config.h"
 #include <errno.h>
 #include <limits.h>
@@ -29,13 +29,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <gnutls/gnutls.h>
 
 #define GNUTLS_POINTER_TO_INT_CAST (long)
 #define GNUTLS_POINTER_TO_INT(_) ((int) GNUTLS_POINTER_TO_INT_CAST (_))
 
+gnutls_dh_params_t dh_params;
+gnutls_session_t session;
 gnutls_certificate_credentials_t x509_cred;
 gnutls_priority_t priority_cache;
 
@@ -218,8 +220,8 @@ void ssl_setup()
 {
         int ret;
 
-	if (GNUTLS_DEBUG_LEVEL > 0) {
-		gnutls_global_set_log_level(GNUTLS_DEBUG_LEVEL);
+	if (TLS_DEBUG_LEVEL > 0) {
+		gnutls_global_set_log_level(TLS_DEBUG_LEVEL);
 		gnutls_global_set_log_function(ssl_log_debug);
 	}
         gnutls_global_init();

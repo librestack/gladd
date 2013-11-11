@@ -37,7 +37,7 @@
 #include "config.h"
 #include "handler.h"
 #include "main.h"
-#include "gnutls.h"
+#include "tls.h"
 #include "server.h"
 #include "signals.h"
 
