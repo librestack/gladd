@@ -628,6 +628,9 @@ LIBOBJS
 EGREP
 GREP
 CPP
+libxml
+incxml
+xml
 libtds
 tds
 libpg
@@ -3756,14 +3759,18 @@ fi
 fi
 
 # xml support (presently required)
-#if test "$with_xml" == "no"
-#then
-#	AC_MSG_NOTICE([disabling xml support])
-#	AC_SUBST(xml, -D_NXML)
-#else
-#	AC_SUBST(incxml, -I/usr/include/libxml2)
-#	AC_SUBST(libxml, -lxml2)
-#fi
+if test "$with_xml" == "no"
+then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: disabling xml support" >&5
+$as_echo "$as_me: disabling xml support" >&6;}
+	xml=-D_NXML
+
+else
+	incxml=-I/usr/include/libxml2
+
+	libxml=-lxml2
+
+fi
 
 # Checks for header files.
 ac_ext=c

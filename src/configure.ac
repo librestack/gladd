@@ -123,14 +123,14 @@ else
 fi
 
 # xml support (presently required)
-#if test "$with_xml" == "no"
-#then
-#	AC_MSG_NOTICE([disabling xml support])
-#	AC_SUBST(xml, -D_NXML)
-#else
-#	AC_SUBST(incxml, -I/usr/include/libxml2)
-#	AC_SUBST(libxml, -lxml2)
-#fi
+if test "$with_xml" == "no"
+then
+	AC_MSG_NOTICE([disabling xml support])
+	AC_SUBST(xml, -D_NXML)
+else
+	AC_SUBST(incxml, -I/usr/include/libxml2)
+	AC_SUBST(libxml, -lxml2)
+fi
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h stdlib.h string.h sys/file.h sys/socket.h syslog.h unistd.h])
