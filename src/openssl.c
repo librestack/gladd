@@ -21,9 +21,11 @@
  */
 
 #include "tls.h"
+#include "dh.h"
 #include "config.h"
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
+#include <openssl/dh.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
@@ -38,6 +40,7 @@ SSL_CTX *ctx;
 SSL_METHOD *method;
 SSL_SESSION session;
 SSL *ssl;
+DH *dh;
 
 char *ssl_err(int errcode)
 {
@@ -66,6 +69,18 @@ void do_tls_handshake(int fd)
 
 int generate_dh_params(void)
 {
+        int codes;
+        DH *dh = get_dh1024();
+
+        if (DH_check(dh, &codes) != 1) {
+                syslog(LOG_ERR, "Diffie Hellman check failed");
+        }
+
+        if (1 != SSL_CTX_set_tmp_dh(ctx, dh)) {
+                syslog(LOG_ERR, "error loading Diffie Hellman params");
+        }
+        DH_free(dh);
+
         return 0;
 }
 
@@ -154,6 +169,7 @@ void ssl_setup()
         SSL_library_init();
         OpenSSL_add_all_algorithms();
         ctx = SSL_CTX_new(SSLv3_server_method());
+        generate_dh_params();
         ret = SSL_CTX_use_certificate_chain_file(ctx, config->sslcert);
         if (ret != 1) {
                 fprintf(stderr, "Error loading certificate: %s.\n",
