@@ -26,7 +26,6 @@ CC=gcc
 # -D_NTDS  => compile without freetds support
 # -D_NLDAP => compile without ldap support
 # -D_NXML  => compile without xml support
-# TODO: fix -Wno-unused-but-set-variable 
 CFLAGS=-g -Wall -Werror @cflagssl@ @postgres@ @mysql@ @openldap@ @xml@ @cflagmysql@
 INCLUDES=@incxml@ @incpostgres@ -L/usr/local/lib
 LIBS=-L/usr/lib/x86_64-linux-gnu @libxml@ -lxslt -lcurl @libopenldap@ -lb64 -lgladdb @libpg@ -lrt @libtds@ @libmysql@ -lpam -lpam_misc @libssl@

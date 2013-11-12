@@ -628,9 +628,6 @@ LIBOBJS
 EGREP
 GREP
 CPP
-libxml
-incxml
-xml
 libtds
 tds
 libpg
@@ -1457,6 +1454,52 @@ fi
 
 } # ac_fn_c_try_compile
 
+# ac_fn_c_try_link LINENO
+# -----------------------
+# Try to link conftest.$ac_ext, and return whether this succeeded.
+ac_fn_c_try_link ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  rm -f conftest.$ac_objext conftest$ac_exeext
+  if { { ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+$as_echo "$ac_try_echo"; } >&5
+  (eval "$ac_link") 2>conftest.err
+  ac_status=$?
+  if test -s conftest.err; then
+    grep -v '^ *+' conftest.err >conftest.er1
+    cat conftest.er1 >&5
+    mv -f conftest.er1 conftest.err
+  fi
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 test -x conftest$ac_exeext
+       }; then :
+  ac_retval=0
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_retval=1
+fi
+  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
+  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
+  # interfere with the next link command; also delete a directory that is
+  # left behind by Apple's compiler.  We do this before executing the actions.
+  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+  as_fn_set_status $ac_retval
+
+} # ac_fn_c_try_link
+
 # ac_fn_c_try_cpp LINENO
 # ----------------------
 # Try to preprocess conftest.$ac_ext, and return whether this succeeded.
@@ -1711,52 +1754,6 @@ $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
 } # ac_fn_c_check_type
-
-# ac_fn_c_try_link LINENO
-# -----------------------
-# Try to link conftest.$ac_ext, and return whether this succeeded.
-ac_fn_c_try_link ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  rm -f conftest.$ac_objext conftest$ac_exeext
-  if { { ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-$as_echo "$ac_try_echo"; } >&5
-  (eval "$ac_link") 2>conftest.err
-  ac_status=$?
-  if test -s conftest.err; then
-    grep -v '^ *+' conftest.err >conftest.er1
-    cat conftest.er1 >&5
-    mv -f conftest.er1 conftest.err
-  fi
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext && {
-	 test "$cross_compiling" = yes ||
-	 test -x conftest$ac_exeext
-       }; then :
-  ac_retval=0
-else
-  $as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_retval=1
-fi
-  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
-  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
-  # interfere with the next link command; also delete a directory that is
-  # left behind by Apple's compiler.  We do this before executing the actions.
-  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
-  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
-  as_fn_set_status $ac_retval
-
-} # ac_fn_c_try_link
 
 # ac_fn_c_check_func LINENO FUNC VAR
 # ----------------------------------
@@ -3171,26 +3168,396 @@ if test "${with_xml+set}" = set; then :
 fi
 
 
+# Checks for libraries.
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for base64_decode_block in -lb64" >&5
+$as_echo_n "checking for base64_decode_block in -lb64... " >&6; }
+if ${ac_cv_lib_b64_base64_decode_block+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lb64  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char base64_decode_block ();
+int
+main ()
+{
+return base64_decode_block ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_b64_base64_decode_block=yes
+else
+  ac_cv_lib_b64_base64_decode_block=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_b64_base64_decode_block" >&5
+$as_echo "$ac_cv_lib_b64_base64_decode_block" >&6; }
+if test "x$ac_cv_lib_b64_base64_decode_block" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBB64 1
+_ACEOF
+
+  LIBS="-lb64 $LIBS"
+
+else
+  as_fn_error $? "b64 required" "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for curl_easy_init in -lcurl" >&5
+$as_echo_n "checking for curl_easy_init in -lcurl... " >&6; }
+if ${ac_cv_lib_curl_curl_easy_init+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcurl  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char curl_easy_init ();
+int
+main ()
+{
+return curl_easy_init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_curl_curl_easy_init=yes
+else
+  ac_cv_lib_curl_curl_easy_init=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_curl_curl_easy_init" >&5
+$as_echo "$ac_cv_lib_curl_curl_easy_init" >&6; }
+if test "x$ac_cv_lib_curl_curl_easy_init" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBCURL 1
+_ACEOF
+
+  LIBS="-lcurl $LIBS"
+
+else
+  as_fn_error $? "libcurl required" "$LINENO" 5
+fi
+
+#AC_CHECK_LIB([gladdb], [db_exec_sql]) # FIXME
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pam_start in -lpam" >&5
+$as_echo_n "checking for pam_start in -lpam... " >&6; }
+if ${ac_cv_lib_pam_pam_start+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpam  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pam_start ();
+int
+main ()
+{
+return pam_start ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_pam_pam_start=yes
+else
+  ac_cv_lib_pam_pam_start=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pam_pam_start" >&5
+$as_echo "$ac_cv_lib_pam_pam_start" >&6; }
+if test "x$ac_cv_lib_pam_pam_start" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBPAM 1
+_ACEOF
+
+  LIBS="-lpam $LIBS"
+
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pam_misc_setenv in -lpam_misc" >&5
+$as_echo_n "checking for pam_misc_setenv in -lpam_misc... " >&6; }
+if ${ac_cv_lib_pam_misc_pam_misc_setenv+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpam_misc  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pam_misc_setenv ();
+int
+main ()
+{
+return pam_misc_setenv ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_pam_misc_pam_misc_setenv=yes
+else
+  ac_cv_lib_pam_misc_pam_misc_setenv=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pam_misc_pam_misc_setenv" >&5
+$as_echo "$ac_cv_lib_pam_misc_pam_misc_setenv" >&6; }
+if test "x$ac_cv_lib_pam_misc_pam_misc_setenv" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBPAM_MISC 1
+_ACEOF
+
+  LIBS="-lpam_misc $LIBS"
+
+fi
+
+# FIXME: Replace `main' with a function in `-lrt':
+#AC_CHECK_LIB([rt], [main])
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xmlDocSetRootElement in -lxml2" >&5
+$as_echo_n "checking for xmlDocSetRootElement in -lxml2... " >&6; }
+if ${ac_cv_lib_xml2_xmlDocSetRootElement+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lxml2  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char xmlDocSetRootElement ();
+int
+main ()
+{
+return xmlDocSetRootElement ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_xml2_xmlDocSetRootElement=yes
+else
+  ac_cv_lib_xml2_xmlDocSetRootElement=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_xml2_xmlDocSetRootElement" >&5
+$as_echo "$ac_cv_lib_xml2_xmlDocSetRootElement" >&6; }
+if test "x$ac_cv_lib_xml2_xmlDocSetRootElement" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXML2 1
+_ACEOF
+
+  LIBS="-lxml2 $LIBS"
+
+else
+  as_fn_error $? "xml2 required" "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xsltApplyStylesheet in -lxslt" >&5
+$as_echo_n "checking for xsltApplyStylesheet in -lxslt... " >&6; }
+if ${ac_cv_lib_xslt_xsltApplyStylesheet+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lxslt  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char xsltApplyStylesheet ();
+int
+main ()
+{
+return xsltApplyStylesheet ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_xslt_xsltApplyStylesheet=yes
+else
+  ac_cv_lib_xslt_xsltApplyStylesheet=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_xslt_xsltApplyStylesheet" >&5
+$as_echo "$ac_cv_lib_xslt_xsltApplyStylesheet" >&6; }
+if test "x$ac_cv_lib_xslt_xsltApplyStylesheet" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXSLT 1
+_ACEOF
+
+  LIBS="-lxslt $LIBS"
+
+else
+  as_fn_error $? "xslt required" "$LINENO" 5
+fi
+
+
 # choose SSL library
 if test "$with_gnutls" == "yes"
 then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: GNUTTLS enabled." >&5
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for gnutls_global_init in -lgnutls" >&5
+$as_echo_n "checking for gnutls_global_init in -lgnutls... " >&6; }
+if ${ac_cv_lib_gnutls_gnutls_global_init+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgnutls  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char gnutls_global_init ();
+int
+main ()
+{
+return gnutls_global_init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_gnutls_gnutls_global_init=yes
+else
+  ac_cv_lib_gnutls_gnutls_global_init=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_gnutls_gnutls_global_init" >&5
+$as_echo "$ac_cv_lib_gnutls_gnutls_global_init" >&6; }
+if test "x$ac_cv_lib_gnutls_gnutls_global_init" = xyes; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: GNUTTLS enabled." >&5
 $as_echo "$as_me: GNUTTLS enabled." >&6;}
-        cflagssl=-D_GNUTLS
+		cflagssl=-D_GNUTLS
 
-        ssl=gnutls
+		ssl=gnutls
 
-        libssl="`pkg-config gnutls --cflags --libs`"
+		libssl="`pkg-config gnutls --cflags --libs`"
+
+
+else
+  as_fn_error $? "gnutls required for --with-gnutls" "$LINENO" 5
+
+fi
 
 elif test "$with_openssl" == "yes"
 then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: OPENSSL enabled." >&5
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for EVP_get_digestbyname in -lssl" >&5
+$as_echo_n "checking for EVP_get_digestbyname in -lssl... " >&6; }
+if ${ac_cv_lib_ssl_EVP_get_digestbyname+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lssl  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char EVP_get_digestbyname ();
+int
+main ()
+{
+return EVP_get_digestbyname ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_ssl_EVP_get_digestbyname=yes
+else
+  ac_cv_lib_ssl_EVP_get_digestbyname=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ssl_EVP_get_digestbyname" >&5
+$as_echo "$ac_cv_lib_ssl_EVP_get_digestbyname" >&6; }
+if test "x$ac_cv_lib_ssl_EVP_get_digestbyname" = xyes; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: OPENSSL enabled." >&5
 $as_echo "$as_me: OPENSSL enabled." >&6;}
-        cflagssl=-D_OPENSSL
+		cflagssl=-D_OPENSSL
 
-        ssl=openssl
+		ssl=openssl
 
-        libssl=-lssl
+		libssl=-lssl
+
+
+else
+  as_fn_error $? "openssl required for --with-openssl" "$LINENO" 5
+
+fi
 
 else
         { $as_echo "$as_me:${as_lineno-$LINENO}: No SSL library selected.  Disabling SSL." >&5
@@ -3220,6 +3587,58 @@ $as_echo "$as_me: disabling openldap support" >&6;}
 
 	libopenldap=-lldap
 
+else
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for ldap_initialize in -lldap" >&5
+$as_echo_n "checking for ldap_initialize in -lldap... " >&6; }
+if ${ac_cv_lib_ldap_ldap_initialize+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lldap  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char ldap_initialize ();
+int
+main ()
+{
+return ldap_initialize ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_ldap_ldap_initialize=yes
+else
+  ac_cv_lib_ldap_ldap_initialize=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ldap_ldap_initialize" >&5
+$as_echo "$ac_cv_lib_ldap_ldap_initialize" >&6; }
+if test "x$ac_cv_lib_ldap_ldap_initialize" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBLDAP 1
+_ACEOF
+
+  LIBS="-lldap $LIBS"
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: openldap not found - disabling" >&5
+$as_echo "$as_me: WARNING: openldap not found - disabling" >&2;}
+		openldap=-D_NLDAP
+
+
+fi
+
 fi
 if test "$with_postgres" == "no"
 then
@@ -3228,9 +3647,55 @@ $as_echo "$as_me: disabling postgres support" >&6;}
 	postgres=-D_NPG
 
 else
-	incpostgres=-I/usr/include/postgresql
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for PQconnectdb in -lpq" >&5
+$as_echo_n "checking for PQconnectdb in -lpq... " >&6; }
+if ${ac_cv_lib_pq_PQconnectdb+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpq  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
-	libpg=-lpq
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char PQconnectdb ();
+int
+main ()
+{
+return PQconnectdb ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_pq_PQconnectdb=yes
+else
+  ac_cv_lib_pq_PQconnectdb=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pq_PQconnectdb" >&5
+$as_echo "$ac_cv_lib_pq_PQconnectdb" >&6; }
+if test "x$ac_cv_lib_pq_PQconnectdb" = xyes; then :
+  incpostgres=-I/usr/include/postgresql
+
+		libpg=-lpq
+
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: postgres not found - disabling" >&5
+$as_echo "$as_me: WARNING: postgres not found - disabling" >&2;}
+		postgres=-D_NPG
+
+
+fi
 
 fi
 if test "$with_tds" == "no"
@@ -3240,52 +3705,67 @@ $as_echo "$as_me: disabling tds support" >&6;}
 	tds=-D_NTDS
 
 else
-	libtds=-lsybdb
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for dbinit in -lsybdb" >&5
+$as_echo_n "checking for dbinit in -lsybdb... " >&6; }
+if ${ac_cv_lib_sybdb_dbinit+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsybdb  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char dbinit ();
+int
+main ()
+{
+return dbinit ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_sybdb_dbinit=yes
+else
+  ac_cv_lib_sybdb_dbinit=no
 fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sybdb_dbinit" >&5
+$as_echo "$ac_cv_lib_sybdb_dbinit" >&6; }
+if test "x$ac_cv_lib_sybdb_dbinit" = xyes; then :
+  libtds=-lsybdb
 
-# xml support
-if test "$with_xml" == "no"
-then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: disabling xml support" >&5
-$as_echo "$as_me: disabling xml support" >&6;}
-	xml=-D_NXML
 
 else
-	incxml=-I/usr/include/libxml2
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: sybdb not found - disabling" >&5
+$as_echo "$as_me: WARNING: sybdb not found - disabling" >&2;}
+		tds=-D_NTDS
 
-	libxml=-lxml2
 
 fi
 
-# Checks for libraries.
-# FIXME: Replace `main' with a function in `-lb64':
-#AC_CHECK_LIB([b64], [main])
-# FIXME: Replace `main' with a function in `-lcurl':
-#AC_CHECK_LIB([curl], [main])
-# FIXME: Replace `main' with a function in `-lgladdb':
-#AC_CHECK_LIB([gladdb], [main])
-# FIXME: Replace `main' with a function in `-lldap':
-#AC_CHECK_LIB([ldap], [main])
-# FIXME: Replace `main' with a function in `-lpam':
-#AC_CHECK_LIB([pam], [main])
-# FIXME: Replace `main' with a function in `-lpam_misc':
-#AC_CHECK_LIB([pam_misc], [main])
-# FIXME: Replace `main' with a function in `-lpq':
-#AC_CHECK_LIB([pq], [main])
-# FIXME: Replace `main' with a function in `-lrt':
-#AC_CHECK_LIB([rt], [main])
-# FIXME: Replace `main' with a function in `-lssl':
-#AC_CHECK_LIB([ssl], [main])
-# FIXME: Replace `main' with a function in `-lsybdb':
-#AC_CHECK_LIB([sybdb], [main])
-# FIXME: Replace `main' with a function in `-lxml2':
-#AC_CHECK_LIB([xml2], [main])
-# FIXME: Replace `main' with a function in `-lxslt':
-#AC_CHECK_LIB([xslt], [main])
+fi
+
+# xml support (presently required)
+#if test "$with_xml" == "no"
+#then
+#	AC_MSG_NOTICE([disabling xml support])
+#	AC_SUBST(xml, -D_NXML)
+#else
+#	AC_SUBST(incxml, -I/usr/include/libxml2)
+#	AC_SUBST(libxml, -lxml2)
+#fi
 
 # Checks for header files.
-
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'

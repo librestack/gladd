@@ -38,19 +38,38 @@ AC_ARG_WITH(tds, [ --without-tds disable tds support])
 AC_ARG_WITH(openldap, [ --without-openldap disable openldap])
 AC_ARG_WITH(xml, [ --without-xml disable xml support])
 
+# Checks for libraries.
+AC_CHECK_LIB([b64], [base64_decode_block], , AC_MSG_ERROR([b64 required]))
+AC_CHECK_LIB([curl], [curl_easy_init], , AC_MSG_ERROR([libcurl required]))
+#AC_CHECK_LIB([gladdb], [db_exec_sql]) # FIXME
+AC_CHECK_LIB([pam], [pam_start])
+AC_CHECK_LIB([pam_misc], [pam_misc_setenv])
+# FIXME: Replace `main' with a function in `-lrt':
+#AC_CHECK_LIB([rt], [main])
+AC_CHECK_LIB([xml2], [xmlDocSetRootElement],,AC_MSG_ERROR([xml2 required]))
+AC_CHECK_LIB([xslt], [xsltApplyStylesheet],,AC_MSG_ERROR([xslt required]))
+
 # choose SSL library
 if test "$with_gnutls" == "yes"
 then
-        AC_MSG_NOTICE([GNUTTLS enabled.])
-        AC_SUBST(cflagssl, -D_GNUTLS)
-        AC_SUBST(ssl, gnutls)
-        AC_SUBST(libssl,["`pkg-config gnutls --cflags --libs`"])
+	AC_CHECK_LIB([gnutls], [gnutls_global_init],
+		AC_MSG_NOTICE([GNUTTLS enabled.])
+		AC_SUBST(cflagssl, -D_GNUTLS)
+		AC_SUBST(ssl, gnutls)
+		AC_SUBST(libssl,["`pkg-config gnutls --cflags --libs`"])
+	,
+		AC_MSG_ERROR([gnutls required for --with-gnutls])
+	)
 elif test "$with_openssl" == "yes"
 then
-        AC_MSG_NOTICE([OPENSSL enabled.])
-        AC_SUBST(cflagssl, -D_OPENSSL)
-        AC_SUBST(ssl, openssl)
-        AC_SUBST(libssl, -lssl)
+	AC_CHECK_LIB([ssl], [EVP_get_digestbyname],
+		AC_MSG_NOTICE([OPENSSL enabled.])
+		AC_SUBST(cflagssl, -D_OPENSSL)
+		AC_SUBST(ssl, openssl)
+		AC_SUBST(libssl, -lssl)
+	,
+		AC_MSG_ERROR([openssl required for --with-openssl])
+	)
 else
         AC_MSG_NOTICE([No SSL library selected.  Disabling SSL.])
         AC_SUBST(ssl, tls)
@@ -70,58 +89,48 @@ then
 	AC_MSG_NOTICE([disabling openldap support])
 	AC_SUBST(openldap, -D_NLDAP)
 	AC_SUBST(libopenldap, -lldap)
+else
+	AC_CHECK_LIB([ldap], [ldap_initialize],
+	,
+		AC_MSG_WARN([openldap not found - disabling])
+		AC_SUBST(openldap, -D_NLDAP)
+	)
 fi
 if test "$with_postgres" == "no"
 then
 	AC_MSG_NOTICE([disabling postgres support])
 	AC_SUBST(postgres, -D_NPG)
 else
-	AC_SUBST(incpostgres, -I/usr/include/postgresql)
-	AC_SUBST(libpg, -lpq)
+	AC_CHECK_LIB([pq], [PQconnectdb],
+		AC_SUBST(incpostgres, -I/usr/include/postgresql)
+		AC_SUBST(libpg, -lpq)
+	,
+		AC_MSG_WARN([postgres not found - disabling])
+		AC_SUBST(postgres, -D_NPG)
+	)
 fi
 if test "$with_tds" == "no"
 then
 	AC_MSG_NOTICE([disabling tds support])
 	AC_SUBST(tds, -D_NTDS)
 else
-	AC_SUBST(libtds, -lsybdb)
+	AC_CHECK_LIB([sybdb], [dbinit],
+		AC_SUBST(libtds, -lsybdb)
+	,
+		AC_MSG_WARN([sybdb not found - disabling])
+		AC_SUBST(tds, -D_NTDS)
+	)
 fi
 
-# xml support
-if test "$with_xml" == "no"
-then
-	AC_MSG_NOTICE([disabling xml support])
-	AC_SUBST(xml, -D_NXML)
-else
-	AC_SUBST(incxml, -I/usr/include/libxml2)
-	AC_SUBST(libxml, -lxml2)
-fi
-
-# Checks for libraries.
-# FIXME: Replace `main' with a function in `-lb64':
-#AC_CHECK_LIB([b64], [main])
-# FIXME: Replace `main' with a function in `-lcurl':
-#AC_CHECK_LIB([curl], [main])
-# FIXME: Replace `main' with a function in `-lgladdb':
-#AC_CHECK_LIB([gladdb], [main])
-# FIXME: Replace `main' with a function in `-lldap':
-#AC_CHECK_LIB([ldap], [main])
-# FIXME: Replace `main' with a function in `-lpam':
-#AC_CHECK_LIB([pam], [main])
-# FIXME: Replace `main' with a function in `-lpam_misc':
-#AC_CHECK_LIB([pam_misc], [main])
-# FIXME: Replace `main' with a function in `-lpq':
-#AC_CHECK_LIB([pq], [main])
-# FIXME: Replace `main' with a function in `-lrt':
-#AC_CHECK_LIB([rt], [main])
-# FIXME: Replace `main' with a function in `-lssl':
-#AC_CHECK_LIB([ssl], [main])
-# FIXME: Replace `main' with a function in `-lsybdb':
-#AC_CHECK_LIB([sybdb], [main])
-# FIXME: Replace `main' with a function in `-lxml2':
-#AC_CHECK_LIB([xml2], [main])
-# FIXME: Replace `main' with a function in `-lxslt':
-#AC_CHECK_LIB([xslt], [main])
+# xml support (presently required)
+#if test "$with_xml" == "no"
+#then
+#	AC_MSG_NOTICE([disabling xml support])
+#	AC_SUBST(xml, -D_NXML)
+#else
+#	AC_SUBST(incxml, -I/usr/include/libxml2)
+#	AC_SUBST(libxml, -lxml2)
+#fi
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h stdlib.h string.h sys/file.h sys/socket.h syslog.h unistd.h])
