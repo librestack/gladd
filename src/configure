@@ -3195,6 +3195,8 @@ $as_echo "$as_me: OPENSSL enabled." >&6;}
 else
         { $as_echo "$as_me:${as_lineno-$LINENO}: No SSL library selected.  Disabling SSL." >&5
 $as_echo "$as_me: No SSL library selected.  Disabling SSL." >&6;}
+        ssl=tls
+
 fi
 
 # backend support
