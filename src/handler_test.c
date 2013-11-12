@@ -33,7 +33,6 @@
 char *test_handler_plugin()
 {
         char pbuf[BUFSIZE] = "";
-        int ibytes;
         int sv[2];
         struct timeval tv;
         url_t *u;
@@ -61,7 +60,7 @@ char *test_handler_plugin()
         setsockopt(sv[0], SOL_SOCKET, SO_RCVTIMEO,
                 (char *)&tv, sizeof(struct timeval));
 
-        ibytes = read(sv[0], pbuf, BUFSIZE);
+        read(sv[0], pbuf, BUFSIZE);
 
         /* test the response */
         mu_assert("... correct result",

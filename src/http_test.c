@@ -38,7 +38,6 @@ char *test_http_read_request_get()
         char *clear;
         char *headers;
         http_status_code_t err;
-        int ret;
 
         config->ssl = 0;
 
@@ -52,7 +51,7 @@ char *test_http_read_request_get()
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
                 perror("socketpair");
         }
-        ret = write(sv[0], headers, strlen(headers));
+        write(sv[0], headers, strlen(headers));
         close(sv[0]); /* close write socket */
 
         r = http_read_request(sv[1], &hcount, &err);
@@ -154,7 +153,6 @@ char *test_http_read_request_post()
 
         keyval_t *h = NULL;
         http_request_t *r = NULL;
-        int ret;
 
         char *headers = "POST /sqlview/ HTTP/1.1\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\nContent-Length: 49\nContent-Type: application/x-www-form-urlencoded\n\nname=boris+was+here%2For+there%3F&id=9999999%2622";
 
@@ -163,7 +161,7 @@ char *test_http_read_request_post()
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
                 perror("socketpair");
         }
-        ret = write(sv[0], headers, strlen(headers));
+        write(sv[0], headers, strlen(headers));
         close(sv[0]); /* close write socket */
 
         r = http_read_request(sv[1], &hcount, &err);
@@ -245,12 +243,10 @@ char *test_http_postdata_invalid()
 char *test_http_postdata_checks()
 {
         http_request_t *r;
-        url_t *u;
 
         r = http_init_request();
         asprintf(&r->method, "POST");
         asprintf(&r->res, "/sqlview/");
-        u = http_match_url(r);
         mu_assert("http_match_url() - match test url",
                 http_match_url(r) != NULL);
         free_request(r);
@@ -262,7 +258,6 @@ char *test_http_read_request_post_xml()
 {
         http_request_t *r;
         int hcount = 0;
-        int ret;
         http_status_code_t err = 0;
 
         char *headers = "POST / HTTP/1.1\nHost: localhost:3000\nAccept: */*\nContent-Length: 227\nContent-Type: text/xml\n";
@@ -276,7 +271,7 @@ char *test_http_read_request_post_xml()
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
                 perror("socketpair");
         }
-        ret = write(sv[0], xmlreq, strlen(xmlreq));
+        write(sv[0], xmlreq, strlen(xmlreq));
         close(sv[0]); /* close write socket */
 
         mu_assert("Read XML POST request",
@@ -304,7 +299,6 @@ char *test_http_read_request_post_large()
         int hcount = 0;
         int headlen;
         int i;
-        int ret;
 
         /* create a pair of connected sockets */
         int sv[2];
@@ -324,7 +318,7 @@ char *test_http_read_request_post_large()
         for (i=headlen; i<buflen; i++) {
                 strncpy(databuf + i, "0", 1);
         }
-        ret = write(sv[0], databuf, strlen(databuf));
+        write(sv[0], databuf, strlen(databuf));
         close(sv[0]); /* close write socket */
 
         mu_assert("POST more data than buffer",
@@ -348,7 +342,6 @@ char *test_http_proxy_request()
         char *url = "http://www.gladserv.com/";
         char *checkstring = "<!DOCTYPE HTML PUBLIC";
         char buf[1024];
-        http_status_code_t r;
         url_t u;
         size_t size = 0;
 
@@ -368,7 +361,7 @@ char *test_http_proxy_request()
         u.path = strdup(url);
 
         /* fetch file */
-        r = http_response_proxy(sv[0], &u);
+        http_response_proxy(sv[0], &u);
         close(sv[0]); /* close write socket */
         size = recv(sv[1], buf, sizeof buf, 0);
         buf[size] = '\0';
@@ -387,7 +380,6 @@ char *test_http_rewrite_request()
         char *url = "http://www.gladserv.com/$2/$3/$4";
         char *checkstring = "<!DOCTYPE HTML";
         char buf[1024];
-        http_status_code_t r;
         url_t u;
         size_t size = 0;
 
@@ -407,7 +399,7 @@ char *test_http_rewrite_request()
         u.path = strdup(url);
 
         /* fetch file */
-        r = http_response_proxy(sv[0], &u);
+        http_response_proxy(sv[0], &u);
         close(sv[0]); /* close write socket */
         size = recv(sv[1], buf, sizeof buf, 0);
         buf[size] = '\0';
