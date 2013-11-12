@@ -92,7 +92,6 @@ int sendfile_ssl(int sock, int fd, size_t size)
         int ret;
         int offset = 0;
 
-        fprintf(stderr, "Sending file...");
         syslog(LOG_DEBUG, "Sending file...");
 
         /* read from file descriptor and send to ssl socket */
@@ -109,8 +108,6 @@ int sendfile_ssl(int sock, int fd, size_t size)
                 }
 
         } while (sent < size);
-        fprintf(stderr, "done.\n");
-        fprintf(stderr, "%i/%i bytes sent\n", (int)sent, (int)size);
         syslog(LOG_DEBUG, "%i/%i bytes sent", (int)sent, (int)size);
 
         return sent;
@@ -172,18 +169,18 @@ void ssl_setup()
         generate_dh_params();
         ret = SSL_CTX_use_certificate_chain_file(ctx, config->sslcert);
         if (ret != 1) {
-                fprintf(stderr, "Error loading certificate: %s.\n",
+                syslog(LOG_ERR, "Error loading certificate: %s.\n",
                         ssl_err(ret));
                 _exit(EXIT_FAILURE);
         }
         ret = SSL_CTX_use_PrivateKey_file(ctx,config->sslkey,SSL_FILETYPE_PEM);
         if (ret != 1) {
-                fprintf(stderr, "Error loading private key: %s\n",
+                syslog(LOG_ERR, "Error loading private key: %s\n",
                         ssl_err(ret));
                 _exit(EXIT_FAILURE);
         }
         if (SSL_CTX_check_private_key(ctx) != 1) {
-                fprintf(stderr, "Private key verification failure: %s.\n",
+                syslog(LOG_ERR, "Private key verification failure: %s.\n",
                         ssl_err(ret));
                 _exit(EXIT_FAILURE);
         }
