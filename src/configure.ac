@@ -62,7 +62,7 @@ then
 	)
 elif test "$with_openssl" == "yes"
 then
-	AC_CHECK_LIB([ssl], [EVP_get_digestbyname],
+	AC_CHECK_LIB([ssl], [SSL_library_init],
 		AC_MSG_NOTICE([OPENSSL enabled.])
 		AC_SUBST(cflagssl, -D_OPENSSL)
 		AC_SUBST(ssl, openssl)
