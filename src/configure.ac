@@ -18,6 +18,9 @@
 # along with this program (see the file COPYING in the distribution).
 # If not, see <http://www.gnu.org/licenses/>.
 
+# To build configure script:
+#   autoconf configure.ac > configure
+
 AC_INIT([gladd], [0.1.1], [brett@gladserv.com])
 AC_CONFIG_SRCDIR([xml.c])
 AC_PROG_CC
@@ -50,6 +53,7 @@ then
         AC_SUBST(libssl, -lssl)
 else
         AC_MSG_NOTICE([No SSL library selected.  Disabling SSL.])
+        AC_SUBST(ssl, tls)
 fi
 
 # backend support
