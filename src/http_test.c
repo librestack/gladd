@@ -410,5 +410,33 @@ char *test_http_rewrite_request()
 
         close(sv[1]); /* close read socket */
 
+        free_request(request);
+
+        return 0;
+}
+
+char *test_http_accept_encoding()
+{
+        http_request_t *r = http_init_request();
+
+        /* no headers at all - MUST return 0 */
+        mu_assert("Check for encoding with no header - MUST fail",
+                !http_accept_encoding(r, "gzip"));
+
+        /* Set Accept-Encoding header in request */
+        r->headers = calloc(1, sizeof (struct keyval_t));
+        asprintf(&r->headers->key, "Accept-Encoding");
+        asprintf(&r->headers->value, "gzip, deflate");
+
+        /* run some tests */
+        mu_assert("Check for encoding (gzip)",
+                http_accept_encoding(r, "gzip"));
+        mu_assert("Check for encoding (deflate)",
+                http_accept_encoding(r, "deflate"));
+        mu_assert("Check for missing encoding (lzma)",
+                !http_accept_encoding(r, "lzma"));
+
+        free_request(r);
+
         return 0;
 }

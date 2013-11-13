@@ -49,6 +49,7 @@ static char * all_tests()
         printline("*", 80);
         printf("Running tests\n");
         printline("*", 80);
+        mu_run_test(test_http_accept_encoding);
         mu_run_test(test_config_skip_comment);
         mu_run_test(test_config_skip_blank);
         mu_run_test(test_config_invalid_line);

@@ -386,6 +386,35 @@ char *http_readline(int sock)
         return line;
 }
 
+/* return 1 if encoding was requested, 0 if not
+ * r            - the request handle
+ * encoding     - the encoding to check for */
+int http_accept_encoding(http_request_t *r, char *encoding)
+{
+        char **tokens;
+        char *tmp;
+        char *ztypes = NULL;
+        int i;
+        int match = 0;
+        int toks;
+
+        ztypes = http_get_header(r, "Accept-Encoding");
+        if (ztypes == NULL) { /* no encoding requested */
+                return 0;
+        }
+
+        tmp = strdup(ztypes);
+        tokens = tokenize(&toks, &tmp, ",");
+        for(i=0; i < toks; i++) {
+                if (strncmp(strip(tokens[i]), encoding, strlen(encoding))==0) {
+                        match = 1;
+                }
+        }
+        free(tmp);
+
+        return match;
+}
+
 /* read body of http request, returning bytes read */
 size_t http_read_body(int sock, char **body, long lclen)
 {

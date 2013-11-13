@@ -115,6 +115,11 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 }
         }
 
+        /* TODO: has client requested compression? */
+        if (http_accept_encoding(request, "gzip")) {
+                syslog(LOG_DEBUG, "Client has requested gzip encoding");
+        }
+
         syslog(LOG_DEBUG, "Client header count: %i", hcount);
         syslog(LOG_DEBUG, "Method: %s", request->method);
         syslog(LOG_DEBUG, "Resource: %s", request->res);
