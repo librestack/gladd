@@ -1,0 +1,3 @@
+*.o
+plugin
+plugin_test

@@ -47,6 +47,7 @@
 #include <sys/file.h>
 #include <sys/sendfile.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <syslog.h>
 #include <unistd.h>
 
@@ -202,7 +203,12 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                 http_response(sock, err);
                 }
                 else if (strcmp(u->type, "plugin") == 0) {
-                        err = response_plugin(sock, u);
+                        if (strcmp(u->method, "POST") == 0) {
+                                err = response_xml_plugin(sock, u);
+                        }
+                        else {
+                                err = response_plugin(sock, u);
+                        }
                         if (err != 0)
                                 http_response(sock, err);
                 }
@@ -648,6 +654,79 @@ http_status_code_t response_upload(int sock, url_t *u)
 
         /* return hash of uploaded file */
         respond(sock, hash);
+
+        return err;
+}
+
+/* plugin function to process xml POST data
+ * fork and execute plugin, write request data (xml) to plugin stdin
+ * and return xml from plugin stdout to http client
+ */
+/* TODO: set plugin POST data limit from config */
+http_status_code_t response_xml_plugin(int sock, url_t *u)
+{
+        FILE *fd;
+        char plugout[BUFSIZE];
+        int err = 0;
+        int pipes[4];
+        pid_t pid;
+        size_t len;
+
+        pipe(&pipes[0]);
+        pipe(&pipes[2]);
+
+        /* fork and exec */
+        pid = fork();
+        if (pid == -1) {
+                syslog(LOG_ERR, "plugin fork failed");
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        if (pid == 0) { /* child */
+                /* close unused pipes */
+                close(pipes[1]);
+                close(pipes[2]);
+
+                /* redirect stdin and stdout to pipes */
+                close(STDIN_FILENO);
+                close(STDOUT_FILENO);
+                dup2(pipes[0], STDIN_FILENO);
+                dup2(pipes[3], STDOUT_FILENO);
+
+                /* execute plugin */
+                char *cmd = strdup(u->path);
+                char *args[2] = { cmd, NULL };
+                sqlvars(&cmd, request->res);
+                syslog(LOG_DEBUG, "executing plugin: %s", cmd);
+                if (execv(cmd, args) == -1) {
+                        syslog(LOG_ERR, "error executing plugin");
+                }
+                syslog(LOG_DEBUG, "we'll never get here, they said");
+                free(cmd);
+                _exit(EXIT_FAILURE);
+        }
+        close(pipes[0]); close(pipes[3]); /* close unused pipes in parent */
+
+        /* write to stdin of plugin */
+        fd = fdopen(pipes[1], "w");
+        fprintf(fd, "%s", request->data->value);
+        fclose(fd);
+
+        /* read from stdout of plugin */
+        fd = fdopen(pipes[2], "r");
+        len = fread(plugout, sizeof plugout, 1, fd);
+        fclose(fd);
+
+        /* FIXME: obtain plugin exit code */
+        int status;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status)) {
+                syslog(LOG_DEBUG, "plugin exited with code %d",
+                        WEXITSTATUS(status));
+        }
+
+        /* respond to http client */
+        respond(sock, plugout);
 
         return err;
 }

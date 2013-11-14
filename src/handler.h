@@ -41,6 +41,7 @@ http_status_code_t response_plugin(int sock, url_t *u);
 http_status_code_t response_sqlview(int sock, url_t *u);
 http_status_code_t response_static(int sock, url_t *u);
 http_status_code_t response_upload(int sock, url_t *u);
+http_status_code_t response_xml_plugin(int sock, url_t *u);
 http_status_code_t response_xslt(int sock, url_t *u);
 
 #endif /* __GLADD_HANDLER_H__ */
