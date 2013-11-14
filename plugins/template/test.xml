@@ -1,0 +1,10 @@
+<request>
+<instance>test</instance>
+<business>1</business>
+<data>
+<user>
+<username>iamauser</username>
+<password>mysecret</password>
+</user>
+</data>
+</request>

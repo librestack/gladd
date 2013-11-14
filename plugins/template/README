@@ -1,0 +1,5 @@
+A simple gladd plugin template.
+
+Takes xml on stdin and returns an xml result on stdout.  Presumably does something in between.
+
+The action() function in main.c is a good place to start.
