@@ -701,7 +701,6 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
                 if (execv(cmd, args) == -1) {
                         syslog(LOG_ERR, "error executing plugin");
                 }
-                syslog(LOG_DEBUG, "we'll never get here, they said");
                 free(cmd);
                 _exit(EXIT_FAILURE);
         }
