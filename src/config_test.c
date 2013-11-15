@@ -77,6 +77,7 @@ char *test_config_defaults()
         mu_assert("Ensure default debug=0", config->debug == 0);
         mu_assert("Ensure default port=8080", config->port == 8080);
         mu_assert("Ensure default daemon=0", config->daemon == 0);
+        mu_assert("Ensure default pipelining=0", config->pipelining == 0);
         mu_assert("Ensure default ssl=0", config->ssl == 0);
         mu_assert("Ensure default authrealm=gladd", 
                 strncmp(config->authrealm, "gladd", 5) == 0);
@@ -95,6 +96,8 @@ char *test_config_set()
         mu_assert("Ensure debug is set from config", config->debug == 1);
         mu_assert("Ensure port is set from config", config->port == 3000);
         mu_assert("Ensure daemon is set from config", config->daemon == 1);
+        mu_assert("Ensure pipelining is set from config",
+                config->pipelining == 1);
         mu_assert("Ensure ssl is set from config", config->ssl == 1);
         mu_assert("Ensure encoding is set from config", 
                 strcmp(config->encoding, "ISO-8859-1") == 0);

@@ -223,23 +223,26 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         syslog(LOG_ERR, "Unknown url type '%s'", u->type);
                 }
         }
+        free_request(request);
+
+        /* TODO: allow http pipelining */
+        //if (config->pipelining)
+
+        /* check for another client request */
 
 close_connection:
 
+        /* close client connection */
         if (config->ssl)
                 ssl_cleanup(sock);
         else
                 close(sock);
 
-        /* close client connection */
-        close(sock);
-
         /* free memory */
-        free_request(request);
         free_config();
 
         /* child process can exit */
-        exit (EXIT_SUCCESS);
+        exit(EXIT_SUCCESS);
 }
 
 void respond (int fd, char *response)
