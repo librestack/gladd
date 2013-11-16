@@ -711,7 +711,6 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
         int err = 0;
         int pipes[4];
         pid_t pid;
-        size_t len;
 
         pipe(&pipes[0]);
         pipe(&pipes[2]);
@@ -754,7 +753,7 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
 
         /* read from stdout of plugin */
         fd = fdopen(pipes[2], "r");
-        len = fread(plugout, sizeof plugout, 1, fd);
+        fread(plugout, sizeof plugout, 1, fd);
         fclose(fd);
 
         /* FIXME: obtain plugin exit code */
