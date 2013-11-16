@@ -73,29 +73,84 @@ void *get_in_addr(struct sockaddr *sa)
  */
 void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
-        char *mtype;
+        char peekbuf[1];
         char s[INET6_ADDRSTRLEN];
+        int err = 0;
+        int i = 0;
+        int peek;
+        struct timeval tv;
+
+        inet_ntop(their_addr.ss_family,
+                        get_in_addr((struct sockaddr *)&their_addr),
+                        s, sizeof s);
+
+        syslog(LOG_DEBUG, "[%s] connection received", s);
+
+        if (config->ssl) do_tls_handshake(sock);
+
+        /* loop to allow persistent connections & pipelining */
+        do {
+                if (i > 0) {
+                        /* set longer timeout for subsequent connections */
+                        tv.tv_sec = 115; tv.tv_usec = 0;
+                        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                                (char *)&tv, sizeof(struct timeval));
+                        peek = rcv(sock, peekbuf, 1, MSG_PEEK | MSG_WAITALL);
+                        if (peek == -1) {
+                                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                                        syslog(LOG_DEBUG,
+                                                "[%s] connection timeout", s);
+                                }
+                                else {
+                                        syslog(LOG_DEBUG,"%s",strerror(errno));
+                                }
+                                break;
+                        }
+                        else if (peek == 0) {
+                                syslog(LOG_DEBUG,
+                                        "[%s] client closed connection", s);
+                                break;
+                        }
+
+                }
+                syslog(LOG_DEBUG, "handling request %i on connection", ++i);
+                err = handle_request(sock, s);
+        }
+        while ((err == 0) && (config->pipelining == 1));
+        syslog(LOG_DEBUG, "[%s] closing connection", s);
+
+        /* close client connection */
+        if (config->ssl)
+                ssl_cleanup(sock);
+        else
+                close(sock);
+
+        /* free memory */
+        free_config();
+
+        /* child process can exit */
+        _exit(EXIT_SUCCESS);
+}
+
+int handle_request(int sock, char *s)
+{
+        char *mtype;
         http_status_code_t err;
         int auth = -1;
         int hcount = 0;
         url_t *u;
         long len;
 
-        inet_ntop(their_addr.ss_family,
-                        get_in_addr((struct sockaddr *)&their_addr),
-                        s, sizeof s);
-
-        syslog(LOG_DEBUG, "server: got connection from %s", s);
-
-        if (config->ssl) do_tls_handshake(sock);
 
         /* read http client request */
         request = http_read_request(sock, &hcount, &err);
         if (err != 0) {
                 http_response(sock, err);
-                exit(EXIT_FAILURE);
+                return -1;
         }
-        
+
+        if (request == NULL) return -1; /* connection was closed */
+
         /* keep a note of client ip */
         asprintf(&request->clientip, "%s", s);
 
@@ -103,7 +158,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         if (err != 0) {
                 syslog(LOG_INFO, "Bad Request - invalid request headers");
                 http_response(sock, err);
-                exit(EXIT_FAILURE);
+                return -1;
         }
 
         /* X-Forwarded-For */
@@ -116,7 +171,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 }
         }
 
-        /* TODO: has client requested compression? */
+        /* has client requested compression? */
         if (http_accept_encoding(request, "gzip")) {
                 syslog(LOG_DEBUG, "Client has requested gzip encoding");
         }
@@ -141,7 +196,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         auth = check_auth(request);
         if (auth != 0) {
                 http_response(sock, auth);
-                goto close_connection;
+                return -1;
         }
 
         /* match url */
@@ -160,7 +215,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                         if (err != 0) {
                                 syslog(LOG_DEBUG, "Incorrect content length");
                                 http_response(sock, err);
-                                goto close_connection;
+                                return -1;
                         }
                         else {
                                 syslog(LOG_DEBUG, "Content-Length: %li", len);
@@ -171,7 +226,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                                 syslog(LOG_ERR,
                                         "Unsupported Media Type '%s'", mtype);
                                 http_response(sock, err);
-                                goto close_connection;
+                                return -1;
                         }
                 }
                 syslog(LOG_DEBUG, "Type: %s", u->type);
@@ -225,24 +280,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         }
         free_request(request);
 
-        /* TODO: allow http pipelining */
-        //if (config->pipelining)
-
-        /* check for another client request */
-
-close_connection:
-
-        /* close client connection */
-        if (config->ssl)
-                ssl_cleanup(sock);
-        else
-                close(sock);
-
-        /* free memory */
-        free_config();
-
-        /* child process can exit */
-        exit(EXIT_SUCCESS);
+        return 0;
 }
 
 void respond (int fd, char *response)
@@ -802,6 +840,7 @@ http_status_code_t response_static(int sock, url_t *u)
 int send_file(int sock, char *path, http_status_code_t *err)
 {
         char *r;
+        char *headers;
         char *mimetype;
         int f;
         int rc;
@@ -834,12 +873,15 @@ int send_file(int sock, char *path, http_status_code_t *err)
         mimetype = malloc(strlen(MIME_DEFAULT)+1);
         get_mime_type(mimetype, path);
         syslog(LOG_DEBUG, "Content-Type: %s", mimetype);
-        if (asprintf(&r, RESPONSE_200, mimetype, "") == -1) {
+        asprintf(&headers, "%s\nContent-Length: %i", mimetype,
+                (int)stat_buf.st_size);
+        free(mimetype);
+        if (asprintf(&r, RESPONSE_200, headers, "") == -1) {
                 syslog(LOG_ERR, "send_file(): malloc failed");
                 *err = HTTP_INTERNAL_SERVER_ERROR;
                 return -1;
         }
-        free(mimetype);
+        free(headers);
         respond(sock, r);
 
         /* send the file */
@@ -904,17 +946,19 @@ field_t * get_element(int *err) {
 
 size_t rcv(int sock, void *data, size_t len, int flags)
 {
+        size_t rbytes;
         if (config->ssl) {
-                return ssl_recv(data, len);
+                if ((flags & MSG_PEEK) == MSG_PEEK) {
+                        rbytes = ssl_peek(data, len);/* look but don't touch */
+                }
+                else {
+                        rbytes = ssl_recv(data, len);
+                }
         }
         else {
-                /* set socket timeout */
-                struct timeval tv;
-                tv.tv_sec = 1; tv.tv_usec = 0;
-                setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
-                        (char *)&tv, sizeof(struct timeval));
-                return recv(sock, data, len, flags);
+                rbytes = recv(sock, data, len, flags);
         }
+        return rbytes;
 }
 
 ssize_t snd(int sock, void *data, size_t len, int flags)
@@ -931,5 +975,4 @@ void setcork(int sock, int state)
                 setcork_ssl(state);
         else
                 setsockopt(sock, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
-        
 }

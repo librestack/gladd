@@ -44,7 +44,7 @@ gnutls_priority_t priority_cache;
 int generate_dh_params(void)
 {
           unsigned int bits = 
-            gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH, GNUTLS_SEC_PARAM_NORMAL);
+            gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH, GNUTLS_SEC_PARAM_HIGH);
 
           syslog(LOG_INFO, "Generating Diffie-Hellman params...");
 
@@ -68,14 +68,7 @@ ssize_t ssl_push(gnutls_transport_ptr_t ptr, const void *data, size_t len)
 ssize_t ssl_pull(gnutls_transport_ptr_t ptr, void *data, size_t len)
 {
         int sock = GNUTLS_POINTER_TO_INT(ptr);
-        struct timeval tv;
-        tv.tv_sec = 1; tv.tv_usec = 0;
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
-                (char *)&tv, sizeof(struct timeval));
-        int ret = recv(sock, data, len, MSG_WAITALL);
-	if (ret == -1 && config->debug) {
-		syslog(LOG_DEBUG, "%s", strerror(errno));
-	}
+        int ret = recv(sock, data, len, ssl_recv_flags);
 	return ret;
 }
 
@@ -187,12 +180,27 @@ size_t ssl_send(char *msg, size_t len)
         return sent;
 }
 
+size_t ssl_peek(char *b, int len)
+{
+        int ret;
+	ssl_recv_flags = MSG_PEEK | MSG_WAITALL;
+        while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
+                ret = gnutls_record_recv(session, b, len);
+        }
+        ssl_recv_flags = MSG_WAITALL;
+        return ret;
+}
+
 size_t ssl_recv(char *b, int len)
 {
         int ret;
         ret = gnutls_record_recv(session, b, len);
         while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
                 ret = gnutls_record_recv(session, b, len);
+        }
+        if (ret == 0) {
+                syslog(LOG_DEBUG, "gnutls: connection was closed");
+                return 0;
         }
         if (ret < 0) {
                 syslog(LOG_ERR, "gnutls recv error: %s", gnutls_strerror(ret));

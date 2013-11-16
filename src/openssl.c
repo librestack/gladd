@@ -125,6 +125,28 @@ void ssl_cleanup(int fd)
         close(fd);
 }
 
+size_t ssl_peek(char *b, int len)
+{
+        int ret;
+        int nread = 0;
+        ret = SSL_peek(ssl, b, len);
+        switch (SSL_get_error(ssl, ret)) {
+        case SSL_ERROR_NONE:
+                nread += ret;
+                break;
+        case SSL_ERROR_ZERO_RETURN:
+                syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
+                break;
+        case SSL_ERROR_SYSCALL:
+                syslog(LOG_DEBUG,"ssl_peek() I/O Error: %s",ssl_err(ret));
+                break;
+        default:
+                syslog(LOG_DEBUG,"ssl_peek() %s",ssl_err(ret));
+                break;
+        }
+        return nread;
+}
+
 size_t ssl_recv(char *b, int len)
 {
         int ret;

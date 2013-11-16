@@ -25,13 +25,15 @@
 
 
 /* TEMP */
-#define RESPONSE_200 "HTTP/1.1 200 OK\nServer: gladd\nConnection: close\nContent-Type: %s\n\n%s"
+//#define RESPONSE_200 "HTTP/1.1 200 OK\nServer: gladd\nConnection: close\nContent-Type: %s\n\n%s"
+#define RESPONSE_200 "HTTP/1.1 200 OK\nServer: gladd\nContent-Type: %s\n\n%s"
 
 #include <sys/socket.h>
 #include "http.h"
 
 void *get_in_addr(struct sockaddr *sa);
 void handle_connection(int sock, struct sockaddr_storage their_addr);
+int handle_request(int sock, char *s);
 size_t rcv(int sock, void *data, size_t len, int flags);
 ssize_t snd(int sock, void *data, size_t len, int flags);
 void respond (int fd, char *response);

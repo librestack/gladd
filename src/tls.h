@@ -23,15 +23,18 @@
 #ifndef __GLADD_TLS_H__
 #define __GLADD_TLS_H__ 1
 
-#define TLS_DEBUG_LEVEL 10 /* 0 = off, 10+ = all debug enabled */
+#define TLS_DEBUG_LEVEL 0 /* 0 = off, 10+ = all debug enabled */
 
 #include <sys/types.h>
+
+int ssl_recv_flags;
 
 void do_tls_handshake(int fd);
 int generate_dh_params(void);
 int sendfile_ssl(int sock, int fd, size_t size);
 void setcork_ssl(int state);
 void ssl_cleanup(int fd);
+size_t ssl_peek(char *b, int len);
 size_t ssl_recv(char *b, int len);
 size_t ssl_send(char *msg, size_t len);
 void ssl_setup();

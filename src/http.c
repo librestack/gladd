@@ -258,11 +258,8 @@ void http_add_request_data(http_request_t *r, char *key, char *value)
 http_request_t *http_init_request()
 {
         http_request_t *r;
-
         r = calloc(1, sizeof(http_request_t));
-
         asprintf(&r->authtype,"Basic");
-        
         return r;
 }
 
@@ -323,7 +320,7 @@ void http_flush_buffer()
 }
 
 /* top up http buffer, returning number of bytes read or -1 on error */
-size_t fillhttpbuffer(int sock)
+ssize_t fillhttpbuffer(int sock)
 {
         size_t fillbytes;
         size_t newbytes;
@@ -471,7 +468,7 @@ http_request_t *http_read_request(int sock, int *hcount,
         r = http_init_request();
 
         /* first line has http request */
-        http_flush_buffer(); /* make sure buffer is clear */
+        bmore = 1;
         line = http_readline(sock);
         if (line == NULL) {
                 syslog(LOG_ERR, "HTTP request is NULL");
