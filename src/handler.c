@@ -291,6 +291,7 @@ void respond (int fd, char *response)
 /* handle sqlview */
 http_status_code_t response_sqlview(int sock, url_t *u)
 {
+        char *headers;
         char *r;
         char *sql;
         field_t *filter = NULL;
@@ -332,11 +333,13 @@ http_status_code_t response_sqlview(int sock, url_t *u)
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(sql);
-        if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1)
+        asprintf(&headers,"%s\nContent-Length: %i",MIME_XML,(int)strlen(xml));
+        if (asprintf(&r, RESPONSE_200, headers, xml) == -1)
         {
                 free(xml);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
+        free(headers);
         respond(sock, r);
         free(r);
         free(xml);
@@ -348,6 +351,7 @@ http_status_code_t response_sqlview(int sock, url_t *u)
 http_status_code_t response_xslpost(int sock, url_t *u)
 {
         db_t *db;
+        char *headers;
         char *xml;
         char *xsd;
         char *xsl;
@@ -441,11 +445,15 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                         return HTTP_INTERNAL_SERVER_ERROR;
                 }
                 free(sql);
-                if (asprintf(&r, RESPONSE_200, MIME_XML, xml) == -1)
+                asprintf(&headers, "%s\nContent-Length: %i", MIME_XML,
+                        (int)strlen(xml));
+                if (asprintf(&r, RESPONSE_200, headers, xml) == -1)
                 {
                         free(xml);
                         return HTTP_INTERNAL_SERVER_ERROR;
                 }
+                free(headers);
+                free(xml);
                 respond(sock, r);
                 free(r);
         }
@@ -457,6 +465,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
 
 http_status_code_t response_xslt(int sock, url_t *u)
 {
+        char *headers;
         char *r;
         char *sql;
         char *xml;
@@ -512,11 +521,13 @@ http_status_code_t response_xslt(int sock, url_t *u)
         free(xsl); free(xml);
 
         /* build response */
-        if (asprintf(&r, RESPONSE_200, MIME_HTML, html) == -1)
+        asprintf(&headers,"%s\nContent-Length: %i",MIME_HTML,(int)strlen(html));
+        if (asprintf(&r, RESPONSE_200, headers, html) == -1)
         {
                 free(html);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
+        free(headers);
 
         /* return html response */
         respond(sock, r);
@@ -694,6 +705,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         free(filename);
 
         /* return hash of uploaded file */
+        /* TODO: return headers, 201 created etc. */
         respond(sock, hash);
 
         return err;
@@ -764,6 +776,8 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
                         WEXITSTATUS(status));
         }
 
+        /* TODO: tack on some headers */
+
         /* respond to http client */
         respond(sock, plugout);
 
@@ -793,6 +807,8 @@ http_status_code_t response_plugin(int sock, url_t *u)
         /* TODO: write data to plugin */
 
         /* TODO: write HTTP headers */
+
+        /* TODO: send as chunks */
 
         /* keep reading from plugin and sending output back to HTTP client */
         while (ibytes == BUFSIZE) {
