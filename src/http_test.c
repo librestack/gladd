@@ -164,6 +164,7 @@ char *test_http_read_request_post()
         write(sv[0], headers, strlen(headers));
         close(sv[0]); /* close write socket */
 
+        http_flush_buffer(); /* clear buffer before making new request */
         r = http_read_request(sv[1], &hcount, &err);
         close(sv[1]); /* close read socket */
 
