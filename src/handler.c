@@ -783,7 +783,7 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
 
         /* tack on some headers */
         char *r;
-        asprintf(&r, "HTTP/1.1 %d Bad Request", WEXITSTATUS(status));
+        asprintf(&r, "HTTP/1.1 %d Bad Request", httpcode);
         http_insert_header(&r, "Server: gladd");
         http_insert_header(&r, "Content-Type: text/xml");
         http_insert_header(&r, "Content-Length: %i", strlen(plugout));
