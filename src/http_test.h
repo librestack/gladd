@@ -36,5 +36,6 @@ char *test_http_read_request_post_large();
 char *test_http_read_request_post_xml();
 char *test_http_readline();
 char *test_http_accept_encoding();
+char *test_http_insert_header();
 
 #endif /* __GLADD_HTTP_TEST__H__ */

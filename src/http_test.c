@@ -24,6 +24,7 @@
 #include "config.h"
 #include "http_test.h"
 #include "minunit.h"
+#include "string.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -441,6 +442,34 @@ char *test_http_accept_encoding()
                 !http_accept_encoding(r, "lzma"));
 
         free_request(r);
+
+        return 0;
+}
+
+char *test_http_insert_header()
+{
+        char *r;
+        char *header = "Cache-Control: 3600";
+
+        /* build a typical request */
+        asprintf(&r, "GET /static/somefile.txt HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
+
+        /* insert header after request (no body)*/
+        http_insert_header(&r, header);
+        mu_assert("check for inserted header",
+                memsearch(r, header, strlen(r)) != NULL);
+        free(r);
+
+        /* check header is correctly inserted before body */
+        asprintf(&r, "POST /static/stuff/ HTTP/1.1\r\nAuthorization: Basic YmV0dHk6bm9iYnk=\r\nUser-Agent: telnet\r\nHost: localhost\r\nAccept: */*\r\n\r\nBODY HERE");
+        http_insert_header(&r, header);
+
+        int pos = strlen("POST /static/stuff/ HTTP/1.1\r\nAuthorization: Basic YmV0dHk6bm9iYnk=\r\nUser-Agent: telnet\r\nHost: localhost\r\nAccept: */*\r\n");
+        fprintf(stderr, "%s", r);
+
+        mu_assert("check header is inserted before body",
+                memsearch(r, header, strlen(r))-r == pos);
+        free(r);
 
         return 0;
 }

@@ -49,6 +49,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <syslog.h>
+#include <time.h>
 #include <unistd.h>
 
 int sockme;
@@ -854,13 +855,16 @@ http_status_code_t response_static(int sock, url_t *u)
 /* send a static file */
 int send_file(int sock, char *path, http_status_code_t *err)
 {
-        char *r;
         char *headers;
         char *mimetype;
+        char *r;
+        char expires[39];
         int f;
         int rc;
         off_t offset;
         struct stat stat_buf;
+        struct tm *tmp;
+        time_t t;
 
         *err = 0;
 
@@ -897,6 +901,14 @@ int send_file(int sock, char *path, http_status_code_t *err)
                 return -1;
         }
         free(headers);
+
+        /* Add Expires header in RFC1123 date format, roughly 10 years ahead */
+        int tenyears = 10 * 365 * 24 * 60 * 60; /* ish */
+        t = time(NULL) + tenyears;
+        tmp = localtime(&t);
+        if (strftime(expires, 39, "Expires: %a, %d %b %Y %T GMT", tmp) != 0) {
+                http_insert_header(&r, expires);
+        }
         respond(sock, r);
 
         /* send the file */

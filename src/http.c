@@ -312,6 +312,48 @@ void http_set_request_resource(http_request_t *r, char *res)
                 
 }
 
+int http_insert_header(char **r, char *header)
+{
+        char *pos;
+        char *body = NULL;
+        char *headers = NULL;
+        char nl[2];
+        char *tmp = strdup(*r);
+        free(*r);
+
+        /* insert just before the first blank line, otherwise at end */
+        pos = memsearch(tmp, "\r\n\r\n", strlen(tmp));
+        if (!pos) {
+                pos = memsearch(tmp, "\n\n", strlen(tmp));
+                if (!pos) {
+                        /* no body, just tack header on the end */
+                        asprintf(r, "%s%s\r\n\r\n", tmp, header);
+                }
+                else {
+                        strcpy(nl, "\n");
+                }
+        }
+        else {
+                strcpy(nl, "\r\n");
+        }
+        if (pos) {
+                /* request has body, insert header before the blank line */
+                size_t hsize = pos-tmp;
+                headers = calloc(1, hsize + 1);
+                strncpy(headers, tmp, hsize);
+
+                size_t bsize = strlen(pos+2);
+                body = calloc(1, bsize + 1);
+                strncpy(body, pos+2, bsize);
+
+                asprintf(r, "%s%s%s%s%s%s", headers,nl,header,nl,nl,body);
+                free(headers);
+                free(body);
+        }
+        free(tmp);
+        return 0;
+}
+
 void http_flush_buffer()
 {
         buf[0] = '\0';
