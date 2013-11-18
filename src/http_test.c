@@ -275,6 +275,7 @@ char *test_http_read_request_post_xml()
         write(sv[0], xmlreq, strlen(xmlreq));
         close(sv[0]); /* close write socket */
 
+        http_flush_buffer(); /* clear buffer before making new request */
         mu_assert("Read XML POST request",
                 r = http_read_request(sv[1], &hcount, &err));
         close(sv[1]); /* close read socket */
@@ -300,6 +301,8 @@ char *test_http_read_request_post_large()
         int hcount = 0;
         int headlen;
         int i;
+
+        http_flush_buffer(); /* clear buffer before making new request */
 
         /* create a pair of connected sockets */
         int sv[2];
