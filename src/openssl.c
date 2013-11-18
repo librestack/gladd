@@ -174,11 +174,25 @@ size_t ssl_recv(char *b, int len)
 size_t ssl_send(char *msg, size_t len)
 {
         int ret;
-        ret =  SSL_write(ssl, msg, len);
-        if (ret <= 0) {
-                syslog(LOG_ERR, "Error in ssl_send(): %s", ssl_err(ret));
-        }
-        return  (ret >= 0) ? ret : -1;
+        int nwrite = 0;
+        do {
+                ret =  SSL_write(ssl, msg+nwrite, len-nwrite);
+                switch (SSL_get_error(ssl, ret)) {
+                case SSL_ERROR_NONE:
+                        nwrite += ret;
+                        break;
+                case SSL_ERROR_ZERO_RETURN:
+                        syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
+                        break;
+                case SSL_ERROR_WANT_WRITE | SSL_ERROR_WANT_READ:
+                        syslog(LOG_DEBUG, "ssl_send() again");
+                        break;
+                default:
+                        syslog(LOG_ERR, "ssl_send(): %s", ssl_err(ret));
+                        break;
+                }
+        } while(ret > 0);
+        return nwrite; 
 }
 
 void ssl_setup()
