@@ -769,18 +769,30 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
         fread(plugout, sizeof plugout, 1, fd);
         fclose(fd);
 
-        /* FIXME: obtain plugin exit code */
+        /* obtain plugin exit code */
         int status;
+        int httpcode = HTTP_INTERNAL_SERVER_ERROR;
         waitpid(pid, &status, 0);
         if (WIFEXITED(status)) {
                 syslog(LOG_DEBUG, "plugin exited with code %d",
                         WEXITSTATUS(status));
+                if (WIFEXITED(status) >= 200 && WIFEXITED(status) < 600) {
+                        httpcode = WIFEXITED(status);
+                }
         }
 
-        /* TODO: tack on some headers */
+        /* tack on some headers */
+        char *r;
+        asprintf(&r, "HTTP/1.1 %d Bad Request", WEXITSTATUS(status));
+        http_insert_header(&r, "Server: gladd");
+        http_insert_header(&r, "Content-Type: text/xml");
+        http_insert_header(&r, "Content-Length: %i", strlen(plugout));
 
         /* respond to http client */
+        respond(sock, r);
+        respond(sock, "\r\n\r\n");
         respond(sock, plugout);
+        free(r);
 
         return err;
 }

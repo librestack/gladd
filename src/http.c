@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -312,14 +313,20 @@ void http_set_request_resource(http_request_t *r, char *res)
                 
 }
 
-int http_insert_header(char **r, char *header)
+int http_insert_header(char **r, char *header, ...)
 {
         char *pos;
         char *body = NULL;
         char *headers = NULL;
         char nl[2];
         char *tmp = strdup(*r);
+        char b[LINE_MAX];
+        va_list argp;
         free(*r);
+
+        va_start(argp, header);
+        vsprintf(b, header, argp);
+        va_end(argp);
 
         /* insert just before the first blank line, otherwise at end */
         pos = memsearch(tmp, "\r\n\r\n", strlen(tmp));
@@ -327,7 +334,7 @@ int http_insert_header(char **r, char *header)
                 pos = memsearch(tmp, "\n\n", strlen(tmp));
                 if (!pos) {
                         /* no body, just tack header on the end */
-                        asprintf(r, "%s%s\r\n\r\n", tmp, header);
+                        asprintf(r, "%s%s\r\n\r\n", tmp, b);
                 }
                 else {
                         strcpy(nl, "\n");
@@ -346,7 +353,7 @@ int http_insert_header(char **r, char *header)
                 body = calloc(1, bsize + 1);
                 strncpy(body, pos+2, bsize);
 
-                asprintf(r, "%s%s%s%s%s%s", headers,nl,header,nl,nl,body);
+                asprintf(r, "%s%s%s%s%s%s", headers,nl,b,nl,nl,body);
                 free(headers);
                 free(body);
         }
