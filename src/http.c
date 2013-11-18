@@ -39,6 +39,12 @@
 #include "string.h"
 #include "xml.h"
 
+/* TEMP */
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 /* 
  * HTTP response codes from:
  *   http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -334,7 +340,7 @@ int http_insert_header(char **r, char *header, ...)
                 pos = memsearch(tmp, "\n\n", strlen(tmp));
                 if (!pos) {
                         /* no body, just tack header on the end */
-                        asprintf(r, "%s%s\r\n\r\n", tmp, b);
+                        asprintf(r, "%s%s\r\n", tmp, b);
                 }
                 else {
                         strcpy(nl, "\n");
@@ -349,11 +355,11 @@ int http_insert_header(char **r, char *header, ...)
                 headers = calloc(1, hsize + 1);
                 strncpy(headers, tmp, hsize);
 
-                size_t bsize = strlen(pos+2);
+                size_t bsize = strlen(pos+strlen(nl));
                 body = calloc(1, bsize + 1);
-                strncpy(body, pos+2, bsize);
+                strncpy(body, pos+strlen(nl), bsize);
 
-                asprintf(r, "%s%s%s%s%s%s", headers,nl,b,nl,nl,body);
+                asprintf(r, "%s%s%s%s%s", headers,nl,b,nl,body);
                 free(headers);
                 free(body);
         }
@@ -648,6 +654,38 @@ void http_response(int sock, int code)
         syslog(LOG_INFO, "%i - %s", code, status);
         free(response);
         free(headers);
+}
+
+/* output HTTP/1.1 response and basic headers only */
+void http_response_headers(int sock, int code, int len, char *mime)
+{
+        char *r;
+        char *status;
+        status = get_status(code).status;
+        asprintf(&r, "HTTP/1.1 %i %s\r\n", code, status);
+        http_insert_header(&r, "Server: gladd");
+        if (mime) {
+                http_insert_header(&r, "Content-Type: %s", mime);
+                http_insert_header(&r, "Content-Length: %i", len);
+        }
+        respond(sock, r);
+        free(r);
+}
+
+/* output full response including body */
+void http_response_full(int sock, int code, char *mime, char *body)
+{
+        char *r;
+        char *status;
+        status = get_status(code).status;
+        asprintf(&r, "HTTP/1.1 %i %s\r\n\r\n%s", code, status, body);
+        http_insert_header(&r, "Server: gladd");
+        if (mime) {
+                http_insert_header(&r, "Content-Type: %s", mime);
+                http_insert_header(&r, "Content-Length: %i", strlen(body));
+        }
+        respond(sock, r);
+        free(r);
 }
 
 size_t http_curl_write(void *ptr, size_t size, size_t nmemb, void *stream)

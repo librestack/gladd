@@ -186,6 +186,7 @@ size_t ssl_send(char *msg, size_t len)
                         break;
                 case SSL_ERROR_WANT_WRITE | SSL_ERROR_WANT_READ:
                         syslog(LOG_DEBUG, "ssl_send() again");
+                        ret = 0;
                         break;
                 default:
                         syslog(LOG_ERR, "ssl_send(): %s", ssl_err(ret));

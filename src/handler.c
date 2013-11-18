@@ -776,23 +776,20 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
         if (WIFEXITED(status)) {
                 syslog(LOG_DEBUG, "plugin exited with code %d",
                         WEXITSTATUS(status));
-                if (WIFEXITED(status) >= 200 && WIFEXITED(status) < 600) {
-                        httpcode = WIFEXITED(status);
+                switch (WEXITSTATUS(status)) {
+                case 0:
+                        httpcode = HTTP_OK;
+                        break;
+                case 4:
+                        httpcode = HTTP_BAD_REQUEST;
+                        break;
+                default:
+                        httpcode = HTTP_INTERNAL_SERVER_ERROR;
+                        break;
                 }
         }
-
-        /* tack on some headers */
-        char *r;
-        asprintf(&r, "HTTP/1.1 %d Bad Request\r\n", httpcode);
-        http_insert_header(&r, "Server: gladd");
-        http_insert_header(&r, "Content-Type: text/xml");
-        http_insert_header(&r, "Content-Length: %i", strlen(plugout));
-
         /* respond to http client */
-        respond(sock, r);
-        respond(sock, "\r\n\r\n");
-        respond(sock, plugout);
-        free(r);
+        http_response_full(sock, httpcode, "text/xml", plugout);
 
         return err;
 }

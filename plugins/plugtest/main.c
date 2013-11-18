@@ -36,19 +36,25 @@ enum xmlstatus action()
 
 int main()
 {
-        int err = 3;
+        int err = HTTP_OK;
         read_input(stdin);
         enum xmlstatus result = action();
         write_output(stdout, result);
         switch (result) {
         case XML_STATUS_OK:
                 err = HTTP_OK;
+                break;
         case XML_STATUS_INVALID:
                 err = HTTP_BAD_REQUEST;
+                break;
         case XML_STATUS_UNKNOWN:
                 err = HTTP_INTERNAL_SERVER_ERROR;
+                break;
         default:
                 err = HTTP_INTERNAL_SERVER_ERROR;
+                break;
         }
+
+        fprintf(stderr, "Exit: %i", err);
         return err;
 }
