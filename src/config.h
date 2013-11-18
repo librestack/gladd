@@ -52,7 +52,8 @@ typedef struct config_t {
         long debug;
         char *encoding;      /* encoding to use - default UTF-8 */
         long port;
-        long pipelining;     /* 1 = allow http pipelining, 0=disable(default)*/
+        long pipelining;     /* 1 = allow http pipelining(default), 0=disable*/
+        long keepalive;      /* inactivity timeout on tcp connections (s) */
         long ssl;            /* 0 = disable ssl (default), 1 = enable ssl */
         char *sslca;
         char *sslkey;

@@ -92,7 +92,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         do {
                 if (i > 0 && bytes == 0) { /* wait for data if we have none */
                         /* set longer timeout for subsequent connections */
-                        tv.tv_sec = 115; tv.tv_usec = 0;
+                        tv.tv_sec = config->keepalive; tv.tv_usec = 0;
                         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
                                 (char *)&tv, sizeof(struct timeval));
                         peek = rcv(sock, peekbuf, 1, MSG_PEEK | MSG_WAITALL);

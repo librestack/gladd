@@ -42,7 +42,8 @@ config_t config_default = {
         .encoding       = "UTF-8",
         .xmlpath        = ".",
         .port           = 8080,
-        .pipelining     = 0,
+        .pipelining     = 1,
+        .keepalive      = 115,
         .ssl            = 0,
         .xforward       = 0,
         .urldefault     = "index.html"
@@ -789,6 +790,10 @@ int process_config_line(char *line)
                 else if (strcmp(key, "pipelining") == 0) {
                         return set_config_long(&config_new->pipelining, 
                                                 "pipelining", i, 0, 1);
+                }
+                else if (strcmp(key, "keepalive") == 0) {
+                        return set_config_long(&config_new->keepalive, 
+                                                "keepalive", i, 0, LONG_MAX);
                 }
                 else if (strcmp(key, "ssl") == 0) {
                         return set_config_long(&config_new->ssl, 
