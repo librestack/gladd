@@ -63,8 +63,13 @@ int check_auth_pam(char *service, char *username, char *password)
                                "PAM authentication successful for user %s", username);
                 }
                 else {
+                        if (config->debug) {
+                                syslog(LOG_DEBUG, "PAM: %s",
+                                        pam_strerror(pamh, ret));
+                        }
                         syslog(LOG_ERR,
-                               "PAM authentication failure for user %s", username);
+                                "PAM authentication failure for user %s",
+                                username);
                 }
 
         }
