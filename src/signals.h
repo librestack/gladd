@@ -23,6 +23,9 @@
 #ifndef __GLADD_SIGNALS_H__
 #define __GLADD_SIGNALS_H__ 1
 
+extern int handler_procs;
+
+void killhandlerprocs();
 int sighandlers();
 void sigchld_handler (int signo);
 void sigint_handler (int signo);

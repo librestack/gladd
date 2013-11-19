@@ -30,6 +30,16 @@
 #include "server.h"
 #include "signals.h"
 
+int handler_procs = 0;
+
+/* make sure we don't leave zombies - called by atexit() and sigterm */
+void killhandlerprocs()
+{
+        for (;handler_procs > 0; handler_procs--) {
+                kill(0, SIGKILL);
+        }
+}
+
 /* set up signal handling */
 int sighandlers()
 {
@@ -57,6 +67,7 @@ void sigchld_handler (int signo)
 {
         int status;
         while (waitpid(-1, &status, WNOHANG) > 0);
+        handler_procs--;
 }
 
 /* catch SIGINT and clean up */
@@ -70,6 +81,7 @@ void sigterm_handler (int signo)
 {
         close(sockme);
         syslog(LOG_INFO, "Received SIGTERM.  Shutting down.");
+        killhandlerprocs();
         closelog();
         free_config();
         exit(EXIT_SUCCESS);

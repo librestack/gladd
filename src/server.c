@@ -154,6 +154,9 @@ int server_start(int lockfd)
                 exit(EXIT_FAILURE);
         }
 
+        /* install exit handler to kill child procs */
+        atexit(killhandlerprocs);
+
         for (;;) {
                 /* incoming! */
                 ++hits;
@@ -171,6 +174,7 @@ int server_start(int lockfd)
                 }
                 else {
                         /* parent can close connection */
+                        handler_procs++;
                         close(new_fd);
                 }
         }
