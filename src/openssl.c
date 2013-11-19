@@ -160,8 +160,13 @@ size_t ssl_recv(char *b, int len)
                 case SSL_ERROR_ZERO_RETURN:
                         syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
                         break;
-                case SSL_ERROR_SYSCALL:
-                        //syslog(LOG_DEBUG,"I/O Error: %s",ssl_err(ret));
+                case SSL_ERROR_WANT_WRITE:
+                        syslog(LOG_DEBUG, "ssl_recv() wants write");
+                        ret = 0;
+                        break;
+                case SSL_ERROR_WANT_READ:
+                        syslog(LOG_DEBUG, "ssl_recv() wants read");
+                        ret = 0;
                         break;
                 default:
                         syslog(LOG_DEBUG,"ssl_recv() %s",ssl_err(ret));
@@ -176,7 +181,7 @@ size_t ssl_send(char *msg, size_t len)
         int ret;
         int nwrite = 0;
         do {
-                ret =  SSL_write(ssl, msg+nwrite, len-nwrite);
+                ret = SSL_write(ssl, msg+nwrite, len-nwrite);
                 switch (SSL_get_error(ssl, ret)) {
                 case SSL_ERROR_NONE:
                         nwrite += ret;
@@ -184,8 +189,12 @@ size_t ssl_send(char *msg, size_t len)
                 case SSL_ERROR_ZERO_RETURN:
                         syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
                         break;
-                case SSL_ERROR_WANT_WRITE | SSL_ERROR_WANT_READ:
-                        syslog(LOG_DEBUG, "ssl_send() again");
+                case SSL_ERROR_WANT_WRITE:
+                        syslog(LOG_DEBUG, "ssl_send() wants write");
+                        ret = 0;
+                        break;
+                case SSL_ERROR_WANT_READ:
+                        syslog(LOG_DEBUG, "ssl_send() wants read");
                         ret = 0;
                         break;
                 default:
