@@ -465,7 +465,6 @@ char *test_http_insert_header()
         http_insert_header(&r, header);
 
         int pos = strlen("POST /static/stuff/ HTTP/1.1\r\nAuthorization: Basic YmV0dHk6bm9iYnk=\r\nUser-Agent: telnet\r\nHost: localhost\r\nAccept: */*\r\n");
-        fprintf(stderr, "%s", r);
 
         mu_assert("check header is inserted before body",
                 memsearch(r, header, strlen(r))-r == pos);
