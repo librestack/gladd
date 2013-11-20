@@ -848,7 +848,13 @@ http_status_code_t response_static(int sock, url_t *u)
         char *basefile;
         http_status_code_t err = 0;
 
-        basefile = strdup(request->res + strlen(u->url) - 1);
+        if (strcmp(u->url + strlen(u->url)-1, "*") == 0) {
+                /* url ends in wildcard (*) */
+                basefile = strdup(request->res + strlen(u->url) - 1);
+        }
+        else {
+                basefile = strdup("");
+        }
 
         syslog(LOG_DEBUG, "basefile: %s", basefile);
         syslog(LOG_DEBUG, "u->path: %s", u->path);
@@ -877,6 +883,9 @@ int send_file(int sock, char *path, http_status_code_t *err)
         time_t t;
 
         *err = 0;
+
+        /* perform variable substitution on path */
+        sqlvars(&path, request->res);
 
         f = open(path, O_RDONLY);
         if (f == -1) {
