@@ -104,20 +104,21 @@ int check_auth(http_request_t *r)
                         syslog(LOG_DEBUG,
                                 "Found matching acl - checking credentials");
 
-                        if (strncmp(a->type, "deny", strlen(a->type)) == 0) {
+                        if (strcmp(a->type, "deny") == 0) {
                                 syslog(LOG_DEBUG, "acl deny");
                                 return HTTP_FORBIDDEN;
                         }
-                        else if (strncmp(a->type, "allow",
-                        strlen(a->type)) == 0) 
-                        {
+                        else if (strcmp(a->type, "allow") == 0) {
                                 /* TODO: check for ip address */
                                 syslog(LOG_DEBUG, "acl allow");
                                 return 0;
                         }
-                        else if (strncmp(a->type, "sufficient",
-                        strlen(a->type)) == 0) 
-                        {
+                        else if (strcmp(a->type, "params") == 0) {
+                                r->params = strdup(a->auth);
+                                syslog(LOG_DEBUG, "url has params: %s",
+                                        r->params);
+                        }
+                        else if (strcmp(a->type, "sufficient") == 0) {
                                 syslog(LOG_DEBUG, "acl sufficient...");
                                 /* if this is successful, no further checks */
                                 i = check_auth_sufficient(a->auth, r);
@@ -126,9 +127,7 @@ int check_auth(http_request_t *r)
                                         return i;
                                 }
                         }
-                        else if (strncmp(a->type, "require",
-                        strlen(a->type)) == 0) 
-                        {
+                        else if (strcmp(a->type, "require") == 0) {
                                 syslog(LOG_DEBUG, "acl require ...");
                                 /* this MUST pass, but do further checks */
                                 i = check_auth_require(a->auth, r);
@@ -147,7 +146,7 @@ int check_auth(http_request_t *r)
                 a = a->next;
         }
         if (a != NULL) {
-                if (strncmp(a->type, "sufficient", strlen(a->type)) == 0) {
+                if (strcmp(a->type, "sufficient") == 0) {
                         return 0;
                 }
         }

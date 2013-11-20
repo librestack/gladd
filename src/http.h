@@ -63,6 +63,7 @@ typedef struct http_request_t {
         char *authuser;         /* username supplied for http basic auth */
         char *authpass;         /* password    "      "   "     "    "   */
         char *boundary;         /* boundary for multipart data           */
+        char *params;           /* any parameters the acls have applied  */
         keyval_t *headers;      /* client request headers                */
         keyval_t *data;         /* client request data                   */
 } http_request_t;

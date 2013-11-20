@@ -91,7 +91,8 @@ int add_acl (char *value)
                 newacl->next = NULL;
         }
         else if ((strcmp(type, "require") == 0) ||
-                 (strcmp(type, "sufficient") == 0)) 
+                 (strcmp(type, "sufficient") == 0) ||
+                 (strcmp(type, "params") == 0)) 
         {
                 newacl->method = strndup(method, LINE_MAX);
                 newacl->url = strndup(url, LINE_MAX);
