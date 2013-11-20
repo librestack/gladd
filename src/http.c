@@ -776,7 +776,7 @@ int http_validate_headers(http_request_t *r, http_status_code_t *err)
                                         syslog(LOG_DEBUG,
                                                 "Invalid auth details\n");
                                         free(clearauth);
-                                        *err = HTTP_BAD_REQUEST;
+                                        *err = HTTP_UNAUTHORIZED;
                                         return -1;
                                 }
                         }
