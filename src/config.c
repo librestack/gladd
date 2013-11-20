@@ -752,7 +752,7 @@ int process_config_line(char *line)
         
         if (multi != NULL) {
                 /* we're processing a multi-line config here */
-                if (strcmp(line, "end") == 0) {
+                if (strncmp(line, "end", 3) == 0) {
                         tmp = strdup(multi);
                         free(multi);
                         multi = NULL;
@@ -826,7 +826,7 @@ int process_config_line(char *line)
                 else if (strcmp(key, "auth") == 0) {
                         return add_auth(value);
                 }
-                else if (strcmp(key, "begin") == 0) {
+                else if (strncmp(key, "begin", 5) == 0) {
                         /* multi-line config - cat the bits together and
                          * call this function again */
                         asprintf(&multi, "%s ", value);
