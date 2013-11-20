@@ -80,8 +80,8 @@ int add_acl (char *value)
         }
 
         newacl = malloc(sizeof(struct acl_t));
-        if ((strncmp(type, "allow", 5) == 0) ||
-            (strncmp(type, "deny", 5) == 0))
+        if ((strcmp(type, "allow") == 0) ||
+            (strcmp(type, "deny") == 0))
         {
                 newacl->method = strndup(method, LINE_MAX);
                 newacl->url = strndup(url, LINE_MAX);
@@ -90,8 +90,8 @@ int add_acl (char *value)
                 newacl->params = NULL;
                 newacl->next = NULL;
         }
-        else if ((strncmp(type, "require", 5) == 0) ||
-                 (strncmp(type, "sufficient", 11) == 0)) 
+        else if ((strcmp(type, "require") == 0) ||
+                 (strcmp(type, "sufficient") == 0)) 
         {
                 newacl->method = strndup(method, LINE_MAX);
                 newacl->url = strndup(url, LINE_MAX);
@@ -347,7 +347,7 @@ int add_url_handler(char *value)
 
         /* TODO: refactor this */
         if (sscanf(value, "%s %[^\n]", type, params) == 2) {
-                if (strncmp(type, "static", 6) == 0) {
+                if (strcmp(type, "static") == 0) {
                         handle_url_static("static", params);
                 }
                 else if (strcmp(type, "sqlview") == 0) {
@@ -752,7 +752,7 @@ int process_config_line(char *line)
         
         if (multi != NULL) {
                 /* we're processing a multi-line config here */
-                if (strncmp(line, "end", 3) == 0) {
+                if (strcmp(line, "end") == 0) {
                         tmp = strdup(multi);
                         free(multi);
                         multi = NULL;
