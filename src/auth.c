@@ -24,6 +24,7 @@
 #include "auth.h"
 #include "config.h"
 #include "gladdb/db.h"
+#include "xml.h"
 #include <fnmatch.h>
 #include <grp.h>
 #include <security/pam_appl.h>
@@ -110,6 +111,7 @@ int check_auth(http_request_t *r)
                         else if (strncmp(a->type, "allow",
                         strlen(a->type)) == 0) 
                         {
+                                /* TODO: check for ip address */
                                 syslog(LOG_DEBUG, "acl allow");
                                 return 0;
                         }
@@ -160,7 +162,7 @@ int check_auth_sufficient(char *alias, http_request_t *r)
         auth_t *a;
         int i;
         
-        if (strncmp(alias, "*", 1) == 0) {
+        if (strcmp(alias, "*") == 0) {
                 a = config->auth;
                 while (a != NULL) {
                         i = check_auth_alias(a->alias, r);
@@ -183,7 +185,7 @@ int check_auth_require(char *alias, http_request_t *r)
         auth_t *a;
         int i;
         
-        if (strncmp(alias, "*", 1) == 0) {
+        if (strcmp(alias, "*") == 0) {
                 /* all auth MUST succeed */
                 a = config->auth;
                 while (a != NULL) {
@@ -258,19 +260,23 @@ int check_auth_alias(char *alias, http_request_t *r)
                         return check_auth_pam(a->db, r->authuser, r->authpass);
                 }
                 else if (strcmp(a->type, "group") == 0) {
-                        if (strcmp(a->db, "*") != 0) {
-                                /* group is ldap or db - TODO */
+                        char *vgroup = strdup(a->db);
+                        char *url = strdup(r->res);
+                        sqlvars(&vgroup, url);
+                        if (check_auth_group(r->authuser, vgroup)) {
+                                syslog(LOG_DEBUG, "user %s in group %s",
+                                        r->authuser, vgroup);
+                                free(url);
+                                free(vgroup);
+                                return 0;
+                        }
+                        else {
+                                syslog(LOG_DEBUG, "user %s NOT in group %s",
+                                        r->authuser, vgroup);
+                                free(url);
+                                free(vgroup);
                                 return HTTP_UNAUTHORIZED;
                         }
-                        if (check_auth_group(r->authuser, a->alias)) {
-                                /* user in correct group, now check user */
-                                syslog(LOG_DEBUG, "user %s in group %s",
-                                        r->authuser, a->alias);
-                                int res;
-                                res = check_auth_alias("user", r);
-                                return res;
-                        }
-                        return HTTP_UNAUTHORIZED;
                 }
         }
         else {
@@ -310,7 +316,9 @@ int ingroup(char *user, char *group)
 int check_auth_group(char *username, char *groupname)
 {
         /* check config groups first */
-        if (ingroup(username, groupname) == 1) return 1;
+        if (ingroup(username, groupname) == 1) {
+                return 1;
+        }
 
         /* now search nsswitch groups */
         int ret = 0;
