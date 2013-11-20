@@ -25,11 +25,14 @@
 #include "config.h"
 #include "gladdb/db.h"
 #include <fnmatch.h>
+#include <grp.h>
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
 #include <string.h>
 #include <stdlib.h>
 #include <syslog.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 struct pam_response *r;
 
@@ -259,7 +262,7 @@ int check_auth_alias(char *alias, http_request_t *r)
                                 /* group is ldap or db - TODO */
                                 return HTTP_UNAUTHORIZED;
                         }
-                        if (ingroup(r->authuser, a->alias)) {
+                        if (check_auth_group(r->authuser, a->alias)) {
                                 /* user in correct group, now check user */
                                 syslog(LOG_DEBUG, "user %s in group %s",
                                         r->authuser, a->alias);
@@ -280,6 +283,7 @@ int check_auth_alias(char *alias, http_request_t *r)
         return 0;
 }
 
+/* return 1 if user in config-defined group, 0 if not */
 int ingroup(char *user, char *group)
 {
         group_t *g;
@@ -298,4 +302,29 @@ int ingroup(char *user, char *group)
         }
 
         return 0;
+}
+
+/* check is user is in specified group
+ * searches, static config-defined groups, then NSS
+ * returns 1 if in group, 0 if not, or -1 on error */
+int check_auth_group(char *username, char *groupname)
+{
+        /* check config groups first */
+        if (ingroup(username, groupname) == 1) return 1;
+
+        /* now search nsswitch groups */
+        int ret = 0;
+        char *member;
+        int i = 0;
+        struct group *g;
+        if ((g = getgrnam(groupname))) {
+                while ((member = g->gr_mem[i++])) {
+                        if (strcmp(username, member) == 0) {
+                                ret = 1;
+                                break;
+                        }
+                }
+        }
+        endgrent();
+        return ret;
 }
