@@ -112,6 +112,7 @@ char *test_xml_sqlvars()
 
         free(sql);
         free_request(request);
+        request = NULL;
 
         return 0;
 }

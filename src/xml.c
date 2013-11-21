@@ -161,11 +161,15 @@ void sqlvars(char **sql, char *url)
         }
 
         /* replace occurances of $user with username */
-        /*
-        sqltmp = replaceall(*sql, "$user", request->authuser);
-        *sql = strdup(sqltmp);
-        free(sqltmp);
-        */
+        if (request) {
+                if (request->authuser) {
+                        char *auser = strdup(request->authuser);
+                        sqltmp = replaceall(*sql, "$user", auser);
+                        *sql = strdup(sqltmp);
+                        free(sqltmp);
+                        free(auser);
+                }
+        }
 
         free(tokens);
 }
