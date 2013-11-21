@@ -219,7 +219,7 @@ handler_result_t handle_request(int sock, char *s)
                 if (err != 0) {
                         syslog(LOG_DEBUG, "Incorrect content length");
                         http_response(sock, err);
-                        return HANDLER_OK;
+                        return HANDLER_CLOSE_CONNECTION;
                 }
                 else {
                         syslog(LOG_DEBUG, "Content-Length: %li", len);
@@ -230,7 +230,7 @@ handler_result_t handle_request(int sock, char *s)
                         syslog(LOG_ERR,
                                 "Unsupported Media Type '%s'", mtype);
                         http_response(sock, err);
-                        return HANDLER_OK;
+                        return HANDLER_CLOSE_CONNECTION;
                 }
         }
         syslog(LOG_DEBUG, "Type: %s", u->type);
