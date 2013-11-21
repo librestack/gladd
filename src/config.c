@@ -464,6 +464,8 @@ void free_config()
         config->urldefault = NULL;
         free(config->xmlpath);
         config->xmlpath = NULL;
+        free(config->sslca);
+        config->sslca = NULL;
         free(config->sslkey);
         config->sslkey = NULL;
         free(config->sslcert);

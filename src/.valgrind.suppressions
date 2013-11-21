@@ -64,7 +64,79 @@
    fun:check_auth_alias
 }
 {
-   nss_group1
+   pam2
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:__nss_lookup_function
+   obj:*
+   obj:*
+   fun:getpwnam_r@@GLIBC_2.2.5
+   fun:pam_modutil_getpwnam
+   obj:*
+   fun:_pam_dispatch
+   fun:pam_authenticate
+   fun:check_auth_pam
+   fun:check_auth_alias
+   fun:check_auth_require
+}
+{
+   pam3
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:__nss_lookup_function
+   obj:*
+   obj:*
+   fun:getpwnam_r@@GLIBC_2.2.5
+   fun:pam_modutil_getpwnam
+   obj:*
+   fun:_pam_dispatch
+   fun:pam_authenticate
+   fun:check_auth_pam
+   fun:check_auth_alias
+   fun:check_auth_require
+}
+{
+   pam4
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:__nss_lookup_function
+   obj:*
+   obj:*
+   fun:getpwnam_r@@GLIBC_2.2.5
+   fun:pam_modutil_getpwnam
+   obj:*
+   fun:_pam_dispatch
+   fun:pam_authenticate
+   fun:check_auth_pam
+   fun:check_auth_alias
+   fun:check_auth_require
+}
+{
+   pam5
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:__nss_lookup_function
+   obj:*
+   obj:*
+   fun:getpwnam_r@@GLIBC_2.2.5
+   fun:pam_modutil_getpwnam
+   obj:*
+   fun:_pam_dispatch
+   fun:pam_authenticate
+   fun:check_auth_pam
+   fun:check_auth_alias
+   fun:check_auth_require
+}
+
+
+
+
+{
+   nss1
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
@@ -79,5 +151,338 @@
    fun:check_auth_require
    fun:check_auth
    fun:test_auth_groups_01
+}
+{
+   nss2
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:__nss_lookup_function
+   obj:*
+   obj:*
+   fun:getpwnam_r@@GLIBC_2.2.5
+   fun:pam_modutil_getpwnam
+   obj:*
+   fun:_pam_dispatch
+   fun:pam_authenticate
+   fun:check_auth_pam
+   fun:check_auth_alias
+   fun:check_auth_require
+}
+{
+   getgrnam
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:__nss_lookup_function
+   obj:*
+   obj:*
+   fun:getgrnam_r@@GLIBC_2.2.5
+   fun:getgrnam
+   fun:check_auth_group
+   fun:check_auth_alias
+   fun:check_auth_require
+   fun:check_auth
+   fun:test_auth_groups_01
+   fun:all_tests
+}
+
+
+{
+   curl1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:engine_cleanup_add_last
+   fun:ENGINE_add
+   fun:ENGINE_load_dynamic
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+   fun:main
+}
+{
+   curl2
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:load_builtin_compressions
+   fun:SSL_COMP_get_compression_methods
+   fun:SSL_library_init
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:bodyline
+   fun:test_http_read_request_data
+   fun:all_tests
+   fun:main
+}
+{
+   curl3
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:def_get_class
+   fun:int_new_ex_data
+   fun:ENGINE_new
+   fun:ENGINE_load_dynamic
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+}
+{
+   curl4
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:lh_insert
+   fun:def_get_class
+   fun:int_new_ex_data
+   fun:ENGINE_new
+   fun:ENGINE_load_dynamic
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+}
+{
+   curl5
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:lh_insert
+   fun:int_thread_set_item
+   fun:ERR_get_state
+   fun:ERR_clear_error
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+}
+{
+   curl6
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:lh_insert
+   fun:OBJ_NAME_add
+   fun:EVP_add_cipher
+   fun:SSL_library_init
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+}
+{
+   curl7
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:lh_insert
+   fun:int_err_set_item
+   fun:err_load_strings
+   fun:ERR_load_crypto_strings
+   fun:SSL_load_error_strings
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+}
+{
+   curl8
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:lh_insert
+   fun:int_err_set_item
+   fun:err_load_strings
+   fun:ERR_load_crypto_strings
+   fun:SSL_load_error_strings
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+}
+{
+   curl9
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:lh_insert
+   fun:OBJ_NAME_add
+   fun:SSL_library_init
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+   fun:main
+}
+{
+   curl10
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:lh_insert
+   fun:OBJ_NAME_add
+   fun:SSL_library_init
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+   fun:main
+}
+{
+   curl11
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:lh_insert
+   fun:OBJ_NAME_add
+   fun:EVP_add_digest
+   fun:SSL_library_init
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+}
+{
+   curl12
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:OBJ_NAME_add
+   fun:EVP_add_cipher
+   fun:OpenSSL_add_all_ciphers
+   fun:OPENSSL_add_all_algorithms_noconf
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+}
+{
+   curl13
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:lh_insert
+   fun:OBJ_NAME_add
+   fun:OpenSSL_add_all_ciphers
+   fun:OPENSSL_add_all_algorithms_noconf
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+}
+{
+   curl14
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+}
+{
+   curl15
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:OBJ_NAME_add
+   fun:OpenSSL_add_all_ciphers
+   fun:OPENSSL_add_all_algorithms_noconf
+   fun:Curl_ossl_init
+   fun:curl_global_init
+   fun:curl_easy_init
+   fun:http_response_proxy
+   fun:test_http_proxy_request
+   fun:all_tests
+   fun:main
+}
+{
+   curl16
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:make_request
+   fun:__check_pf
+   fun:getaddrinfo
+   fun:Curl_getaddrinfo_ex
+}
+{
+   curl17
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   fun:CRYPTO_realloc
+   fun:lh_insert
+   fun:OBJ_NAME_add
+   fun:EVP_add_cipher
+   fun:OpenSSL_add_all_ciphers
+   fun:OPENSSL_add_all_algorithms_noconf
+   fun:Curl_ossl_init
+}
+{
+   curl18
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   fun:CRYPTO_realloc
+   fun:lh_insert
+   fun:int_err_set_item
+   fun:err_load_strings
+   fun:ERR_load_SSL_strings
+   fun:Curl_ossl_init
+}
+{
+   pam_2_1
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:_pam_load_module
+}
+{
+   nss_2_1
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:tsearch
+   fun:__nss_lookup_function
 }
 
