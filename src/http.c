@@ -267,6 +267,7 @@ http_request_t *http_init_request()
         http_request_t *r;
         r = calloc(1, sizeof(http_request_t));
         asprintf(&r->authtype,"Basic");
+        r->authuser = NULL;
         return r;
 }
 
@@ -463,6 +464,7 @@ int http_accept_encoding(http_request_t *r, char *encoding)
                 }
         }
         free(tmp);
+        free(tokens);
 
         return match;
 }
@@ -728,6 +730,7 @@ http_status_code_t http_response_proxy(int sock, url_t *u)
         }
         curl_easy_cleanup(curl);
         fclose(f);
+        free(url);
 
         return err;
 }

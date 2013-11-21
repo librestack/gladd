@@ -377,6 +377,12 @@ char *test_http_proxy_request()
 
         close(sv[1]); /* close read socket */
 
+        free(u.type);
+        free(u.method);
+        free(u.url);
+        free(u.path);
+        free_request(request);
+
         return 0;
 }
 
@@ -414,7 +420,11 @@ char *test_http_rewrite_request()
                 strncmp(buf, checkstring, strlen(checkstring)) == 0);
 
         close(sv[1]); /* close read socket */
-
+        
+        free(u.type);
+        free(u.method);
+        free(u.url);
+        free(u.path);
         free_request(request);
 
         return 0;

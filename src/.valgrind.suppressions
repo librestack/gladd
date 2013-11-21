@@ -46,3 +46,38 @@
    fun:connectOptions1
    fun:PQconnectStart
 }
+{
+   pam1
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:nss_parse_service_list
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getpwnam_r@@GLIBC_2.2.5
+   fun:pam_modutil_getpwnam
+   obj:*
+   fun:_pam_dispatch
+   fun:pam_authenticate
+   fun:check_auth_pam
+   fun:check_auth_alias
+}
+{
+   nss_group1
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:nss_parse_service_list
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getgrnam_r@@GLIBC_2.2.5
+   fun:getgrnam
+   fun:check_auth_group
+   fun:check_auth_alias
+   fun:check_auth_require
+   fun:check_auth
+   fun:test_auth_groups_01
+}
+
