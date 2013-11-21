@@ -117,7 +117,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 syslog(LOG_DEBUG, "handling request %i on connection", ++i);
                 err = handle_request(sock, s);
         }
-        while ((err == 0) && (config->pipelining == 1));
+        while ((err == HANDLER_OK) && (config->pipelining == 1));
         syslog(LOG_DEBUG, "[%s] closing connection", s);
 
         /* close client connection */
@@ -151,8 +151,8 @@ handler_result_t handle_request(int sock, char *s)
                 return HANDLER_OK;
         }
 
-        if (request == NULL)
-                return HANDLER_CLOSE_CONNECTION; /* connection was closed */
+        if (request == NULL) /* connection was closed */
+                return HANDLER_CLOSE_CONNECTION;
 
         /* keep a note of client ip */
         asprintf(&request->clientip, "%s", s);
@@ -161,7 +161,7 @@ handler_result_t handle_request(int sock, char *s)
         if (err != 0) {
                 syslog(LOG_INFO, "Bad Request - invalid request headers");
                 http_response(sock, err);
-                return HANDLER_OK;
+                return HANDLER_CLOSE_CONNECTION;
         }
 
         /* X-Forwarded-For */
