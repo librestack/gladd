@@ -76,7 +76,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
         char peekbuf[1];
         char s[INET6_ADDRSTRLEN];
-        int err = 0;
+        handler_result_t err = HANDLER_OK;
         int i = 0;
         int peek;
         struct timeval tv;
