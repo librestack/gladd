@@ -148,7 +148,7 @@ handler_result_t handle_request(int sock, char *s)
         request = http_read_request(sock, &hcount, &err);
         if (err != 0) {
                 http_response(sock, err);
-                return HANDLER_OK;
+                return HANDLER_CLOSE_CONNECTION;
         }
 
         if (request == NULL) /* connection was closed */
