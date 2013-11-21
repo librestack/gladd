@@ -91,7 +91,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
         /* loop to allow persistent connections & pipelining */
         do {
-                if (i > 0 && bytes == 0) { /* wait for data if we have none */
+                if (bytes == 0) { /* wait for data if we have none */
                         /* set longer timeout for subsequent connections */
                         tv.tv_sec = config->keepalive; tv.tv_usec = 0;
                         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
@@ -119,6 +119,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         }
         while ((err == HANDLER_OK) && (config->pipelining == 1));
         syslog(LOG_DEBUG, "[%s] closing connection", s);
+        syslog(LOG_DEBUG, "we had %i bytes left over", (int)bytes);
 
         /* close client connection */
         if (config->ssl)
@@ -148,7 +149,7 @@ handler_result_t handle_request(int sock, char *s)
         request = http_read_request(sock, &hcount, &err);
         if (err != 0) {
                 http_response(sock, err);
-                return HANDLER_CLOSE_CONNECTION;
+                return HANDLER_OK;
         }
 
         if (request == NULL) /* connection was closed */
@@ -161,7 +162,7 @@ handler_result_t handle_request(int sock, char *s)
         if (err != 0) {
                 syslog(LOG_INFO, "Bad Request - invalid request headers");
                 http_response(sock, err);
-                return HANDLER_CLOSE_CONNECTION;
+                return HANDLER_OK;
         }
 
         /* X-Forwarded-For */
@@ -208,7 +209,7 @@ handler_result_t handle_request(int sock, char *s)
         auth = check_auth(request);
         if (auth != 0) {
                 http_response(sock, auth);
-                return HANDLER_CLOSE_CONNECTION; /* close after auth fail */
+                return HANDLER_OK;
         }
 
         if (strcmp(request->method, "POST") == 0) {
@@ -282,7 +283,10 @@ handler_result_t handle_request(int sock, char *s)
                 syslog(LOG_ERR, "Unknown url type '%s'", u->type);
         }
 
-        return HANDLER_OK;
+        if (strcmp(request->httpv, "1.0") == 0)
+                return HANDLER_CLOSE_CONNECTION;
+        else
+                return HANDLER_OK;
 }
 
 void respond (int fd, char *response)

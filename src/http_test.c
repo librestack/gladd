@@ -45,7 +45,7 @@ char *test_http_read_request_get()
         keyval_t *h = NULL;
         http_request_t *r = NULL;
 
-        asprintf(&headers, "GET /static/form.html?somequerystring=value HTTP/1.1\nAuthorization: Basic YmV0dHk6bm9iYnk=\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\nHost: localhost:3000\nAccept: */*\n");
+        asprintf(&headers, "GET /static/form.html?somequerystring=value HTTP/1.1\r\nAuthorization: Basic YmV0dHk6bm9iYnk=\r\nUser-Agent: curl/7.25.0 (x86_64-pc-linux-gnu) libcurl/7.25.0 OpenSSL/1.0.0j zlib/1.2.5.1 libidn/1.25\r\nHost: localhost:3000\r\nAccept: */*\r\n\r\n");
 
         /* create a pair of connected sockets */
         int sv[2];
@@ -117,6 +117,8 @@ char *test_http_readline()
         int ret;
         int sv[2];
 
+        config->ssl = 0; /* ensure we're not using ssl */
+
         /* create a pair of connected sockets */
         fprintf(stderr, "Creating test sockets.\n");
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
@@ -166,7 +168,9 @@ char *test_http_read_request_post()
         close(sv[0]); /* close write socket */
 
         http_flush_buffer(); /* clear buffer before making new request */
+        fprintf(stderr, "That's all she wrote");
         r = http_read_request(sv[1], &hcount, &err);
+        fprintf(stderr, "Angela Landsbury");
         close(sv[1]); /* close read socket */
 
         mu_assert("Test http_read_headers() with POST", err == 0);
@@ -334,7 +338,7 @@ char *test_http_read_request_post_large()
         fprintf(stderr, "%i / %i bytes read\n",
                 (int)r->bytes, (int)strlen(databuf));
         mu_assert("Ensure correct number of bytes read back",
-                r->bytes == strlen(databuf));
+                r->bytes == strlen(databuf)-6);
 
         free(databuf);
         free_request(r);

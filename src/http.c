@@ -89,7 +89,7 @@ struct http_status httpcode[] = {
 http_request_t *request;
 char buf[BUFSIZE];
 size_t bytes = 0;
-int bmore = 1;
+//int bmore = 1;
 
 /* 
  * bodyline() - Also known as Fast Leg Theory.
@@ -372,7 +372,7 @@ void http_flush_buffer()
 {
         buf[0] = '\0';
         bytes = 0;
-        bmore = 1;
+        //bmore = 1;
 }
 
 /* top up http buffer, returning number of bytes read or -1 on error */
@@ -383,7 +383,7 @@ ssize_t fillhttpbuffer(int sock)
         struct timeval tv;
 
         /* set socket timeout */
-        tv.tv_sec = 1; tv.tv_usec = 0;
+        tv.tv_sec = 0; tv.tv_usec = 5;
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
                 (char *)&tv, sizeof(struct timeval));
 
@@ -393,11 +393,8 @@ ssize_t fillhttpbuffer(int sock)
         if (newbytes == -1) {
                 syslog(LOG_ERR, "Error reading from socket: %s", 
                         strerror(errno));
-                bmore = 0;
                 return -1;
         }
-        if (newbytes < fillbytes) bmore = 0; /* no more to read */
-
         bytes += newbytes;
 
         return newbytes;
@@ -405,37 +402,48 @@ ssize_t fillhttpbuffer(int sock)
 
 /* Read a line from the http buffer, filling the buffer as required.
  * returns either the line or NULL if no lines found
- * NB: lines cannot be longer than BUFSIZE and the returned char array
- * must be free'd after use.
+ * NB: lines cannot be longer than LINE_MAX
+ * we strip off CRLF or LF from the end of the line before returning it
  */
 char *http_readline(int sock)
 {
         char *line = NULL;
         char *nl;
         int pos;
+        size_t ll = 0;  /* line length */
 
-        /* fill buffer */
-        if ((bytes < sizeof buf) && (bmore)) {
-                if (fillhttpbuffer(sock) == -1) return NULL;
+        line = calloc(1, LINE_MAX + 1);
+        for (;;) {
+                /* fill the buffer if empty */
+                if (bytes == 0)
+                        if (fillhttpbuffer(sock) == -1) {
+                                syslog(LOG_DEBUG, "failed to fill buffer");
+                                return line;
+                        }
+                if (bytes == 0) continue;
+
+                /* scan buffer for newline */
+                nl = memchr(buf, '\n', bytes);
+                if (nl != NULL) {
+                        pos = nl - buf;
+                        memcpy(line, buf, pos + 1);
+                        line[pos] = '\0';
+                        if (pos > 0)
+                                if (line[pos - 1] == '\r')
+                                        line[pos - 1] = '\0';
+                        bytes -= pos + 1;
+                        /* move unprocessed bytes to beginning of buffer */
+                        memmove(buf, nl + 1, bytes);
+                        memset(buf + bytes, '\0', BUFSIZE-bytes);
+                        break;
+                }
+                else {
+                        /* newline not found, so copy everything */
+                        memcpy(line + ll, buf, bytes);
+                        ll += bytes;
+                        http_flush_buffer();
+                }
         }
-        if (bytes == 0) return NULL;
-
-        /* scan buffer for newline */
-        nl = memchr(buf, '\n', bytes);
-        if (nl != NULL) {
-                pos = nl - buf;
-                line = malloc(pos + 2);
-                memcpy(line, buf, pos + 1);
-                line[pos + 1] = '\0';
-        }
-
-        /* move unprocessed bytes to beginning of buffer */
-        bytes = bmore ? BUFSIZE - pos - 1 : bytes - pos - 1;
-        if (nl) {
-                memmove(buf, nl + 1, bytes);
-                memset(buf + bytes, '\0', BUFSIZE-bytes);
-        }
-
         return line;
 }
 
@@ -505,7 +513,6 @@ http_request_t *http_read_request(int sock, int *hcount,
 {
         char *clen;
         char *ctype;
-        char *stripped;
         char *body;
         char httpv[16] = "";
         char key[256] = "";
@@ -525,7 +532,6 @@ http_request_t *http_read_request(int sock, int *hcount,
         r = http_init_request();
 
         /* first line has http request */
-        bmore = 1;
         line = http_readline(sock);
         if (line == NULL) {
                 syslog(LOG_ERR, "HTTP request is NULL");
@@ -553,20 +559,14 @@ http_request_t *http_read_request(int sock, int *hcount,
         http_set_request_resource(r, resource);
 
         /* read headers */
-        while ((line = http_readline(sock))) {
-                headlen = headlen + strlen(line);
-                /* we strip out any \r which jquery puts in, before matching */
-                if (strcmp(line, "\n") == 0) {
-                        free(line);
-                        break;
-                }
-                stripped = replaceall(line, "\r", "");
+        for (;;) {
+                line = http_readline(sock);
+                if (line == NULL) break;
+                if (strlen(line) == 0) break;
+                headlen += strlen(line);
+                syslog(LOG_DEBUG, "[%s]", line);
+                if (sscanf(line, "%[^:]: %[^\r\n]", key, value) != 2) break;
                 free(line);
-                if (sscanf(stripped, "%[^:]: %[^\n]", key, value) != 2) {
-                        free(stripped);
-                        break;
-                }
-                free(stripped);
                 h = http_set_keyval(key, value);
                 if (hlast != NULL) {
                         hlast->next = h;
@@ -577,6 +577,7 @@ http_request_t *http_read_request(int sock, int *hcount,
                 hlast = h;
                 (*hcount)++;
         }
+        free(line);
         syslog(LOG_DEBUG, "headers size: %i", headlen);
         r->bytes += headlen;
 
@@ -642,20 +643,12 @@ void http_response(int sock, int code)
         char *response;
         char *status;
         char *mime = "text/html";
-        char *headers = "";
-
-        if (code == HTTP_UNAUTHORIZED) {
-                /* 401 Unauthorized MUST include WWW-Authenticate header */
-                asprintf(&headers, "\nWWW-Authenticate: %s realm=\"%s\"", 
-                                request->authtype, config->authrealm);
-        }
 
         status = get_status(code).status;
-        asprintf(&response, HTTP_RESPONSE, code, status, mime, headers);
-        respond(sock, response);
-        syslog(LOG_INFO, "%i - %s", code, status);
+        asprintf(&response, HTTP_RESPONSE_HTTP, code, status);
+        http_response_full(sock, code, mime, response);
         free(response);
-        free(headers);
+        syslog(LOG_INFO, "%i - %s", code, status);
 }
 
 /* output HTTP/1.1 response and basic headers only */
@@ -666,9 +659,16 @@ void http_response_headers(int sock, int code, int len, char *mime)
         status = get_status(code).status;
         asprintf(&r, "HTTP/1.1 %i %s\r\n", code, status);
         http_insert_header(&r, "Server: gladd");
+        if (!config->pipelining)
+                http_insert_header(&r, "Connection: close");
         if (mime) {
                 http_insert_header(&r, "Content-Type: %s", mime);
                 http_insert_header(&r, "Content-Length: %i", len);
+        }
+        if (code == HTTP_UNAUTHORIZED) {
+                /* 401 Unauthorized MUST include WWW-Authenticate header */
+                http_insert_header(&r, "\nWWW-Authenticate: %s realm=\"%s\"", 
+                        request->authtype, config->authrealm);
         }
         respond(sock, r);
         free(r);
@@ -682,9 +682,16 @@ void http_response_full(int sock, int code, char *mime, char *body)
         status = get_status(code).status;
         asprintf(&r, "HTTP/1.1 %i %s\r\n\r\n%s", code, status, body);
         http_insert_header(&r, "Server: gladd");
+        if (!config->pipelining)
+                http_insert_header(&r, "Connection: close");
         if (mime) {
                 http_insert_header(&r, "Content-Type: %s", mime);
                 http_insert_header(&r, "Content-Length: %i", strlen(body));
+        }
+        if (code == HTTP_UNAUTHORIZED) {
+                /* 401 Unauthorized MUST include WWW-Authenticate header */
+                http_insert_header(&r, "\nWWW-Authenticate: %s realm=\"%s\"", 
+                        request->authtype, config->authrealm);
         }
         respond(sock, r);
         free(r);

@@ -162,11 +162,9 @@ size_t ssl_recv(char *b, int len)
                         break;
                 case SSL_ERROR_WANT_WRITE:
                         syslog(LOG_DEBUG, "ssl_recv() wants write");
-                        ret = 0;
                         break;
                 case SSL_ERROR_WANT_READ:
-                        syslog(LOG_DEBUG, "ssl_recv() wants read");
-                        ret = 0;
+                        //syslog(LOG_DEBUG, "ssl_recv() wants read");
                         break;
                 default:
                         syslog(LOG_DEBUG,"ssl_recv() %s",ssl_err(ret));
