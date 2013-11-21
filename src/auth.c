@@ -91,6 +91,7 @@ int check_auth(http_request_t *r)
         acl_t *a;
         int i;
         int pass = 0;
+        http_status_code_t res = HTTP_FORBIDDEN;
 
         a = config->acls;
         while (a != NULL) {
@@ -126,6 +127,8 @@ int check_auth(http_request_t *r)
                                         syslog(LOG_DEBUG, "auth sufficient");
                                         return i;
                                 }
+                                /* if we fail later, code is 401, not 403 */
+                                res = HTTP_UNAUTHORIZED;
                         }
                         else if (strcmp(a->type, "require") == 0) {
                                 syslog(LOG_DEBUG, "acl require ...");
@@ -152,7 +155,7 @@ int check_auth(http_request_t *r)
         }
         if (pass > 0) return 0;
         syslog(LOG_DEBUG, "no acl matched");
-        return HTTP_FORBIDDEN; /* default is to deny access */
+        return res;
 }
 
 /* any auth will do */

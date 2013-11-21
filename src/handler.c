@@ -127,13 +127,14 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 close(sock);
 
         /* free memory */
+        free_request(request);
         free_config();
 
         /* child process can exit */
         _exit(EXIT_SUCCESS);
 }
 
-int handle_request(int sock, char *s)
+handler_result_t handle_request(int sock, char *s)
 {
         char *mtype;
         http_status_code_t err;
@@ -147,10 +148,11 @@ int handle_request(int sock, char *s)
         request = http_read_request(sock, &hcount, &err);
         if (err != 0) {
                 http_response(sock, err);
-                return -1;
+                return HANDLER_OK;
         }
 
-        if (request == NULL) return -1; /* connection was closed */
+        if (request == NULL)
+                return HANDLER_CLOSE_CONNECTION; /* connection was closed */
 
         /* keep a note of client ip */
         asprintf(&request->clientip, "%s", s);
@@ -159,7 +161,7 @@ int handle_request(int sock, char *s)
         if (err != 0) {
                 syslog(LOG_INFO, "Bad Request - invalid request headers");
                 http_response(sock, err);
-                return -1;
+                return HANDLER_OK;
         }
 
         /* X-Forwarded-For */
@@ -193,95 +195,94 @@ int handle_request(int sock, char *s)
                 request->res = strdup(config->urldefault);
         }
 
-        /* check auth & auth */
-        auth = check_auth(request);
-        if (auth != 0) {
-                http_response(sock, auth);
-                return -1;
-        }
-
         /* match url */
         u = http_match_url(request);
         if (u == NULL) {
                 /* Not found */
                 syslog(LOG_DEBUG, "failed to find matching url in config");
                 http_response(sock, HTTP_NOT_FOUND);
+                return HANDLER_OK;
         }
-        else {
-                if (strcmp(request->method, "POST") == 0) {
-                        /* POST requires Content-Length header */
-                        http_status_code_t err;
 
-                        len = check_content_length(request, &err);
-                        if (err != 0) {
-                                syslog(LOG_DEBUG, "Incorrect content length");
-                                http_response(sock, err);
-                                return -1;
-                        }
-                        else {
-                                syslog(LOG_DEBUG, "Content-Length: %li", len);
-                        }
+        /* check auth & auth */
+        auth = check_auth(request);
+        if (auth != 0) {
+                http_response(sock, auth);
+                return HANDLER_CLOSE_CONNECTION; /* close after auth fail */
+        }
 
-                        mtype = check_content_type(request, &err, u->type);
-                        if (err != 0) {
-                                syslog(LOG_ERR,
-                                        "Unsupported Media Type '%s'", mtype);
-                                http_response(sock, err);
-                                return -1;
-                        }
-                }
-                syslog(LOG_DEBUG, "Type: %s", u->type);
-                if (strncmp(u->type, "static", 6) == 0) {
-                        /* serve static files */
-                        err = response_static(sock, u);
-                        if (err != 0)
-                                http_response(sock, err);
-                }
-                else if (strcmp(u->type, "sqlview") == 0) {
-                        /* handle sqlview */
-                        err = response_sqlview(sock, u);
-                        if (err != 0)
-                                http_response(sock, err);
-                }
-                else if (strcmp(u->type, "xslpost") == 0) {
-                        err = response_xslpost(sock, u);
-                        if (err != 0)
-                                http_response(sock, err);
-                }
-                else if (strcmp(u->type, "xslt") == 0) {
-                        err = response_xslt(sock, u);
-                        if (err != 0)
-                                http_response(sock, err);
-                }
-                else if (strcmp(u->type, "upload") == 0) {
-                        err = response_upload(sock, u);
-                        if (err != 0)
-                                http_response(sock, err);
-                }
-                else if (strcmp(u->type, "plugin") == 0) {
-                        if (strcmp(u->method, "POST") == 0) {
-                                err = response_xml_plugin(sock, u);
-                        }
-                        else {
-                                err = response_plugin(sock, u);
-                        }
-                        if (err != 0)
-                                http_response(sock, err);
-                }
-                else if ((strcmp(u->type, "proxy") == 0)
-                || (strcmp(u->type, "rewrite") == 0))
-                {
-                        err = http_response_proxy(sock, u);
-                        if (err != 0)
-                                http_response(sock, err);
+        if (strcmp(request->method, "POST") == 0) {
+                /* POST requires Content-Length header */
+                http_status_code_t err;
+
+                len = check_content_length(request, &err);
+                if (err != 0) {
+                        syslog(LOG_DEBUG, "Incorrect content length");
+                        http_response(sock, err);
+                        return HANDLER_OK;
                 }
                 else {
-                        syslog(LOG_ERR, "Unknown url type '%s'", u->type);
+                        syslog(LOG_DEBUG, "Content-Length: %li", len);
+                }
+
+                mtype = check_content_type(request, &err, u->type);
+                if (err != 0) {
+                        syslog(LOG_ERR,
+                                "Unsupported Media Type '%s'", mtype);
+                        http_response(sock, err);
+                        return HANDLER_OK;
                 }
         }
-        free_request(request);
+        syslog(LOG_DEBUG, "Type: %s", u->type);
+        if (strncmp(u->type, "static", 6) == 0) {
+                /* serve static files */
+                err = response_static(sock, u);
+                if (err != 0)
+                        http_response(sock, err);
+        }
+        else if (strcmp(u->type, "sqlview") == 0) {
+                /* handle sqlview */
+                err = response_sqlview(sock, u);
+                if (err != 0)
+                        http_response(sock, err);
+        }
+        else if (strcmp(u->type, "xslpost") == 0) {
+                err = response_xslpost(sock, u);
+                if (err != 0)
+                        http_response(sock, err);
+        }
+        else if (strcmp(u->type, "xslt") == 0) {
+                err = response_xslt(sock, u);
+                if (err != 0)
+                        http_response(sock, err);
+        }
+        else if (strcmp(u->type, "upload") == 0) {
+                err = response_upload(sock, u);
+                if (err != 0)
+                        http_response(sock, err);
+        }
+        else if (strcmp(u->type, "plugin") == 0) {
+                if (strcmp(u->method, "POST") == 0) {
+                        err = response_xml_plugin(sock, u);
+                }
+                else {
+                        err = response_plugin(sock, u);
+                }
+                if (err != 0)
+                        http_response(sock, err);
+        }
+        else if ((strcmp(u->type, "proxy") == 0)
+        || (strcmp(u->type, "rewrite") == 0))
+        {
+                err = http_response_proxy(sock, u);
+                if (err != 0)
+                        http_response(sock, err);
+        }
+        else {
+                syslog(LOG_ERR, "Unknown url type '%s'", u->type);
+        }
 
-        return 0;
+        return HANDLER_OK;
 }
 
 void respond (int fd, char *response)
