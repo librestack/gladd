@@ -119,7 +119,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
         }
         while ((err == HANDLER_OK) && (config->pipelining == 1));
         syslog(LOG_DEBUG, "[%s] closing connection", s);
-        syslog(LOG_DEBUG, "we had %i bytes left over", (int)bytes);
 
         /* close client connection */
         if (config->ssl)
