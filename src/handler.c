@@ -872,8 +872,9 @@ http_status_code_t response_static(int sock, url_t *u)
 }
 
 /* send a static file */
-int send_file(int sock, char *path, http_status_code_t *err)
+int send_file(int sock, char *file, http_status_code_t *err)
 {
+        char *path;
         char *headers;
         char *mimetype;
         char *r;
@@ -889,6 +890,7 @@ int send_file(int sock, char *path, http_status_code_t *err)
         *err = 0;
 
         /* perform variable substitution on path */
+        path = strdup(file);
         sqlvars(&path, request->res);
 
         f = open(path, O_RDONLY);
@@ -896,6 +898,7 @@ int send_file(int sock, char *path, http_status_code_t *err)
                 syslog(LOG_ERR, "unable to open '%s': %s\n", path,
                                 strerror(errno));
                 *err = HTTP_NOT_FOUND;
+                free(path);
                 return -1;
         }
 
@@ -906,6 +909,7 @@ int send_file(int sock, char *path, http_status_code_t *err)
         if (! S_ISREG(stat_buf.st_mode)) {
                 syslog(LOG_ERR, "'%s' is not a regular file\n", path);
                 *err = HTTP_NOT_FOUND;
+                free(path);
                 return -1;
         }
 
@@ -921,6 +925,7 @@ int send_file(int sock, char *path, http_status_code_t *err)
         if (asprintf(&r, RESPONSE_200, headers, "") == -1) {
                 syslog(LOG_ERR, "send_file(): malloc failed");
                 *err = HTTP_INTERNAL_SERVER_ERROR;
+                free(path);
                 return -1;
         }
         free(headers);
@@ -987,6 +992,7 @@ skip_expires:
         setcork(sock, 0);
 
         close(f);
+        free(path);
 
         return 0;
 }
