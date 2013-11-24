@@ -2,9 +2,12 @@ CONFIGURATION
 
 Configuration of gladd happens in /etc/gladd.conf.
 
-Any line beginning with a # is deemed to be a comment and will be ignored by the configration parser.
+Any line beginning with a # is deemed to be a comment and will be ignored by
+the configration parser.
 
-After making changes to gladd.conf, a "gladd reload" will trigger a HUP of the application.  If the new configuration is valid, it will be loaded.  It will be ignored if not.
+After making changes to gladd.conf, a "gladd reload" will trigger a HUP of the
+application.  If the new configuration is valid, it will be loaded.  It will
+be ignored if not.
 
 == Global Settings ==
 
@@ -12,7 +15,9 @@ daemon
 0 = run gladd as a daemon (default).  1 = do not daemonize.
 
 debug
-0 = off (default), 1 = on.  With debug on, gladd will output a lot of information to syslog.
+
+0 = off (default), 1 = on.  With debug on, gladd will output a lot of
+information to syslog.
 
 encoding
 Character encoding to use.  Default UTF-8.
@@ -20,7 +25,9 @@ Character encoding to use.  Default UTF-8.
 pipelining
 0 = off
 1 = on (default)
-When on, both persistent TCP connections and HTTP pipelining are enabled.  When off, only a single HTTP request will be handled per connection, after which the connection will be closed (as in HTTP/1.0).
+When on, both persistent TCP connections and HTTP pipelining are enabled.
+When off, only a single HTTP request will be handled per connection, after
+which the connection will be closed (as in HTTP/1.0).
 
 port
 TCP port to listen on.  Default 8080.
@@ -28,7 +35,12 @@ TCP port to listen on.  Default 8080.
 ssl
 0 = off (default)
 1 = on
-Turn on to enable ssl support.  Requires that gladd be configured and built with ssl support.  Gladd has support for both gnutls and openssl.  Of the two, openssl is the most tested.  GnuTLS 3.0+ works, I believe.  I've seen problems with GnuTLS 2.x and would not recommend its use.  If you enable ssl, you will require ssl-ca, ssl-key, ssl-cert and ssl-crl also.
+
+Turn on to enable ssl support.  Requires that gladd be configured and built
+with ssl support.  Gladd has support for both gnutls and openssl.  Of the two,
+openssl is the most tested.  GnuTLS 3.0+ works, I believe.  I've seen problems
+with GnuTLS 2.x and would not recommend its use.  If you enable ssl, you will
+require ssl-ca, ssl-key, ssl-cert and ssl-crl also.
 
 ssl-ca
 (required for ssl=1)
@@ -54,7 +66,10 @@ Default url to serve up if a client requests /
 x-forward
 0 = off (default)
 1 = on
-If enabled, use the X-Forwarded-For header as the IP address of the client instead of the IP address of the connection.  Useful if gladd is sitting behind a proxy.
+
+If enabled, use the X-Forwarded-For header as the IP address of the client
+instead of the IP address of the connection.  Useful if gladd is sitting
+behind a proxy.
 
 xmlpath
 Default: .
