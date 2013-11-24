@@ -2,11 +2,32 @@ INSTALL
 
 Installation instructions for gladd.
 
+The usual:
+ ./configure
+ make
+ make install
+
+will get things up and running.
+
+There are a few options to configure:
+ --with-openssl		Use OpenSSL for HTTPS (default is no https support)
+ --with-gnutls		Use GnuTLS for HTTPS
+ --without-mysql	Do not include support for mysql
+ --without-postgres	Do not include support for postgresql
+ --without-tds		Do not include support for tds databases
+ 			(sybase and SQL Server)
+ --without-openldap	Do not include openldap support
+ --without-xml		Disable xml and xslt support
+
+Requires gladdb (available from https://github.com/brettsheffield/gladdb) for
+database backend support to work.
+
+== Tests ==
+
 (rather incomplete)
 
 gladd_test (called by `make test`) requires a database to exist called gladd_test.  It is also essential that gladd_fake does *not* exist or the unit tests will fail.
 
-Requires gladdb (available from https://github.com/brettsheffield/gladdb).
 
 == Ubuntu 12.04 LTS ==
 
