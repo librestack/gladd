@@ -75,7 +75,119 @@ xmlpath
 Default: .
 Path to root of xml files for use with xml/xslt-dependent url types.
 
-...
+== Databases ==
+
+Definitions of databases for use with other configuration options.
+
+Database definitions take the form:
+db	<alias> <type> <host> <database> [<username>] [<password>]
+
+eg.
+db      gb	pg      localhost	gladbooks
+db      db_test_my  my      localhost       gladd_test  myuser  mypass
+db      ldap2       ldap    ldap://ldap.example.com dc=example,dc=com myuser mypass
+
+<alias> - a convenient name to refer to this database as
+<type>  - pg=postgresql, my=mysql/mariadb, ldap=openldap, tds=sybase/sqlserver
+<host>  - hostname or IP address of server to connect to
+<database> - the database to work with
+<username> / <password> - credentials to use.  Not supported for pg.
+
+== URLs ==
+
+Here's where we define our application API.  There are several url types available.  Urls are matched in the order they are defined.  The first line where both the method and the url match will be used to handle the url.
+
+The form is:
+url <type> <method> <url> <path> <db> <view>
+
+<type>
+Can be one of:
+static, sqlview, xslpost, xslt, upload, plugin, proxy, rewrite.  See URL TYPES (below).
+
+<method>
+The HTTP method to use.  GET, POST, PULL, DELETE, BREW etc.
+
+<url>
+The url to match.
+
+<db>
+The database alias to use (must be defined in Databases - see above).
+
+<view>
+The sql alias to user (must be defined in Views - see below).
+
+=== URL Types ===
+
+static
+
+Serve static files.
+url static <method> <path>
+
+eg.
+url static GET /css/* /path/to/css/files/
+
+
+sqlview
+
+Serve up results of an SQL query or ldap search as XML.
+url sqlview <method> <url> <database> <view>
+eg.
+url sqlview GET /users/  db1  usersql
+This will serve up the results of the query with alias "usersql" on database "db1".  usersql could be defined like:
+
+sql usersql SELECT * FROM user;
+
+
+xslpost
+Take the XML from a POST, check it matches an XSD schema, transform it into SQL using XSLT, and execute the resultant SQL on a database.
+
+TODO: insert some description here of {xmlpath}/{create,update}.{xml,xsd,xsl}
+
+xslt
+Like a sqlview, but transform the resulting XML using XSLT (view.xsl).
+
+upload
+Handle file uploads from the browser using multipart MIME.  Write the files to the path specified, named according to their SHA1 sum.  Return the SHA1 to the client.
+url upload <method> <url> <path>
+
+eg.
+url upload PUT /filestore/ /path/to/filestore/
+
+
+plugin
+Execute a plugin.  If method is POST, pass the POST data to the stdin of the plugin, returning the results from stdout back to the client.  If method is GET, just execute the plugin and return the output.  Plugins can be written in any language.
+url plugin <method> <url> <path_to_plugin>
+
+
+proxy
+
+Fetch the url and return it to the client.
+
+eg.
+url proxy GET /remote/* http://example.com/
+If the client requests /remote/somefile.txt gladd will fetch http://example.com/somefile.txt and return it.
+
+rewrite
+Like proxy, but rewrite the url first, using $0, $1 etc to represent the first, second segments of the request respectively.
+eg.
+url rewrite GET /remote/*/ http://example.com/$1
+If the client requests /remote/fred/ gladd will fetch http://example.com/fred and return it to the client.
+
+== Access Control ==
+
+acl, auth, user, group etc.  PAM, nsswitch, ldap.  Group variables.
+
+== Views ==
+
+sql <alias> sql
+
+Multiline config
+
+begin sql
+	SELECT * FROM blah
+	ORDER BY blerk
+end sql
+
 
 More to come... watch this space!
 
