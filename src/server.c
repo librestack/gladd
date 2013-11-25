@@ -120,7 +120,7 @@ int server_start(int lockfd)
         }
 
         /* drop privileges */
-        if (!config->dropprivs) {
+        if (config->dropprivs) {
                 gid_t newgid = getgid();
                 setgroups(1, &newgid);
                 if (setuid(getuid()) != 0) {
