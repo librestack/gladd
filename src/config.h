@@ -51,6 +51,7 @@ typedef struct config_t {
         long daemon;         /* 0 = daemonise (default), 1 = don't detach */
         long debug;
         char *encoding;      /* encoding to use - default UTF-8 */
+        long dropprivs;      /* 1 = drop root privileges (default), 0=don't */
         long port;
         long pipelining;     /* 1 = allow http pipelining(default), 0=disable*/
         long keepalive;      /* inactivity timeout on tcp connections (s) */

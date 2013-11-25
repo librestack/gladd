@@ -120,18 +120,20 @@ int server_start(int lockfd)
         }
 
         /* drop privileges */
-        gid_t newgid = getgid();
-        setgroups(1, &newgid);
-        if (setuid(getuid()) != 0) {
-                fprintf(stderr,
+        if (!config->dropprivs) {
+                gid_t newgid = getgid();
+                setgroups(1, &newgid);
+                if (setuid(getuid()) != 0) {
+                        fprintf(stderr,
                         "ERROR: Failed to drop root privileges.  Exiting.\n");
-                exit(EXIT_FAILURE);
-        }
-        /* verify privileges cannot be restored */
-        if (setuid(0) != -1) {
-                fprintf(stderr,
+                        exit(EXIT_FAILURE);
+                }
+                /* verify privileges cannot be restored */
+                if (setuid(0) != -1) {
+                        fprintf(stderr,
                         "ERROR: Regained root privileges.  Exiting.\n");
-                exit(EXIT_FAILURE);
+                        exit(EXIT_FAILURE);
+                }
         }
 
         addr_size = sizeof their_addr;

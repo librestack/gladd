@@ -39,6 +39,7 @@ config_t config_default = {
         .authrealm      = "gladd",
         .daemon         = 0,
         .debug          = 0,
+        .dropprivs      = 1,
         .encoding       = "UTF-8",
         .xmlpath        = ".",
         .port           = 8080,
@@ -785,6 +786,10 @@ int process_config_line(char *line)
                 else if (strcmp(key, "port") == 0) {
                         return set_config_long(&config_new->port, 
                                                 "port", i, 1, 65535);
+                }
+                else if (strcmp(key, "dropprivs") == 0) {
+                        return set_config_long(&config_new->dropprivs, 
+                                                "dropprivs", i, 0, 1);
                 }
                 else if (strcmp(key, "daemon") == 0) {
                         return set_config_long(&config_new->daemon, 
