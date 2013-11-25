@@ -153,7 +153,11 @@ xslt
 Like a sqlview, but transform the resulting XML using XSLT (view.xsl).
 
 upload
-Handle file uploads from the browser using multipart MIME.  Write the files to the path specified, named according to their SHA1 sum.  Return the SHA1 to the client.
+
+Handle file uploads from the browser using multipart MIME.  Write the files to
+the path specified, named according to their SHA1 sum.  Return the SHA1 to the
+client.
+
 url upload <method> <url> <path>
 
 eg.
