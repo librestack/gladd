@@ -95,7 +95,9 @@ db      ldap2       ldap    ldap://ldap.example.com dc=example,dc=com myuser myp
 
 == URLs ==
 
-Here's where we define our application API.  There are several url types available.  Urls are matched in the order they are defined.  The first line where both the method and the url match will be used to handle the url.
+Here's where we define our application API.  There are several url types
+available.  Urls are matched in the order they are defined.  The first line
+where both the method and the url match will be used to handle the url.
 
 The form is:
 url <type> <method> <url> <path> <db> <view>
@@ -133,13 +135,17 @@ Serve up results of an SQL query or ldap search as XML.
 url sqlview <method> <url> <database> <view>
 eg.
 url sqlview GET /users/  db1  usersql
-This will serve up the results of the query with alias "usersql" on database "db1".  usersql could be defined like:
+
+This will serve up the results of the query with alias "usersql" on database
+"db1".  usersql could be defined like:
 
 sql usersql SELECT * FROM user;
 
 
 xslpost
-Take the XML from a POST, check it matches an XSD schema, transform it into SQL using XSLT, and execute the resultant SQL on a database.
+
+Take the XML from a POST, check it matches an XSD schema, transform it into
+SQL using XSLT, and execute the resultant SQL on a database.
 
 TODO: insert some description here of {xmlpath}/{create,update}.{xml,xsd,xsl}
 
@@ -155,7 +161,12 @@ url upload PUT /filestore/ /path/to/filestore/
 
 
 plugin
-Execute a plugin.  If method is POST, pass the POST data to the stdin of the plugin, returning the results from stdout back to the client.  If method is GET, just execute the plugin and return the output.  Plugins can be written in any language.
+
+Execute a plugin.  If method is POST, pass the POST data to the stdin of the
+plugin, returning the results from stdout back to the client.  If method is
+GET, just execute the plugin and return the output.  Plugins can be written in
+any language.
+
 url plugin <method> <url> <path_to_plugin>
 
 
@@ -165,13 +176,20 @@ Fetch the url and return it to the client.
 
 eg.
 url proxy GET /remote/* http://example.com/
-If the client requests /remote/somefile.txt gladd will fetch http://example.com/somefile.txt and return it.
+
+If the client requests /remote/somefile.txt gladd will fetch
+http://example.com/somefile.txt and return it.
 
 rewrite
-Like proxy, but rewrite the url first, using $0, $1 etc to represent the first, second segments of the request respectively.
+
+Like proxy, but rewrite the url first, using $0, $1 etc to represent the
+first, second segments of the request respectively.
+
 eg.
 url rewrite GET /remote/*/ http://example.com/$1
-If the client requests /remote/fred/ gladd will fetch http://example.com/fred and return it to the client.
+
+If the client requests /remote/fred/ gladd will fetch http://example.com/fred
+and return it to the client.
 
 == Access Control ==
 
