@@ -667,7 +667,7 @@ void http_response_headers(int sock, int code, int len, char *mime)
         }
         if (code == HTTP_UNAUTHORIZED) {
                 /* 401 Unauthorized MUST include WWW-Authenticate header */
-                http_insert_header(&r, "\nWWW-Authenticate: %s realm=\"%s\"", 
+                http_insert_header(&r, "WWW-Authenticate: %s realm=\"%s\"", 
                         request->authtype, config->authrealm);
         }
         respond(sock, r);
@@ -690,7 +690,7 @@ void http_response_full(int sock, int code, char *mime, char *body)
         }
         if (code == HTTP_UNAUTHORIZED) {
                 /* 401 Unauthorized MUST include WWW-Authenticate header */
-                http_insert_header(&r, "\nWWW-Authenticate: %s realm=\"%s\"", 
+                http_insert_header(&r, "WWW-Authenticate: %s realm=\"%s\"", 
                         request->authtype, config->authrealm);
         }
         respond(sock, r);
