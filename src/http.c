@@ -805,19 +805,21 @@ int http_validate_headers(http_request_t *r, http_status_code_t *err)
 /* free request info */
 void free_request(http_request_t *r)
 {
-        free_keyval(r->headers);
-        free_keyval(r->data);
-        free(r->httpv);
-        free(r->method);
-        free(r->res);
-        free(r->querystr);
-        free(r->clientip);
-        free(r->xforwardip);
-        free(r->authtype);
-        free(r->authuser);
-        free(r->authpass);
-        free(r->boundary);
-        free(r->params);
-        free(r);
-        r = NULL;
+        if (r) {
+                free_keyval(r->headers);
+                free_keyval(r->data);
+                free(r->httpv);
+                free(r->method);
+                free(r->res);
+                free(r->querystr);
+                free(r->clientip);
+                free(r->xforwardip);
+                free(r->authtype);
+                free(r->authuser);
+                free(r->authpass);
+                free(r->boundary);
+                free(r->params);
+                free(r);
+                r = NULL;
+        }
 }
