@@ -156,7 +156,7 @@ size_t ssl_recv(char *b, int len)
                         break;
                 case SSL_ERROR_ZERO_RETURN:
                         syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
-                        return nread;
+                        return -1;
                 case SSL_ERROR_WANT_WRITE:
                         return nread;
                 case SSL_ERROR_WANT_READ:
@@ -180,7 +180,7 @@ size_t ssl_send(char *msg, size_t len)
                         break;
                 case SSL_ERROR_ZERO_RETURN:
                         syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
-                        return nwrite;
+                        return -1;
                 case SSL_ERROR_WANT_WRITE:
                         return nwrite;
                 case SSL_ERROR_WANT_READ:
