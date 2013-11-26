@@ -219,67 +219,63 @@ int check_auth_alias(char *alias, http_request_t *r)
 
         syslog(LOG_DEBUG, "checking alias %s", alias);
 
-        if ((strcmp(a->type, "ldap") == 0) || (strcmp(a->type, "user") == 0)
-        || (strcmp(a->type, "pam") == 0) || (strcmp(a->type, "group") == 0))
-        {
-                if ((r->authuser == NULL) || (r->authpass == NULL)) {
-                        /* don't allow auth with blank credentials */
+        if (strcmp(a->type, "group") == 0) {
+                char *vgroup = strdup(a->db);
+                char *url = strdup(r->res);
+                sqlvars(&vgroup, url);
+                if (check_auth_group(r->authuser, vgroup)) {
+                        syslog(LOG_DEBUG, "user %s in group %s",
+                                r->authuser, vgroup);
+                        free(url);
+                        free(vgroup);
+                        return 0;
+                }
+                else {
+                        syslog(LOG_DEBUG, "user %s NOT in group %s",
+                                r->authuser, vgroup);
+                        free(url);
+                        free(vgroup);
                         return HTTP_UNAUTHORIZED;
                 }
-                if (strcmp(a->type, "ldap") == 0) {
-                        /* test credentials against ldap */
-                        syslog(LOG_DEBUG, "checking ldap users");
-                        res = db_test_bind(getdb(a->db),
-                                getsql(a->sql), a->bind,
-                                r->authuser, r->authpass);
-                        if (res == -1) return HTTP_INTERNAL_SERVER_ERROR;
-                        if (res == -2) return HTTP_UNAUTHORIZED;
-                        return res;
+        }
+        else if ((r->authuser == NULL) || (r->authpass == NULL)) {
+                /* don't allow auth to proceed with blank credentials */
+                return HTTP_UNAUTHORIZED;
+        }
+        else if (strcmp(a->type, "ldap") == 0) {
+                /* test credentials against ldap */
+                syslog(LOG_DEBUG, "checking ldap users");
+                res = db_test_bind(getdb(a->db),
+                        getsql(a->sql), a->bind,
+                        r->authuser, r->authpass);
+                if (res == -1) return HTTP_INTERNAL_SERVER_ERROR;
+                if (res == -2) return HTTP_UNAUTHORIZED;
+                return res;
+        }
+        else if (strcmp(a->type, "user") == 0) {
+                /* test credentials against users */
+                syslog(LOG_DEBUG, "checking static users");
+                user_t *u;
+                u = getuser(r->authuser);
+                if (u == NULL) {
+                        /* user not found */
+                        syslog(LOG_DEBUG, "no static user match");
+                        return HTTP_UNAUTHORIZED;
                 }
-                else if (strcmp(a->type, "user") == 0) {
-                        /* test credentials against users */
-                        syslog(LOG_DEBUG, "checking static users");
-                        user_t *u;
-                        u = getuser(r->authuser);
-                        if (u == NULL) {
-                                /* user not found */
-                                syslog(LOG_DEBUG, "no static user match");
-                                return HTTP_UNAUTHORIZED;
-                        }
-                        syslog(LOG_DEBUG, "matched static user");
-                        if ((strncmp(r->authpass, u->password,
-                        strlen(u->password)) != 0)
-                        || (strlen(r->authpass) != strlen(u->password)))
-                        {
-                                /* password incorrect */
-                                syslog(LOG_DEBUG, "password incorrect");
-                                return HTTP_UNAUTHORIZED;
-                        }
+                syslog(LOG_DEBUG, "matched static user");
+                if ((strncmp(r->authpass, u->password,
+                strlen(u->password)) != 0)
+                || (strlen(r->authpass) != strlen(u->password)))
+                {
+                        /* password incorrect */
+                        syslog(LOG_DEBUG, "password incorrect");
+                        return HTTP_UNAUTHORIZED;
                 }
-                else if (strcmp(a->type, "pam") == 0) {
-                        /* use pam authentication */
-                        syslog(LOG_DEBUG, "checking PAM authentication");
-                        return check_auth_pam(a->db, r->authuser, r->authpass);
-                }
-                else if (strcmp(a->type, "group") == 0) {
-                        char *vgroup = strdup(a->db);
-                        char *url = strdup(r->res);
-                        sqlvars(&vgroup, url);
-                        if (check_auth_group(r->authuser, vgroup)) {
-                                syslog(LOG_DEBUG, "user %s in group %s",
-                                        r->authuser, vgroup);
-                                free(url);
-                                free(vgroup);
-                                return 0;
-                        }
-                        else {
-                                syslog(LOG_DEBUG, "user %s NOT in group %s",
-                                        r->authuser, vgroup);
-                                free(url);
-                                free(vgroup);
-                                return HTTP_UNAUTHORIZED;
-                        }
-                }
+        }
+        else if (strcmp(a->type, "pam") == 0) {
+                /* use pam authentication */
+                syslog(LOG_DEBUG, "checking PAM authentication");
+                return check_auth_pam(a->db, r->authuser, r->authpass);
         }
         else {
                 syslog(LOG_ERR,
