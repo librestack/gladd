@@ -141,8 +141,8 @@ size_t ssl_peek(char *b, int len)
                 syslog(LOG_DEBUG,"ssl_peek() I/O Error: %s",ssl_err(ret));
                 break;
         default:
-                syslog(LOG_DEBUG,"ssl_peek() %s",ssl_err(ret));
-                break;
+                //syslog(LOG_DEBUG,"ssl_peek() %s",ssl_err(ret));
+                return 0;
         }
         return nread;
 }
@@ -167,8 +167,8 @@ size_t ssl_recv(char *b, int len)
                         //syslog(LOG_DEBUG, "ssl_recv() wants read");
                         break;
                 default:
-                        syslog(LOG_DEBUG,"ssl_recv() %s",ssl_err(ret));
-                        break;
+                        //syslog(LOG_DEBUG,"ssl_recv() %s",ssl_err(ret));
+                        return 0;
                 }
         } while(ret > 0);
         return nread;
@@ -189,15 +189,13 @@ size_t ssl_send(char *msg, size_t len)
                         break;
                 case SSL_ERROR_WANT_WRITE:
                         syslog(LOG_DEBUG, "ssl_send() wants write");
-                        ret = 0;
                         break;
                 case SSL_ERROR_WANT_READ:
                         syslog(LOG_DEBUG, "ssl_send() wants read");
-                        ret = 0;
                         break;
                 default:
-                        syslog(LOG_ERR, "ssl_send(): %s", ssl_err(ret));
-                        break;
+                        //syslog(LOG_ERR, "ssl_send(): %s", ssl_err(ret));
+                        return 0;
                 }
         } while(ret > 0);
         return nwrite; 
