@@ -219,7 +219,11 @@ int check_auth_alias(char *alias, http_request_t *r)
 
         syslog(LOG_DEBUG, "checking alias %s", alias);
 
-        if (strcmp(a->type, "group") == 0) {
+        if (r->authuser == NULL || r->authpass == NULL) {
+                /* don't allow auth to proceed with blank credentials */
+                return HTTP_UNAUTHORIZED;
+        }
+        else if (strcmp(a->type, "group") == 0) {
                 char *vgroup = strdup(a->db);
                 char *url = strdup(r->res);
                 sqlvars(&vgroup, url);
@@ -237,10 +241,6 @@ int check_auth_alias(char *alias, http_request_t *r)
                         free(vgroup);
                         return HTTP_UNAUTHORIZED;
                 }
-        }
-        else if ((r->authuser == NULL) || (r->authpass == NULL)) {
-                /* don't allow auth to proceed with blank credentials */
-                return HTTP_UNAUTHORIZED;
         }
         else if (strcmp(a->type, "ldap") == 0) {
                 /* test credentials against ldap */
