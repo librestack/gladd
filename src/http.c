@@ -818,7 +818,6 @@ void free_request(http_request_t *r)
                 free(r->authuser);
                 free(r->authpass);
                 free(r->boundary);
-                free(r->params);
                 free(r);
                 r = NULL;
         }

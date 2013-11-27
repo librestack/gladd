@@ -345,6 +345,7 @@ http_status_code_t response_sqlview(int sock, url_t *u)
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(headers);
+        set_headers(&r); /* set any additional headers */
         respond(sock, r);
         free(r);
         free(xml);
@@ -881,7 +882,6 @@ int send_file(int sock, char *file, http_status_code_t *err)
         char expires[39];
         int f;
         int rc;
-        int nocache = 0;
         off_t offset;
         struct stat stat_buf;
         struct tm *tmp;
@@ -930,40 +930,18 @@ int send_file(int sock, char *file, http_status_code_t *err)
         }
         free(headers);
 
-        /* check params */
-        if (request->params) {
-                int segs = 0;
-                char *pstr = strdup(request->params);
-                char **toks;
-                /* loop through comma-separated parameters */
-                toks = tokenize(&segs, &pstr, ",");
-                while (segs > 0) {
-                        syslog(LOG_DEBUG, "param: %s", toks[--segs]);
-                        if (strcmp(toks[segs], "nocache") == 0) {
-                                nocache = 1;
-                        }
+        set_headers(&r); /* set any additional headers */
+
+        if (!request->nocache) {
+                /* Add Expires header in RFC1123 date format, 10 years ahead */
+                int tenyears = 10 * 365 * 24 * 60 * 60; /* ish */
+                t = time(NULL) + tenyears;
+                tmp = localtime(&t);
+                if (strftime(expires, 39, "Expires: %a, %d %b %Y %T GMT", tmp))
+                {
+                        http_insert_header(&r, expires);
                 }
         }
-
-        if (nocache) {
-                /* Tell all browsers as clearly as possible no to cache this */
-                http_insert_header(&r,
-                        "Cache-Control: no-cache, no-store, must-revalidate");
-                http_insert_header(&r,
-                        "Pragma: no-cache");
-                http_insert_header(&r,
-                        "Expires: 0");
-                goto skip_expires;
-        }
-        /* Add Expires header in RFC1123 date format, roughly 10 years ahead */
-        int tenyears = 10 * 365 * 24 * 60 * 60; /* ish */
-        t = time(NULL) + tenyears;
-        tmp = localtime(&t);
-        if (strftime(expires, 39, "Expires: %a, %d %b %Y %T GMT", tmp) != 0) {
-                http_insert_header(&r, expires);
-        }
-skip_expires:
-
         respond(sock, r);
 
         /* send the file */
@@ -1058,4 +1036,16 @@ void setcork(int sock, int state)
                 setcork_ssl(state);
         else
                 setsockopt(sock, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
+}
+
+/* set any additional headers */
+void set_headers(char **r)
+{
+        if (request->nocache == 1) {
+                /* Tell all browsers not to cache this */
+                http_insert_header(r,
+                        "Cache-Control: no-cache, no-store, must-revalidate");
+                http_insert_header(r, "Pragma: no-cache");
+                http_insert_header(r, "Expires: 0");
+        }
 }

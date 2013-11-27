@@ -115,9 +115,14 @@ int check_auth(http_request_t *r)
                                 return 0;
                         }
                         else if (strcmp(a->type, "params") == 0) {
-                                r->params = strdup(a->auth);
-                                syslog(LOG_DEBUG, "url has params: %s",
-                                        r->params);
+                                if (strcmp(a->auth, "cookie:session") == 0) {
+                                        syslog(LOG_DEBUG, "cookie");
+                                        r->cookie = 1;
+                                }
+                                if (strcmp(a->auth, "nocache") == 0) {
+                                        syslog(LOG_DEBUG, "nocache");
+                                        r->nocache = 1;
+                                }
                         }
                         else if (strcmp(a->type, "sufficient") == 0) {
                                 syslog(LOG_DEBUG, "acl sufficient...");
