@@ -205,7 +205,6 @@ handler_result_t handle_request(int sock, char *s)
         }
 
         /* check auth & auth */
-        syslog(LOG_DEBUG, "user to use(r): %s", request->authuser);
         auth = check_auth(request);
         if (auth != 0) {
                 http_response(sock, auth);
