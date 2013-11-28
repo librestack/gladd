@@ -928,10 +928,13 @@ int read_config(char *configfile)
         fclose(fd);
 
         /* generate random secretkey if none set */
-        if (!config->secretkey) {
+        if (!config_new->secretkey) {
                 syslog(LOG_DEBUG, "Generating random secret key");
-                config->secretkey = randstring(64);
+                config_new->secretkey = randstring(64);
         }
+        /* Initialize Blowfish */
+        Blowfish_Init(&config_new->ctx, (unsigned char*)config_new->secretkey,
+                        strlen(config_new->secretkey));
 
         /* if config parsed okay, make active */
         if (retval == 0)

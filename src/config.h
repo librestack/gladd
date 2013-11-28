@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include "gladdb/db.h"
+#include "blowfish.h"
 
 #define DEFAULT_CONFIG "/etc/gladd.conf"
 
@@ -62,6 +63,7 @@ typedef struct config_t {
         char *sslcert;
         char *sslcrl;
         char *secretkey;     /* secret key used for en/decrypting cookies */
+        BLOWFISH_CTX ctx;    /* blowfish context */
         char *urldefault;
         long xforward;
         char *xmlpath;       /* path to xml, xsl and xsd files */

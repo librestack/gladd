@@ -22,7 +22,6 @@
 #define _GNU_SOURCE
 
 #include "auth.h"
-#include "blowfish.h"
 #include "config.h"
 #include "gladdb/db.h"
 #include "string.h"
@@ -442,13 +441,10 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
 char *encipher(char *cleartext)
 {
         char *ciphertext = strndup(cleartext, 64);
-        BLOWFISH_CTX ctx;
         unsigned long L = (unsigned long)ciphertext;
         unsigned long R = (unsigned long)ciphertext+32;
 
-        Blowfish_Init(&ctx, (unsigned char*)config->secretkey,
-                strlen(config->secretkey));
-        Blowfish_Encrypt(&ctx, &L, &R);
+        Blowfish_Encrypt(&config->ctx, &L, &R);
 
         /* blowfish may contain embedded nuls, so run it through base64 */
         char *base64 = encode64(ciphertext, 64);
@@ -464,13 +460,11 @@ char *decipher(char *base64)
         char *ciphertext = decode64(base64);
 
         char *cleartext = strndup(ciphertext, 64);
-        BLOWFISH_CTX ctx;
+        free(ciphertext);
         unsigned long L = (unsigned long)cleartext;
         unsigned long R = (unsigned long)cleartext+32;
 
-        Blowfish_Init(&ctx, (unsigned char*)config->secretkey,
-                strlen(config->secretkey));
-        Blowfish_Decrypt(&ctx, &L, &R);
+        Blowfish_Decrypt(&config->ctx, &L, &R);
 
         return cleartext;
 }
