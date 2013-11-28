@@ -75,7 +75,7 @@ int base64_encode_block(const char* plaintext_in, int length_in, char* code_out,
 			++(state_in->stepcount);
 			if (state_in->stepcount == CHARS_PER_LINE/4)
 			{
-				*codechar++ = '\n';
+				*codechar++ = '\0';
 				state_in->stepcount = 0;
 			}
 		}
