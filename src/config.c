@@ -927,6 +927,12 @@ int read_config(char *configfile)
         /* close file */
         fclose(fd);
 
+        /* generate random secretkey if none set */
+        if (!config->secretkey) {
+                syslog(LOG_DEBUG, "Generating random secret key");
+                config->secretkey = randstring(64);
+        }
+
         /* if config parsed okay, make active */
         if (retval == 0)
                 config = config_new;
