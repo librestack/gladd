@@ -229,9 +229,8 @@ int check_auth_alias(char *alias, http_request_t *r)
         if (strcmp(a->type, "cookie") == 0) {
                 return check_auth_cookie(r, a);
         }
-        else if (r->authuser == NULL || r->authpass == NULL) {
-                /* don't allow auth to proceed with blank credentials */
-                syslog(LOG_DEBUG, "auth attempted with blank credentials");
+        else if (r->authuser == NULL) {
+                syslog(LOG_DEBUG, "auth attempted with blank username");
                 return HTTP_UNAUTHORIZED;
         }
         else if (strcmp(a->type, "group") == 0) {
@@ -252,6 +251,10 @@ int check_auth_alias(char *alias, http_request_t *r)
                         free(vgroup);
                         return HTTP_UNAUTHORIZED;
                 }
+        }
+        else if (r->authpass == NULL) {
+                syslog(LOG_DEBUG, "auth attempted with blank password");
+                return HTTP_UNAUTHORIZED;
         }
         else if (strcmp(a->type, "ldap") == 0) {
                 /* test credentials against ldap */
