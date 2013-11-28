@@ -22,8 +22,10 @@
 #define _GNU_SOURCE
 
 #include "auth.h"
+#include "blowfish.h"
 #include "config.h"
 #include "gladdb/db.h"
+#include "string.h"
 #include "xml.h"
 #include <fnmatch.h>
 #include <grp.h>
@@ -109,11 +111,6 @@ int check_auth(http_request_t *r)
                                 syslog(LOG_DEBUG, "acl deny");
                                 return HTTP_FORBIDDEN;
                         }
-                        else if (strcmp(a->type, "allow") == 0) {
-                                /* TODO: check for ip address */
-                                syslog(LOG_DEBUG, "acl allow");
-                                return 0;
-                        }
                         else if (strcmp(a->type, "params") == 0) {
                                 if (strcmp(a->auth, "cookie:session") == 0) {
                                         syslog(LOG_DEBUG, "cookie");
@@ -123,6 +120,11 @@ int check_auth(http_request_t *r)
                                         syslog(LOG_DEBUG, "nocache");
                                         r->nocache = 1;
                                 }
+                        }
+                        else if (strcmp(a->type, "allow") == 0) {
+                                /* TODO: check for ip address */
+                                syslog(LOG_DEBUG, "acl allow");
+                                return 0;
                         }
                         else if (strcmp(a->type, "sufficient") == 0) {
                                 syslog(LOG_DEBUG, "acl sufficient...");
@@ -168,7 +170,7 @@ int check_auth_sufficient(char *alias, http_request_t *r)
 {
         auth_t *a;
         int i;
-        
+
         if (strcmp(alias, "*") == 0) {
                 a = config->auth;
                 while (a != NULL) {
@@ -224,8 +226,12 @@ int check_auth_alias(char *alias, http_request_t *r)
 
         syslog(LOG_DEBUG, "checking alias %s", alias);
 
-        if (r->authuser == NULL || r->authpass == NULL) {
+        if (strcmp(a->type, "cookie") == 0) {
+                return check_auth_cookie(r, a);
+        }
+        else if (r->authuser == NULL || r->authpass == NULL) {
                 /* don't allow auth to proceed with blank credentials */
+                syslog(LOG_DEBUG, "auth attempted with blank credentials");
                 return HTTP_UNAUTHORIZED;
         }
         else if (strcmp(a->type, "group") == 0) {
@@ -338,4 +344,130 @@ int check_auth_group(char *username, char *groupname)
         }
         endgrent();
         return ret;
+}
+
+/* set session cookie */
+int auth_set_cookie(char **r, http_cookie_type_t type)
+{
+        /* we create the session cookie by concatenating:
+         * <username> <timestamp> <nonce>
+         * and encrypting this using the blowfish cipher and our key */
+        char *nonce = randstring(64);
+        time_t timestamp = time(NULL);
+        char *dough;
+        char *cookie;
+
+        asprintf(&dough, "%s %li %s", request->authuser, (long)timestamp,
+                nonce);
+        free(nonce);
+        cookie = encipher(dough);
+        free(dough);
+
+        syslog(LOG_DEBUG, "setting session cookie %s", cookie);
+        http_insert_header(r, "Set-Cookie: SID=%s; Path=/; Secure; HttpOnly",
+                cookie);
+        free(cookie);
+
+        return 0;
+}
+
+/* invalidate session cookie */
+int auth_unset_cookie(char **r)
+{
+        syslog(LOG_DEBUG, "logout requested - invalidating session cookie");
+        http_insert_header(r,
+                "Set-Cookie: SID=logout; Path=/; Max-Age=0; Secure; HttpOnly");
+        return 0;
+}
+
+int check_auth_cookie(http_request_t *r, auth_t *a)
+{
+        /* get the Cookie header (we only expect one) */
+        char *cookie = http_get_header(r, "Cookie");
+        if (!cookie) {
+                syslog(LOG_DEBUG, "No Cookie header, skipping cookie auth");
+                return HTTP_UNAUTHORIZED;
+        }
+        syslog(LOG_DEBUG, "attempting cookie auth");
+
+        /* find the first cookie called SID, ignore any others */
+        char *tmp = malloc(strlen(cookie));
+        if (sscanf(cookie, "SID=%[^;]", tmp) != 1) {
+                syslog(LOG_DEBUG, "Session cookie not found");
+                free(tmp);
+                return HTTP_UNAUTHORIZED;
+        }
+        /* decrypt cookie */
+        char *clearcookie = decipher(tmp);
+        free(tmp);
+        syslog(LOG_DEBUG, "Decrypted cookie: %s", clearcookie);
+
+        /* check cookie is valid */
+        char username[64];
+        char nonce[64];
+        long timestamp;
+        if (sscanf(clearcookie, "%s %li %s",
+        username, &timestamp, nonce) != 3)
+        {
+                syslog(LOG_DEBUG, "Invalid cookie");
+                return HTTP_UNAUTHORIZED;
+        }
+
+        /* check cookie freshness */
+        long now = (long)time(NULL);
+        if ((timestamp + config->sessiontimeout) < now) {
+                syslog(LOG_DEBUG, "Stale cookie (older than %lis)",
+                        config->sessiontimeout);
+                return HTTP_UNAUTHORIZED;
+        }
+
+        /* set session info from cookie */
+        syslog(LOG_INFO, "Valid cookie obtained for %s", username);
+        syslog(LOG_DEBUG, "Setting username %s from session cookie", username);
+        request->authuser = strdup(username);
+
+        free(cookie);
+        free(clearcookie);
+
+        return 0;
+}
+
+
+/* Return blowfish-encrypted ciphertext using our secretkey 
+ * NB: string must be exactly 64 bytes long or it will be truncated
+ */
+char *encipher(char *cleartext)
+{
+        char *ciphertext = strndup(cleartext, 64);
+        BLOWFISH_CTX ctx;
+        unsigned long L = (unsigned long)ciphertext;
+        unsigned long R = (unsigned long)ciphertext+32;
+
+        Blowfish_Init(&ctx, (unsigned char*)config->secretkey,
+                strlen(config->secretkey));
+        Blowfish_Encrypt(&ctx, &L, &R);
+
+        /* blowfish may contain embedded nuls, so run it through base64 */
+        char *base64 = encode64(ciphertext, 64);
+        free(ciphertext);
+
+        return base64;
+}
+
+/* Return decrypted blowfish ciphertext */
+char *decipher(char *base64)
+{
+        /* first, strip base64 encoding */
+        char *ciphertext = decode64(base64);
+
+        char *cleartext = strndup(ciphertext, 64);
+        BLOWFISH_CTX ctx;
+        unsigned long L = (unsigned long)cleartext;
+        unsigned long R = (unsigned long)cleartext+32;
+
+        Blowfish_Init(&ctx, (unsigned char*)config->secretkey,
+                strlen(config->secretkey));
+        Blowfish_Decrypt(&ctx, &L, &R);
+
+        return cleartext;
 }

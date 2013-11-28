@@ -54,6 +54,34 @@ char *memsearch(char *hay, char *pin, size_t size)
         return ptr;
 }
 
+/* Return return random char from set: [a–zA–Z0–9] */
+char randchar()
+{
+        char *charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        int r;
+        int rmax = strlen(charset) - 1;
+        int divisor = RAND_MAX/(rmax+1);
+
+        do {
+                r = rand() / divisor;
+        } while (r > rmax);
+
+        return charset[r];
+}
+
+/* return random string of length len */
+char *randstring(int len)
+{
+        char *salt;
+        salt = calloc(1, len + 1);
+
+        while (len-- > 0) {
+               salt[len] = randchar();
+        }
+
+        return salt;
+}
+
 /* search and replace 
  * NB: only replaces one instance of string
  * remember to free() the returned string

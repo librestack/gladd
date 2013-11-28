@@ -79,6 +79,8 @@ char *test_config_defaults()
         mu_assert("Ensure default daemon=0", config->daemon == 0);
         mu_assert("Ensure default pipelining=1", config->pipelining == 1);
         mu_assert("Ensure default keepalive=115", config->keepalive == 115);
+        mu_assert("Ensure default sessiontimeout=300",
+                config->sessiontimeout == 300);
         mu_assert("Ensure default ssl=0", config->ssl == 0);
         mu_assert("Ensure default authrealm=gladd", 
                 strncmp(config->authrealm, "gladd", 5) == 0);
@@ -101,6 +103,8 @@ char *test_config_set()
                 config->pipelining == 0);
         mu_assert("Ensure keepalive is set from config",
                 config->keepalive == 180);
+        mu_assert("Ensure sessiontimeout is set from config",
+                config->sessiontimeout == 600);
         mu_assert("Ensure ssl is set from config", config->ssl == 1);
         mu_assert("Ensure encoding is set from config", 
                 strcmp(config->encoding, "ISO-8859-1") == 0);

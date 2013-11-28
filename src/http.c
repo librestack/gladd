@@ -23,6 +23,7 @@
 #define _GNU_SOURCE
 #include <assert.h>
 #include <b64/cdecode.h>
+#include <b64/cencode.h>
 #include <curl/curl.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -194,21 +195,40 @@ char *check_content_type(http_request_t *r, http_status_code_t *err, char *type)
 /* return decoded base64 string */
 char *decode64(char *str)
 {
-        int r;
+        int i;
         char *plain = NULL;
 
-        plain = malloc(sizeof(str) * 2);
+        plain = malloc(strlen(str) * 2);
 
         base64_decodestate *d;
         d = malloc(sizeof(base64_decodestate));
         base64_init_decodestate(d);
-
-        r = base64_decode_block(str, strlen(str), plain, d);
-        plain[r] = '\0';
+        i = base64_decode_block(str, strlen(str), plain, d);
+        plain[i] = '\0';
 
         free(d);
 
         return plain;
+}
+
+/* return encoded base64 string */
+char *encode64(char *str, int len)
+{
+        int i;
+        char *encoded = NULL;
+
+        encoded = malloc(len * 4/3);
+
+        base64_encodestate *d;
+        d = malloc(sizeof(base64_encodestate));
+        base64_init_encodestate(d);
+
+        i = base64_encode_block(str, len, encoded, d);
+        encoded[i] = '\0';
+
+        free(d);
+
+        return encoded;
 }
 
 /* key -> value lookup for client request headers */
@@ -334,6 +354,9 @@ int http_insert_header(char **r, char *header, ...)
         va_start(argp, header);
         vsprintf(b, header, argp);
         va_end(argp);
+
+        syslog(LOG_DEBUG, "inserting header");
+        syslog(LOG_DEBUG, "[%s]", b);
 
         /* insert just before the first blank line, otherwise at end */
         pos = memsearch(tmp, "\r\n\r\n", strlen(tmp));

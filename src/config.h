@@ -55,11 +55,13 @@ typedef struct config_t {
         long port;
         long pipelining;     /* 1 = allow http pipelining(default), 0=disable*/
         long keepalive;      /* inactivity timeout on tcp connections (s) */
+        long sessiontimeout; /* session timeout (s) */
         long ssl;            /* 0 = disable ssl (default), 1 = enable ssl */
         char *sslca;
         char *sslkey;
         char *sslcert;
         char *sslcrl;
+        char *secretkey;     /* secret key used for en/decrypting cookies */
         char *urldefault;
         long xforward;
         char *xmlpath;       /* path to xml, xsl and xsd files */

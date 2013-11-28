@@ -25,8 +25,13 @@
 
 #include "http.h"
 
+int auth_set_cookie(char **r, http_cookie_type_t type);
+int auth_unset_cookie(char **r);
+char *decipher(char *ciphertext);
+char *encipher(char *cleartext);
 int check_auth(http_request_t *r);
 int check_auth_alias(char *alias, http_request_t *r);
+int check_auth_cookie(http_request_t *r, auth_t *a);
 int check_auth_group(char *user, char *group);
 int check_auth_pam(char *service, char *username, char *password);
 int check_auth_require(char *alias, http_request_t *r);

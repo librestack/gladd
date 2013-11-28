@@ -45,6 +45,7 @@ config_t config_default = {
         .port           = 8080,
         .pipelining     = 1,
         .keepalive      = 115,
+        .sessiontimeout = 300,
         .ssl            = 0,
         .xforward       = 0,
         .urldefault     = "index.html"
@@ -159,6 +160,14 @@ int add_auth (char *value)
                 newauth->next = NULL;
         }
         else if (strcmp(type, "group") == 0) {
+                newauth->alias = strdup(alias);
+                newauth->type = strdup(type);
+                newauth->db = strdup(db);
+                newauth->sql = strdup(sql);
+                newauth->bind = strdup(bind);
+                newauth->next = NULL;
+        }
+        else if (strcmp(type, "cookie") == 0) {
                 newauth->alias = strdup(alias);
                 newauth->type = strdup(type);
                 newauth->db = strdup(db);
@@ -473,6 +482,8 @@ void free_config()
         config->sslcert = NULL;
         free(config->sslcrl);
         config->sslcrl = NULL;
+        free(config->secretkey);
+        config->secretkey = NULL;
         free_acls();
         free_auth();
         free_dbs();
@@ -803,6 +814,10 @@ int process_config_line(char *line)
                         return set_config_long(&config_new->keepalive, 
                                                 "keepalive", i, 0, LONG_MAX);
                 }
+                else if (strcmp(key, "session_timeout") == 0) {
+                        return set_config_long(&config_new->sessiontimeout, 
+                                        "sessiontimeout", i, 0, LONG_MAX);
+                }
                 else if (strcmp(key, "ssl") == 0) {
                         return set_config_long(&config_new->ssl, 
                                                 "ssl", i, 0, 1);
@@ -857,6 +872,9 @@ int process_config_line(char *line)
                 }
                 else if (strcmp(key, "ssl-crl") == 0) {
                         return set_ssl(key, value);
+                }
+                else if (strcmp(key, "secretkey") == 0) {
+                        return asprintf(&config->secretkey, "%s", value);
                 }
                 else if (strcmp(key, "xmlpath") == 0) {
                         return set_xmlpath(value);

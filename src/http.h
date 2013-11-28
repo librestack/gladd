@@ -45,6 +45,10 @@ typedef enum {
         HTTP_VERSION_NOT_SUPPORTED      = 505
 } http_status_code_t;
 
+typedef enum {
+        HTTP_COOKIE_SESSION
+} http_cookie_type_t;
+
 struct http_status {
         int code;
         char *status;
@@ -77,6 +81,7 @@ int check_content_length(http_request_t *r, http_status_code_t *err);
 char *check_content_type(http_request_t *r, http_status_code_t *err, char *type);
 void free_request(http_request_t *r);
 char *decode64(char *str);
+char *encode64(char *str, int len);
 struct http_status get_status(int code);
 void http_add_request_data(http_request_t *r, char *key, char *value);
 http_request_t *http_init_request();

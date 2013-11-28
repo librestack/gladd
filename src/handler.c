@@ -205,6 +205,7 @@ handler_result_t handle_request(int sock, char *s)
         }
 
         /* check auth & auth */
+        syslog(LOG_DEBUG, "user to use(r): %s", request->authuser);
         auth = check_auth(request);
         if (auth != 0) {
                 http_response(sock, auth);
@@ -460,6 +461,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                 }
                 free(headers);
                 free(xml);
+                set_headers(&r); /* set any additional headers */
                 respond(sock, r);
                 free(r);
         }
@@ -536,6 +538,7 @@ http_status_code_t response_xslt(int sock, url_t *u)
         free(headers);
 
         /* return html response */
+        set_headers(&r); /* set any additional headers */
         respond(sock, r);
         free(r);
         free(html);
@@ -712,7 +715,10 @@ http_status_code_t response_upload(int sock, url_t *u)
 
         /* return hash of uploaded file */
         /* TODO: return headers, 201 created etc. */
+        //char *r = strdup(hash);
+        //set_headers(&r); /* set any additional headers */
         respond(sock, hash);
+        //free(r);
 
         return err;
 }
@@ -794,7 +800,10 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
                 }
         }
         /* respond to http client */
-        http_response_full(sock, httpcode, "text/xml", plugout);
+        char *r = strdup(plugout);
+        set_headers(&r); /* set any additional headers */
+        http_response_full(sock, httpcode, "text/xml", r);
+        free(r);
 
         return err;
 }
@@ -930,8 +939,6 @@ int send_file(int sock, char *file, http_status_code_t *err)
         }
         free(headers);
 
-        set_headers(&r); /* set any additional headers */
-
         if (!request->nocache) {
                 /* Add Expires header in RFC1123 date format, 10 years ahead */
                 int tenyears = 10 * 365 * 24 * 60 * 60; /* ish */
@@ -942,6 +949,7 @@ int send_file(int sock, char *file, http_status_code_t *err)
                         http_insert_header(&r, expires);
                 }
         }
+        set_headers(&r); /* set any additional headers */
         respond(sock, r);
 
         /* send the file */
@@ -1041,7 +1049,16 @@ void setcork(int sock, int state)
 /* set any additional headers */
 void set_headers(char **r)
 {
-        if (request->nocache == 1) {
+        syslog(LOG_DEBUG, "set_headers()");
+        if (http_get_header(request, "Logout")) {
+                /* Logout header detected, unset session cookie */
+                auth_unset_cookie(r);
+        }
+        else if (request->cookie) {
+                syslog(LOG_DEBUG, "param requires cookie to be set");
+                auth_set_cookie(r, HTTP_COOKIE_SESSION);
+        }
+        if (request->nocache) {
                 /* Tell all browsers not to cache this */
                 http_insert_header(r,
                         "Cache-Control: no-cache, no-store, must-revalidate");

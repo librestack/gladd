@@ -27,6 +27,8 @@
 
 char *lstrip(char *str);
 char *memsearch(char *hay, char *pin, size_t size);
+char randchar();
+char *randstring(int len);
 char *replace(char *str, char *find, char *repl);
 char *replaceall(char *str, char *find, char *repl);
 char *rstrip(char *str);
