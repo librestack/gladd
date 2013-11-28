@@ -100,8 +100,10 @@ int check_auth(http_request_t *r)
                         "Checking acls for %s %s ... trying %s %s", 
                         r->method, r->res, a->method, a->url);
                 /* ensure method and url matches */
-                if ((fnmatch(a->url, r->res, 0) == 0) &&
-                    (strncmp(r->method, a->method, strlen(r->method)) == 0))
+                if ((fnmatch(a->url, r->res, 0) == 0
+                    && strncmp(r->method, a->method, strlen(r->method)) == 0)
+                || (fnmatch(a->url, r->res, 0) == 0
+                    && strcmp(a->method, "*") == 0))
                 {
                         syslog(LOG_DEBUG,
                                 "Found matching acl - checking credentials");
