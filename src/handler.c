@@ -573,6 +573,12 @@ http_status_code_t response_upload(int sock, url_t *u)
         clen = http_get_header(request, "Content-Length");
         lclen = strtol(clen, NULL, 10);
 
+        /* abort if we don't have a boundary */
+        if (!b) {
+                syslog(LOG_ERR, "No boundary header for upload url");
+                return HTTP_BAD_REQUEST;
+        }
+
         /* first, grab any bytes already in buffer */
         size = bytes;
         syslog(LOG_DEBUG, "I already have %i bytes", (int) size);
