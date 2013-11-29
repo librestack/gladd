@@ -933,8 +933,8 @@ int read_config(char *configfile)
                 config_new->secretkey = randstring(64);
         }
         /* Initialize Blowfish */
-        Blowfish_Init(&config_new->ctx, (unsigned char*)config_new->secretkey,
-                        strlen(config_new->secretkey));
+        BF_set_key(&config_new->ctx, strlen(config_new->secretkey),
+                (const unsigned char*)config_new->secretkey);
 
         /* if config parsed okay, make active */
         if (retval == 0)

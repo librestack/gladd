@@ -437,36 +437,40 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
 }
 
 
-/* Return blowfish-encrypted ciphertext using our secretkey 
- * NB: string must be exactly 64 bytes long or it will be truncated
- */
+/* Return blowfish-encrypted ciphertext using our secretkey */
 char *encipher(char *cleartext)
 {
-        char *ciphertext = strndup(cleartext, 64);
-        unsigned long L = (unsigned long)ciphertext;
-        unsigned long R = (unsigned long)ciphertext+32;
+        unsigned char *ciphertext = calloc(strlen(cleartext)+1, sizeof(char));
+        int i;
 
-        Blowfish_Encrypt(&config->ctx, &L, &R);
+        for (i=0; i< strlen(cleartext); i+=8) {
+                BF_ecb_encrypt((unsigned char *)cleartext+i, ciphertext+i,
+                        &config->ctx, BF_ENCRYPT);
+        }
 
         /* blowfish may contain embedded nuls, so run it through base64 */
-        char *base64 = encode64(ciphertext, 64);
-        free(ciphertext);
+        char *base64 = encode64((char *)ciphertext, strlen(cleartext));
 
         return base64;
 }
 
-/* Return decrypted blowfish ciphertext */
+/* Return decrypted blowfish ciphertext (limit: 64 chars) */
 char *decipher(char *base64)
 {
+        unsigned char *cleartext = calloc(strlen(base64)+1, sizeof(char));
+        int i;
+
         /* first, strip base64 encoding */
-        char *ciphertext = decode64(base64);
+        unsigned char *ciphertext = (unsigned char *)decode64(base64);
 
-        char *cleartext = strndup(ciphertext, 64);
+        for (i=0; i< 64; i+=8) {
+                BF_ecb_encrypt(ciphertext+i, cleartext+i, &config->ctx,
+                        BF_DECRYPT);
+        }
+
         free(ciphertext);
-        unsigned long L = (unsigned long)cleartext;
-        unsigned long R = (unsigned long)cleartext+32;
 
-        Blowfish_Decrypt(&config->ctx, &L, &R);
+        char *clear = strdup((char *)cleartext);
 
-        return cleartext;
+        return clear;
 }
