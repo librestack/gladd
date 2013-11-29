@@ -932,7 +932,7 @@ int read_config(char *configfile)
         if (!config_new->secretkey) {
                 syslog(LOG_DEBUG, "Generating random secret key...");
                 config_new->secretkey = calloc(129, sizeof (char));
-                fd = fopen("/dev/random", "r");
+                fd = fopen("/dev/urandom", "r");
                 for (i=0; i<127; i++) {
                         fread(&config_new->secretkey[i-1],sizeof (char),1,fd);
                 }
