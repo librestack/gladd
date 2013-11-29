@@ -893,6 +893,7 @@ int read_config(char *configfile)
 {
         FILE *fd;
         char line[LINE_MAX];
+        int i;
         int lc = 0;
         int retval = 0;
 
@@ -929,8 +930,14 @@ int read_config(char *configfile)
 
         /* generate random secretkey if none set */
         if (!config_new->secretkey) {
-                syslog(LOG_DEBUG, "Generating random secret key");
-                config_new->secretkey = randstring(64);
+                syslog(LOG_DEBUG, "Generating random secret key...");
+                config_new->secretkey = calloc(129, sizeof (char));
+                fd = fopen("/dev/random", "r");
+                for (i=0; i<127; i++) {
+                        fread(&config_new->secretkey[i-1],sizeof (char),1,fd);
+                }
+                fclose(fd);
+                syslog(LOG_DEBUG, "Key generation complete.");
         }
         /* Initialize Blowfish */
         BF_set_key(&config_new->ctx, strlen(config_new->secretkey),

@@ -54,7 +54,8 @@ char *memsearch(char *hay, char *pin, size_t size)
         return ptr;
 }
 
-/* Return return random char from set: [a–zA–Z0–9] */
+/* Return return random char from set: [a–zA–Z0–9] 
+ * NB: initialize with srand() before calling */
 char randchar()
 {
         char *charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
