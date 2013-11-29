@@ -211,7 +211,7 @@ char *decode64(char *str)
         return plain;
 }
 
-/* return encoded base64 string */
+/* return encoded base64 string, without trailing '='s */
 char *encode64(char *str, int len)
 {
         int i;
