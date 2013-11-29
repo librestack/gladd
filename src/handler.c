@@ -712,12 +712,12 @@ http_status_code_t response_upload(int sock, url_t *u)
         }
         free(filename);
 
-        /* return hash of uploaded file */
-        /* TODO: return headers, 201 created etc. */
-        //char *r = strdup(hash);
-        //set_headers(&r); /* set any additional headers */
-        respond(sock, hash);
-        //free(r);
+        /* return response to client with hash of uploaded file */
+        char *r;
+        asprintf(&r, "<sha1sum>%s</sha1sum>", hash);
+        set_headers(&r); /* set any additional headers */
+        http_response_full(sock, HTTP_CREATED, "text/xml", r);
+        free(r);
 
         return err;
 }
