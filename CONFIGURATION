@@ -37,7 +37,7 @@ this worked, and that it can't get them back again.  If you try to run gladd
 drop privs and fail to start.
 
 gladd drops privs immediately after binding to a port.  If, for some reason
-you do *not* want to do this (you really want to run gladd as root will all
+you do *not* want to do this (you really want to run gladd as root with all
 the risks that involves), then set this option to 0.
 
 One reason for running as root may be that you are running an older version of
