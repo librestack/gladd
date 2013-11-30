@@ -22,6 +22,29 @@ information to syslog.
 encoding
 Character encoding to use.  Default UTF-8.
 
+dropprivs
+0 = do not drop priviliges
+1 = drop privileges (default)
+
+Sometimes it is useful to run gladd with root privileges, so that it can, for
+example, bind to a privileged port, such as 80 or 443.  To achieve this, set
+the binary to be setuid root (the default make install does this) and then run
+gladd as a non-privileged user.
+
+The latter is important.  When gladd drops privs it will check to ensure that
+this worked, and that it can't get them back again.  If you try to run gladd
+*as* root, with dropprivs turned on, it will complain that it was unable to
+drop privs and fail to start.
+
+gladd drops privs immediately after binding to a port.  If, for some reason
+you do *not* want to do this (you really want to run gladd as root will all
+the risks that involves), then set this option to 0.
+
+One reason for running as root may be that you are running an older version of
+PAM with a pam_unix that requires root privs.  This can be used as a
+(temporary) hack to get around this while you find a newer PAM or alternate
+means of authentication.
+
 pipelining
 0 = off
 1 = on (default)
