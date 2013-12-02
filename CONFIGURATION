@@ -231,6 +231,82 @@ and return it to the client.
 
 == Access Control ==
 
+Users and Groups can be defined in gladd.conf for testing.  Passwords for users are plaintext so this should not be used in production.
+
+user	<username>	<unecrypted password>
+
+group	<groupname>	<members>
+
+members is a comma-separated list of usernames.
+
+acls are defined with the following syntax:
+
+acl <method> <url> <control> <auth>
+
+method 	- HTTP method (eg. GET, POST, PUT, DELETE, *)
+
+url	- url to restrict - supports * as a wildcard
+
+control	- allow, deny, require, sufficient, params
+	allow 	=> allow access with no further checks
+	deny	=> return 403 Forbidden with no further checks
+	require	=> this rule MUST pass, or a 401 Unauthorized response is
+		   returned.  No further acls are processed.
+	sufficient => if this rule passes, access is granted and no further
+	           checks are performed.
+	params	=> these appear before the main acls and are used for any 
+	           parameters that we want to set which may affect how the
+		   url is handled.  Valid are:
+		   nocache - add headers to response requesting url is not
+		   	cached.
+		   cookie:session - set a session cookie in response, if auth
+		   	succeeds.
+
+auth	- the auth alias to use (see below) for authentication and/or
+	authorization.  If '*', and control is 'sufficient' then each auth
+	method is attempted in turn and only one needs to succeed.  If '*',
+	and control is 'require' then every auth method is attempted in turn
+	and ALL must succeed for access to be granted.
+
+
+TODO: examples
+
+
+Auth Definitions
+
+There are various types of auth available.  Auth here can refer to either
+authentication (who one is) and authorization (what one is permitted to do).
+Auth lines take the form:
+
+auth <alias> <type> <arg1> <arg2> <arg3>
+
+alias	- a convenient name to refer to this by.  Used in acls (above).
+type	- user, group, cookie, ldap, pam
+arg$	- either an argument used by the type, or '*'
+
+eg.
+
+Check username and password matches one of the locally defined ones in
+gladd.conf:
+auth	eg1	user	*	*	*
+
+Ensure user is in group "wheel":
+auth	eg2	group	wheel	*	*
+
+Validate session cookie and obtain username:
+auth	eg3	cookie	*	*	*
+
+Groups support url tokens in their names.  $0-$n will be replaced by that segment of the request URL (https://example.com/$0/$1/../$n/).
+auth	eg4	group	org$0	*	*
+
+Bind to ldap directory ldap1 (defined in databases - see above), using the
+username and password supplied:
+auth	eg5	ldap	ldap1	ld_auth	uid
+
+Authenticate against PAM service "login"
+auth	eg6	pam	login	*	*
+
+TODO: 
 acl, auth, user, group etc.  PAM, nsswitch, ldap.  Group variables.
 
 == Views ==
