@@ -430,7 +430,6 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
         syslog(LOG_DEBUG, "Setting username %s from session cookie", username);
         request->authuser = strdup(username);
 
-        free(cookie);
         free(clearcookie);
 
         return 0;
