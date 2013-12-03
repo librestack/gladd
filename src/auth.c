@@ -404,7 +404,6 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
         /* decrypt cookie */
         char *clearcookie = decipher(tmp);
         free(tmp);
-        syslog(LOG_DEBUG, "Decrypted cookie: %s", clearcookie);
 
         /* check cookie is valid */
         char username[64];
@@ -416,6 +415,7 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
                 syslog(LOG_DEBUG, "Invalid cookie");
                 return HTTP_UNAUTHORIZED;
         }
+        syslog(LOG_DEBUG, "Decrypted cookie: %s", clearcookie);
 
         /* check cookie freshness */
         long now = (long)time(NULL);
