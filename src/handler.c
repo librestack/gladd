@@ -116,6 +116,7 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 }
                 syslog(LOG_DEBUG, "handling request %i on connection", ++i);
                 err = handle_request(sock, s);
+                free_request(request);
         }
         while ((err == HANDLER_OK) && (config->pipelining == 1));
         syslog(LOG_DEBUG, "[%s] closing connection", s);
@@ -127,7 +128,6 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
                 close(sock);
 
         /* free memory */
-        free_request(request);
         free_config();
 
         /* child process can exit */
