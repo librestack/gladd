@@ -934,7 +934,7 @@ int read_config(char *configfile)
                 config_new->secretkey = calloc(129, sizeof (char));
                 fd = fopen("/dev/urandom", "r");
                 for (i=0; i<127; i++) {
-                        fread(&config_new->secretkey[i-1],sizeof (char),1,fd);
+                        fread(&config_new->secretkey[i],sizeof (char),1,fd);
                 }
                 fclose(fd);
                 syslog(LOG_DEBUG, "Key generation complete.");
