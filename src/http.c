@@ -560,14 +560,14 @@ http_request_t *http_read_request(int sock, int *hcount,
                 syslog(LOG_ERR, "HTTP request is NULL");
                 *err = HTTP_BAD_REQUEST;
                 free(line);
-                return NULL;
+                return r;
         }
         r->bytes = strlen(line);
         if (sscanf(line, "%s %s HTTP/%s", method, resource, httpv) != 3) {
                 syslog(LOG_ERR, "HTTP request invalid");
                 *err = HTTP_BAD_REQUEST;
                 free(line);
-                return NULL;
+                return r;
         }
         free(line);
         r->httpv = strdup(httpv);
@@ -575,7 +575,7 @@ http_request_t *http_read_request(int sock, int *hcount,
         if ((strcmp(r->httpv, "1.0") != 0) && (strcmp(r->httpv, "1.1") != 0)) {
                 syslog(LOG_ERR, "HTTP version '%s' not supported", r->httpv);
                 *err = HTTP_VERSION_NOT_SUPPORTED;
-                return NULL;
+                return r;
         }
 
         http_set_request_method(r, method);
@@ -611,7 +611,7 @@ http_request_t *http_read_request(int sock, int *hcount,
                 errno = 0;
                 lclen = strtol(clen, NULL, 10);
                 if (errno != 0)
-                        return NULL;
+                        return r;
                 /* only match first part of mime type, ignoring charset etc. */
                 if (strncmp(ctype, "text/xml", 8) == 0) {
                         /* read request body */
@@ -623,7 +623,7 @@ http_request_t *http_read_request(int sock, int *hcount,
                                 syslog(LOG_ERR,
                                 "failed to allocate buffer for request body");
                                 *err = HTTP_INTERNAL_SERVER_ERROR;
-                                return NULL;
+                                return r;
                         }
                         size = http_read_body(sock, &body, lclen);
                         r->bytes += size;
@@ -634,7 +634,7 @@ http_request_t *http_read_request(int sock, int *hcount,
                                 syslog(LOG_DEBUG,
                                     "expected: %li, got %li", lclen, size);
                                 *err = HTTP_BAD_REQUEST;
-                                return NULL;
+                                return r;
                         }
                         r->data->value = body;
                 }
