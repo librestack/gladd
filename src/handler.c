@@ -69,51 +69,56 @@ void *get_in_addr(struct sockaddr *sa)
         return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+/* block on socket until data arrives or timeout exceeded
+ * return 1 if data available, 0 if not */
+int waitfordata(int sock, int bytes, char s[INET6_ADDRSTRLEN])
+{
+        int peek;
+        char peekbuf[1];
+        struct timeval tv;
+        if (bytes > 0) return 1; /* we already have data */
+        tv.tv_sec = config->keepalive; tv.tv_usec = 0;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                (char *)&tv, sizeof(struct timeval));
+        peek = rcv(sock, peekbuf, 1, MSG_PEEK | MSG_WAITALL);
+        if (peek == -1) {
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                        syslog(LOG_DEBUG,
+                                "[%s] connection timeout", s);
+                }
+                else {
+                        syslog(LOG_DEBUG,"%s",strerror(errno));
+                }
+                return 0;
+        }
+        else if (peek == 0) {
+                syslog(LOG_DEBUG,
+                        "[%s] client closed connection", s);
+                return 0;
+        }
+        return 1;
+}
+
 /*
  * child process where we handle incoming connections
  */
 void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
-        char peekbuf[1];
         char s[INET6_ADDRSTRLEN];
         handler_result_t err = HANDLER_OK;
         int i = 0;
-        int peek;
-        struct timeval tv;
 
         inet_ntop(their_addr.ss_family,
                         get_in_addr((struct sockaddr *)&their_addr),
                         s, sizeof s);
-
         syslog(LOG_DEBUG, "[%s] connection received", s);
 
         if (config->ssl) do_tls_handshake(sock);
 
         /* loop to allow persistent connections & pipelining */
         do {
-                if (bytes == 0) { /* wait for data if we have none */
-                        /* set longer timeout for subsequent connections */
-                        tv.tv_sec = config->keepalive; tv.tv_usec = 0;
-                        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
-                                (char *)&tv, sizeof(struct timeval));
-                        peek = rcv(sock, peekbuf, 1, MSG_PEEK | MSG_WAITALL);
-                        if (peek == -1) {
-                                if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                                        syslog(LOG_DEBUG,
-                                                "[%s] connection timeout", s);
-                                }
-                                else {
-                                        syslog(LOG_DEBUG,"%s",strerror(errno));
-                                }
-                                break;
-                        }
-                        else if (peek == 0) {
-                                syslog(LOG_DEBUG,
-                                        "[%s] client closed connection", s);
-                                break;
-                        }
-
-                }
+                /* wait for data if we have none */
+                if (!waitfordata(sock, bytes, s)) break;
                 syslog(LOG_DEBUG, "handling request %i on connection", ++i);
                 err = handle_request(sock, s);
                 free_request(&request);
