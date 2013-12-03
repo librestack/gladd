@@ -59,7 +59,7 @@ char *test_xml_doc()
         free(xmldoc);
 #endif /* _NPG */
 
-        free_request(request);
+        free_request(&request);
 
         return 0;
 }
@@ -91,7 +91,7 @@ char *test_xml_to_sql()
 
         free(sql);
 
-        free_request(request);
+        free_request(&request);
 
         return 0;
 }
@@ -111,7 +111,7 @@ char *test_xml_sqlvars()
 
 
         free(sql);
-        free_request(request);
+        free_request(&request);
         request = NULL;
 
         return 0;

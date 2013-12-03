@@ -104,7 +104,7 @@ char *test_http_read_request_get()
         mu_assert("http_validate_headers() - r->authpass (check value)",
                 strcmp(r->authpass, "nobby") == 0);
 
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -205,7 +205,7 @@ char *test_http_read_request_post()
         mu_assert("http_validate_headers()",
                 http_validate_headers(r, &err) == 0);
 
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -227,7 +227,7 @@ char *test_http_read_request_data()
         mu_assert("The Bodyline Test, 1933 (value)",
                 strcmp(r->data->next->value, "that") == 0);
 
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -241,7 +241,7 @@ char *test_http_postdata_invalid()
         asprintf(&r->res, "/invalid/");
         mu_assert("http_match_url() - Ensure unmatched url fails",
                 http_match_url(r) == NULL);
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -255,7 +255,7 @@ char *test_http_postdata_checks()
         asprintf(&r->res, "/sqlview/");
         mu_assert("http_match_url() - match test url",
                 http_match_url(r) != NULL);
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -289,7 +289,7 @@ char *test_http_read_request_post_xml()
 
         fprintf(stderr, "%s\n", r->data->value);
 
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -341,7 +341,7 @@ char *test_http_read_request_post_large()
                 r->bytes == strlen(databuf)-6);
 
         free(databuf);
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -385,7 +385,7 @@ char *test_http_proxy_request()
         free(u.method);
         free(u.url);
         free(u.path);
-        free_request(request);
+        free_request(&request);
 
         return 0;
 }
@@ -429,7 +429,7 @@ char *test_http_rewrite_request()
         free(u.method);
         free(u.url);
         free(u.path);
-        free_request(request);
+        free_request(&request);
 
         return 0;
 }
@@ -455,7 +455,7 @@ char *test_http_accept_encoding()
         mu_assert("Check for missing encoding (lzma)",
                 !http_accept_encoding(r, "lzma"));
 
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }

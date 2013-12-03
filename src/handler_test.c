@@ -72,7 +72,7 @@ char *test_handler_plugin()
         free(u->url);
         free(u->path);
         free(u);
-        free_request(request);
+        free_request(&request);
 
         return 0;
 }

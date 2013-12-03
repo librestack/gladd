@@ -38,7 +38,7 @@ char *test_auth_default()
         mu_assert("ensure check_auth() returns 403 Forbidden by default", 
                 check_auth(r) == 403);
 
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -68,7 +68,7 @@ char *test_auth_deny()
         mu_assert("ensure DELETE /sqlview/ returns 403 Forbidden", 
                 check_auth(r) == 403);
 
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -92,7 +92,7 @@ char *test_auth_allow()
         mu_assert("ensure POST /sqlview/ allowed", 
                 check_auth(r) == 0);
 
-        free_request(r);
+        free_request(&r);
 
         return 0;
 }
@@ -111,14 +111,14 @@ char *test_auth_require()
         asprintf(&r->authpass, "false");
         mu_assert("check_auth_require() - fail with invalid credentials",
                 check_auth_require("ldap", r) != 0);
-        free_request(r);
+        free_request(&r);
 
         r = http_init_request();
         asprintf(&r->authuser, "betty");
         asprintf(&r->authpass, "ie5a8P40");
         mu_assert("check_auth_require() - successful ldap bind",
                 check_auth_require("ldap", r) == 0);
-        free_request(r);
+        free_request(&r);
 #endif /* _NLDAP */
 
         r = http_init_request();
@@ -126,21 +126,21 @@ char *test_auth_require()
         asprintf(&r->authpass, "wrongpassword");
         mu_assert("check_auth_require() - invalid user/pass combo",
                 check_auth_require("user", r) != 0);
-        free_request(r);
+        free_request(&r);
 
         r = http_init_request();
         asprintf(&r->authuser, "bravo");
         asprintf(&r->authpass, "bravosecretwithtrailingchars");
         mu_assert("check_auth_require() - ensure trailing chars return fail ",
                 check_auth_require("user", r) == HTTP_UNAUTHORIZED);
-        free_request(r);
+        free_request(&r);
 
         r = http_init_request();
         asprintf(&r->authuser, "bravo");
         asprintf(&r->authpass, "bravosecret");
         mu_assert("check_auth_require() - successful user/pass combo",
                 check_auth_require("user", r) == 0);
-        free_request(r);
+        free_request(&r);
 
         /* PAM */
         r = http_init_request();
@@ -148,7 +148,7 @@ char *test_auth_require()
         asprintf(&r->authpass, "wrongpassword");
         mu_assert("check_auth_require() - invalid user/pass combo (PAM)",
                 check_auth_require("pam", r) == HTTP_UNAUTHORIZED);
-        free_request(r);
+        free_request(&r);
 
         mu_assert("check_auth_pam() - valid credentials",
             check_auth_pam("login", "bravo", "invalid") == HTTP_UNAUTHORIZED);
@@ -162,7 +162,7 @@ char *test_auth_require()
         asprintf(&r->authpass, "bravosecret");
         mu_assert("check_auth_require() - successful user/pass combo (PAM)",
                 check_auth_require("pam", r) == 0);
-        free_request(r);
+        free_request(&r);
         */
 
         return 0;
@@ -180,7 +180,7 @@ char *test_auth_patterns()
         asprintf(&r->authpass, "bravosecret");
         mu_assert("check_auth() - valid user will fail when ldap required",
                 check_auth(r) == HTTP_UNAUTHORIZED);
-        free_request(r);
+        free_request(&r);
         free_config();
 
         read_config("test_auth_patterns_01.conf");
@@ -191,7 +191,7 @@ char *test_auth_patterns()
         asprintf(&r->authpass, "bravosecret");
         mu_assert("check_auth() - valid user sufficient",
                 check_auth(r) == 0);
-        free_request(r);
+        free_request(&r);
         free_config();
 
         return 0;
@@ -220,7 +220,7 @@ char *test_auth_groups_00()
         mu_assert("User bravo not in group3", !ingroup("bravo", "group3"));
         mu_assert("User charlie in group3", ingroup("charlie", "group3"));
 
-        free_request(r);
+        free_request(&r);
         free_config();
         
         return 0;
@@ -254,7 +254,7 @@ char *test_auth_groups_01()
         mu_assert("User alpha denied access (in required group, wrong passwd)",
                 check_auth(r) == HTTP_UNAUTHORIZED);
 
-        free_request(r);
+        free_request(&r);
         free_config();
 
         return 0;
@@ -296,7 +296,7 @@ char *test_auth_groups_02()
         mu_assert("Two groups required, user in both, correct passwd (allow)",
                 check_auth(r) == 0);
 
-        free_request(r);
+        free_request(&r);
         free_config();
 
         return 0;
