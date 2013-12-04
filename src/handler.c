@@ -554,19 +554,16 @@ http_status_code_t response_xslt(int sock, url_t *u)
 http_status_code_t response_upload(int sock, url_t *u)
 {
         EVP_MD_CTX *mdctx;
-        char **tokens;
         char *b = request->boundary;
         char *clen;
         char *filename;
         char *pbuf;
         char *ptmp;
-        char *url;
         char hash[SHA_DIGEST_LENGTH*2];
         char template[] = "/var/tmp/upload-XXXXXX";
         const EVP_MD *md;
         http_status_code_t err = 0;
         int fd;
-        int toknum;
         long lclen;
         ssize_t ret;
         size_t size = 0;
@@ -653,6 +650,7 @@ http_status_code_t response_upload(int sock, url_t *u)
                                 written += ret;
                                 EVP_DigestUpdate(mdctx, buf, pbuf-buf-4);
                         }
+                        break;
                 }
                 else {
                         /* write contents of buffer out to file */
@@ -663,6 +661,7 @@ http_status_code_t response_upload(int sock, url_t *u)
                         }
                 }
         }
+        /*
         if (lclen != size) {
                 syslog(LOG_ERR, "ERROR: Read %li/%li bytes",
                         (long) size, lclen);
@@ -670,6 +669,7 @@ http_status_code_t response_upload(int sock, url_t *u)
                         lclen - (long)size);
                 return HTTP_BAD_REQUEST;
         }
+        */
         syslog(LOG_DEBUG, "Read %li bytes total", (long)size);
         syslog(LOG_DEBUG, "Wrote %li bytes total", (long)written);
 
@@ -694,26 +694,21 @@ http_status_code_t response_upload(int sock, url_t *u)
         close(fd);
 
         /* ensure destination directory exists */
-        url = strdup(request->res);
-        tokens = tokenize(&toknum, &url, "/");
+        filename = strdup(u->path);
+        sqlvars(&filename, request->res);
         umask(022);
-        asprintf(&filename, "%s/%s", u->path, tokens[2] );
         if (mkdir(filename, 0755) != 0) {
                 if (errno != EEXIST) {
                         syslog(LOG_ERR, "Error creating directory '%s': %s",
                                 filename, strerror(errno));
-                        free(url);
-                        free(tokens);
                         free(filename);
                         return HTTP_INTERNAL_SERVER_ERROR;
                 }
         }
         free(filename);
 
-        /* rename to <path>/<instance>/<sha1sum> */
-        asprintf(&filename, "%s/%s/%s", u->path, tokens[2], hash);
-        free(url);
-        free(tokens);
+        /* rename to <path>/<sha1sum> */
+        asprintf(&filename, "%s/%s", u->path, hash);
         syslog(LOG_ERR, "filename: %s", filename);
         if (rename(template, filename) == -1) {
                 syslog(LOG_ERR, "Failed to rename uploaded file: %s",

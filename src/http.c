@@ -395,7 +395,6 @@ void http_flush_buffer()
 {
         buf[0] = '\0';
         bytes = 0;
-        //bmore = 1;
 }
 
 /* top up http buffer, returning number of bytes read or -1 on error */
@@ -406,7 +405,7 @@ ssize_t fillhttpbuffer(int sock)
         struct timeval tv;
 
         /* set socket timeout */
-        tv.tv_sec = 0; tv.tv_usec = 5;
+        tv.tv_sec = 0; tv.tv_usec = 1;
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
                 (char *)&tv, sizeof(struct timeval));
 
@@ -419,6 +418,8 @@ ssize_t fillhttpbuffer(int sock)
                 return -1;
         }
         bytes += newbytes;
+
+        //syslog(LOG_DEBUG, "buffer topped up with %i bytes", (int)newbytes);
 
         return newbytes;
 }
@@ -438,18 +439,18 @@ char *http_readline(int sock)
         line = calloc(1, LINE_MAX + 1);
         for (;;) {
                 /* fill the buffer if empty */
-                if (bytes == 0)
+                while (bytes == 0) {
                         if (fillhttpbuffer(sock) == -1) {
                                 syslog(LOG_DEBUG, "failed to fill buffer");
                                 return line;
                         }
-                if (bytes == 0) continue;
+                }
 
                 /* scan buffer for newline */
                 nl = memchr(buf, '\n', bytes);
                 if (nl != NULL) {
                         pos = nl - buf;
-                        memcpy(line, buf, pos + 1);
+                        memcpy(line + ll, buf, pos + 1);
                         line[pos] = '\0';
                         if (pos > 0)
                                 if (line[pos - 1] == '\r')
