@@ -662,6 +662,11 @@ http_status_code_t response_upload(int sock, url_t *u)
                         }
                 }
         }
+        if (lclen > size) {
+                /* shift unused bytes to beginning of buffer */
+                memmove(buf, buf+lclen-size, bytes-lclen);
+                lclen = (long)size;
+        }
         if (lclen != size) {
                 syslog(LOG_ERR, "ERROR: Read %li/%li bytes",
                         (long) size, lclen);
