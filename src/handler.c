@@ -697,13 +697,13 @@ http_status_code_t response_upload(int sock, url_t *u)
         /* ensure destination directory exists */
         url = strdup(request->res);
         tokens = tokenize(&toknum, &url, "/");
-        free(url);
         umask(022);
         asprintf(&filename, "%s/%s", u->path, tokens[2] );
         if (mkdir(filename, 0755) != 0) {
                 if (errno != EEXIST) {
                         syslog(LOG_ERR, "Error creating directory '%s': %s",
                                 filename, strerror(errno));
+                        free(url);
                         free(tokens);
                         free(filename);
                         return HTTP_INTERNAL_SERVER_ERROR;
@@ -713,6 +713,7 @@ http_status_code_t response_upload(int sock, url_t *u)
 
         /* rename to <path>/<instance>/<sha1sum> */
         asprintf(&filename, "%s/%s/%s", u->path, tokens[2], hash);
+        free(url);
         free(tokens);
         syslog(LOG_ERR, "filename: %s", filename);
         if (rename(template, filename) == -1) {

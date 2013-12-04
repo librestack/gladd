@@ -25,6 +25,16 @@
 
 #include "handler.h"
 
+typedef struct uploadtest_t { 
+        char *file; 
+        char *sha1sum;
+        char *msg; 
+        int responsecode; 
+        char *response; 
+} uploadtest_t;
+
 char *test_handler_plugin();
+char *test_handler_upload();
+char *upload_test(uploadtest_t t);
 
 #endif /* __GLADD_HANDLER_TEST_H__ */

@@ -954,6 +954,7 @@ int read_config(char *configfile)
 }
 
 /* set config defaults if they haven't been set already */
+/* FIXME: defaults not malloc()'d, so free_config() has errors */
 int set_config_defaults()
 {
         config = &config_default;
