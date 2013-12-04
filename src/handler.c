@@ -567,6 +567,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         int fd;
         long lclen;
         ssize_t ret;
+        size_t required;
         size_t size = 0;
         size_t written = 0;
         unsigned char md_value[EVP_MAX_MD_SIZE];
@@ -630,16 +631,20 @@ http_status_code_t response_upload(int sock, url_t *u)
                 written += ret;
         }
         while(lclen > size) {
-                /* fill the buffer if empty */
-                while (bytes == 0) {
-                        if (http_fill_buffer(sock) == -1) {
-                                syslog(LOG_DEBUG, "failed to fill buffer");
-                                return HTTP_INTERNAL_SERVER_ERROR;
-                        }
+                /* read into buffer */
+                errno = 0;
+                required = ((lclen-size)>BUFSIZE) ? BUFSIZE : lclen - size;
+                syslog(LOG_DEBUG, "Reading %i bytes", (int) required);
+                bytes = rcv(sock, buf, required, MSG_WAITALL);
+                if (bytes < 0) {
+                        syslog(LOG_ERR,"Error reading from socket: %s",
+                                strerror(errno));
+                        break;
+                                
                 }
                 size += bytes;
 
-                if (complete) continue; /* file complete, finish request */
+                if (complete) continue; /* read to end of request */
 
                 /* check for boundary */
                 pbuf = memsearch(buf, b, bytes);
@@ -662,11 +667,8 @@ http_status_code_t response_upload(int sock, url_t *u)
                         }
                 }
         }
-        if (lclen > size) {
-                /* shift unused bytes to beginning of buffer */
-                memmove(buf, buf+lclen-size, bytes-lclen);
-                lclen = (long)size;
-        }
+        syslog(LOG_DEBUG, "Buffer flushed");
+        http_flush_buffer();
         if (lclen != size) {
                 syslog(LOG_ERR, "ERROR: Read %li/%li bytes",
                         (long) size, lclen);
