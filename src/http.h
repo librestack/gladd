@@ -93,6 +93,7 @@ void http_response_headers(int sock, int code, int len, char *mime);
 void http_response_full(int sock, int code, char *mime, char *body);
 char *http_get_header(http_request_t *r, char *key);
 void http_flush_buffer();
+ssize_t http_fill_buffer(int sock);
 char *http_readline(int sock);
 size_t http_read_body(int sock, char **body, long lclen);
 http_request_t *http_read_request(int sock, int *hcount,

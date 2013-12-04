@@ -398,7 +398,7 @@ void http_flush_buffer()
 }
 
 /* top up http buffer, returning number of bytes read or -1 on error */
-ssize_t fillhttpbuffer(int sock)
+ssize_t http_fill_buffer(int sock)
 {
         size_t fillbytes;
         size_t newbytes;
@@ -440,7 +440,7 @@ char *http_readline(int sock)
         for (;;) {
                 /* fill the buffer if empty */
                 while (bytes == 0) {
-                        if (fillhttpbuffer(sock) == -1) {
+                        if (http_fill_buffer(sock) == -1) {
                                 syslog(LOG_DEBUG, "failed to fill buffer");
                                 return line;
                         }
