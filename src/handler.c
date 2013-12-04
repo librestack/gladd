@@ -563,9 +563,11 @@ http_status_code_t response_upload(int sock, url_t *u)
         char template[] = "/var/tmp/upload-XXXXXX";
         const EVP_MD *md;
         http_status_code_t err = 0;
+        int complete = 0;
         int fd;
         long lclen;
         ssize_t ret;
+        size_t required;
         size_t size = 0;
         size_t written = 0;
         unsigned char md_value[EVP_MAX_MD_SIZE];
@@ -631,7 +633,9 @@ http_status_code_t response_upload(int sock, url_t *u)
         while(lclen > size) {
                 /* read into buffer */
                 errno = 0;
-                bytes = rcv(sock, buf, BUFSIZE, MSG_WAITALL);
+                required = ((lclen-size)>BUFSIZE) ? BUFSIZE : lclen - size;
+                syslog(LOG_DEBUG, "Reading %i bytes", (int) required);
+                bytes = rcv(sock, buf, required, MSG_WAITALL);
                 if (bytes < 0) {
                         syslog(LOG_ERR,"Error reading from socket: %s",
                                 strerror(errno));
@@ -639,6 +643,8 @@ http_status_code_t response_upload(int sock, url_t *u)
                                 
                 }
                 size += bytes;
+
+                if (complete) continue; /* read to end of request */
 
                 /* check for boundary */
                 pbuf = memsearch(buf, b, bytes);
@@ -650,7 +656,7 @@ http_status_code_t response_upload(int sock, url_t *u)
                                 written += ret;
                                 EVP_DigestUpdate(mdctx, buf, pbuf-buf-4);
                         }
-                        break;
+                        complete = 1;
                 }
                 else {
                         /* write contents of buffer out to file */
@@ -661,7 +667,10 @@ http_status_code_t response_upload(int sock, url_t *u)
                         }
                 }
         }
-        /*
+
+        syslog(LOG_DEBUG, "Buffer flushed");
+        http_flush_buffer();
+
         if (lclen != size) {
                 syslog(LOG_ERR, "ERROR: Read %li/%li bytes",
                         (long) size, lclen);
@@ -669,7 +678,6 @@ http_status_code_t response_upload(int sock, url_t *u)
                         lclen - (long)size);
                 return HTTP_BAD_REQUEST;
         }
-        */
         syslog(LOG_DEBUG, "Read %li bytes total", (long)size);
         syslog(LOG_DEBUG, "Wrote %li bytes total", (long)written);
 
