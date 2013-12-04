@@ -107,7 +107,6 @@ char *upload_test(uploadtest_t t)
 {
         int sv[2];
         off_t offset = 0;
-        handler_result_t ret;
         struct stat stat_buf;
         int f;
         char pbuf[BUFSIZE] = "";
@@ -142,7 +141,7 @@ char *upload_test(uploadtest_t t)
 
         mu_assert("Reading upload config",
                 read_config("test.upload.conf") == 0);
-        ret = handle_request(sv[1], "127.0.0.1");
+        handle_request(sv[1], "127.0.0.1");
 
         /* set socket timeout */
         tv.tv_sec = 1;
