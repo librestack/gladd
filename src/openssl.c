@@ -155,14 +155,17 @@ size_t ssl_recv(char *b, int len)
                         nread += ret;
                         break;
                 case SSL_ERROR_ZERO_RETURN:
-                        syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
-                        return -1;
+                        //syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
+                        break;
                 case SSL_ERROR_WANT_WRITE:
-                        return nread;
+                        //syslog(LOG_DEBUG, "ssl_recv() SSL_ERROR_WANT_WRITE");
+                        break;
                 case SSL_ERROR_WANT_READ:
-                        return nread;
+                        //syslog(LOG_DEBUG, "ssl_recv() SSL_ERROR_WANT_READ");
+                        break;
                 default:
-                        return 0;
+                        //syslog(LOG_DEBUG, "ssl_recv() other error");
+                        break;
                 }
         } while(ret > 0);
         return nread;
@@ -179,14 +182,17 @@ size_t ssl_send(char *msg, size_t len)
                         nwrite += ret;
                         break;
                 case SSL_ERROR_ZERO_RETURN:
-                        syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
-                        return -1;
+                        //syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
+                        break;
                 case SSL_ERROR_WANT_WRITE:
-                        return nwrite;
+                        //syslog(LOG_DEBUG, "ssl_send() SSL_ERROR_WANT_WRITE");
+                        break;
                 case SSL_ERROR_WANT_READ:
+                        //syslog(LOG_DEBUG, "ssl_send() SSL_ERROR_WANT_READ");
                         break;
                 default:
-                        return 0;
+                        //syslog(LOG_DEBUG, "ssl_send() other error");
+                        break;
                 }
         } while(ret > 0);
         return nwrite; 

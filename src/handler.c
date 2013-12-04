@@ -635,13 +635,12 @@ http_status_code_t response_upload(int sock, url_t *u)
                 /* read into buffer */
                 errno = 0;
                 bytes = rcv(sock, buf, BUFSIZE, MSG_WAITALL);
-                if (bytes == -1) {
+                if (bytes < 0) {
                         syslog(LOG_ERR,"Error reading from socket: %s",
                                 strerror(errno));
                         break;
                                 
                 }
-                if (bytes == 0) break; /* no bytes read */
                 size += bytes;
 
                 /* check for boundary */
