@@ -49,9 +49,9 @@ char *get_mime_type(char *filename)
                         read(fd, mimetype, stat_buf.st_size);
                         close(fd);
                         free(mimefile);
+                        mimetype[stat_buf.st_size] = '\0';
                         syslog(LOG_DEBUG, "mime type set from file: %s", 
                                 mimetype);
-                        mimetype[stat_buf.st_size] = '\0';
                         return mimetype;
                 }
         }
