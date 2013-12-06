@@ -558,7 +558,9 @@ http_status_code_t response_upload(int sock, url_t *u)
         char *b = request->boundary;
         char *clen;
         char *crlf;
+        char *dir;
         char *filename;
+        char *headstart;
         char *mhead;
         char *mimetype;
         char *pbuf;
@@ -600,7 +602,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         pbuf += strlen(b) + 2; /* skip boundary and CRLF */
 
         /* keep a note of where the multipart headers start */
-        char *headstart = pbuf;
+        headstart = pbuf;
 
         /* find end of headers => find blank line (search for 2xCRLF) */
         pbuf = memsearch(pbuf, "\r\n\r\n", BUFSIZE-(pbuf-buf));
@@ -720,17 +722,17 @@ http_status_code_t response_upload(int sock, url_t *u)
         close(fd);
 
         /* ensure destination directory exists */
-        filename = strdup(u->path);
-        sqlvars(&filename, request->res);
+        dir = strdup(u->path);
+        sqlvars(&dir, request->res);
         umask(022);
-        if (!rmkdir(filename, 0755)) {
-                free(filename);
+        if (!rmkdir(dir, 0755)) {
+                free(dir);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
-        free(filename);
 
         /* rename to <path>/<sha1sum> */
-        asprintf(&filename, "%s/%s", u->path, hash);
+        asprintf(&filename, "%s/%s", dir, hash);
+        free(dir);
         syslog(LOG_ERR, "filename: %s", filename);
         if (rename(template, filename) == -1) {
                 syslog(LOG_ERR, "Failed to rename uploaded file: %s",
