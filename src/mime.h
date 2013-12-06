@@ -27,6 +27,6 @@
 #define MIME_HTML "text/html"
 #define MIME_XML "application/xml"
 
-void get_mime_type(char *mimetype, char *filename);
+char *get_mime_type(char *filename);
 
 #endif /* __GLADD_MIME_H__ */

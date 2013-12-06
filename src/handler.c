@@ -556,10 +556,13 @@ http_status_code_t response_upload(int sock, url_t *u)
         EVP_MD_CTX *mdctx;
         char *b = request->boundary;
         char *clen;
+        char *crlf;
         char *filename;
+        char *mhead;
+        char *mimetype;
         char *pbuf;
         char *ptmp;
-        char hash[SHA_DIGEST_LENGTH*2];
+        char hash[SHA_DIGEST_LENGTH*2+1];
         char template[] = "/var/tmp/upload-XXXXXX";
         const EVP_MD *md;
         http_status_code_t err = 0;
@@ -595,13 +598,33 @@ http_status_code_t response_upload(int sock, url_t *u)
         }
         pbuf += strlen(b) + 2; /* skip boundary and CRLF */
 
-        /* skip headers => find blank line (search for 2xCRLF) */
+        /* keep a note of where the multipart headers start */
+        char *headstart = pbuf;
+
+        /* find end of headers => find blank line (search for 2xCRLF) */
         pbuf = memsearch(pbuf, "\r\n\r\n", BUFSIZE-(pbuf-buf));
         if (pbuf == NULL) {
                 syslog(LOG_ERR, "Blank line required after multipart headers");
                 return HTTP_BAD_REQUEST;
         }
-        pbuf += 4;
+
+        /* read multipart headers, get Content-Type */
+        mimetype = calloc(LINE_MAX, sizeof(char));
+        while ((crlf = memsearch(headstart,"\r\n",pbuf-headstart+2)) != NULL) {
+                /* process multipart header */
+                mhead = strndup(headstart, crlf - headstart);
+                syslog(LOG_DEBUG, "multipart header [%s]", mhead);
+                if (strncmp(mhead, "Content-Type: ", 14) == 0) {
+                        if (sscanf(mhead, "Content-Type: %s", mimetype) != 1) {
+                                free(mimetype);
+                                mimetype = NULL;
+                        }
+                }
+                free(mhead);
+                headstart = crlf + 2; /* next line */
+        }
+
+        pbuf += 4; /* skip CRLF */
 
         /* open file for writing */
         fd = mkstemp(template);
@@ -686,10 +709,6 @@ http_status_code_t response_upload(int sock, url_t *u)
                 sprintf((char*)&(hash[i*2]), "%02x", md_value[i]);
         }
 
-        syslog(LOG_DEBUG, "hash: %s", hash);
-
-        /* TODO: deal with other data parts */
-
         /* set permissions */
         if (fchmod(fd, 0644) == -1) {
                 syslog(LOG_ERR, "Failed to set file permissions on upload");
@@ -721,6 +740,26 @@ http_status_code_t response_upload(int sock, url_t *u)
                         strerror(errno));
                 free(filename);
                 return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        /* write metadata to file */
+        if (mimetype) {
+                char *metafile;
+                asprintf(&metafile, "%s.mime", filename);
+                syslog(LOG_DEBUG, "writing mime type to %s", metafile);
+                if ((fd = creat(metafile, S_IRUSR | S_IWUSR)) == -1) {
+                        syslog(LOG_DEBUG, "failed to write metadata");
+                }
+                else {
+                        write(fd, mimetype, strlen(mimetype));
+                        close(fd);
+                        syslog(LOG_DEBUG, "metadata written");
+                }
+                free(mimetype);
+                free(metafile);
+        }
+        else {
+                syslog(LOG_DEBUG, "No metadata. Skipping.");
         }
         free(filename);
 
@@ -936,8 +975,7 @@ int send_file(int sock, char *file, http_status_code_t *err)
         syslog(LOG_DEBUG, "Sending %i bytes", (int)stat_buf.st_size);
 
         /* send headers */
-        mimetype = malloc(strlen(MIME_DEFAULT)+1);
-        get_mime_type(mimetype, path);
+        mimetype = get_mime_type(path);
         syslog(LOG_DEBUG, "Content-Type: %s", mimetype);
         asprintf(&headers, "%s\nContent-Length: %i", mimetype,
                 (int)stat_buf.st_size);
