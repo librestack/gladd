@@ -33,7 +33,7 @@ MYSQLFLAGS=`mysql_config --cflags --libs`
 PROGRAM=gladd
 PREFIX=@prefix@
 INSTALL=@INSTALL@
-OBJECTFILES=args.o auth.o config.o handler.o help.o http.o mime.o server.o signals.o string.o tls.o xml.o
+OBJECTFILES=args.o auth.o config.o handler.o help.o http.o mime.o server.o signals.o string.o tls.o utils.o xml.o
 TESTFILES=test.o args_test.o auth_test.o db_test.o config_test.o handler_test.o http_test.o string_test.o xml_test.o
 
 ${PROGRAM}: ${PROGRAM}_test main.o
@@ -101,6 +101,9 @@ string_test.o: string_test.c string_test.h
 
 test.o: minunit.h test.c test.h db_test.h config_test.h args_test.h auth_test.h http_test.h
 	${CC} ${CFLAGS} -c test.c
+
+utils.o: utils.h utils.c
+	${CC} ${CFLAGS} ${INCLUDES} -c utils.c
 
 xml.o: xml.h xml.c
 	${CC} ${CFLAGS} ${INCLUDES} -c xml.c ${LIBS}

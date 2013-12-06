@@ -30,6 +30,7 @@
 #include "main.h"
 #include "mime.h"
 #include "string.h"
+#include "utils.h"
 #include "xml.h"
 
 #include <arpa/inet.h>
@@ -722,13 +723,9 @@ http_status_code_t response_upload(int sock, url_t *u)
         filename = strdup(u->path);
         sqlvars(&filename, request->res);
         umask(022);
-        if (mkdir(filename, 0755) != 0) {
-                if (errno != EEXIST) {
-                        syslog(LOG_ERR, "Error creating directory '%s': %s",
-                                filename, strerror(errno));
-                        free(filename);
-                        return HTTP_INTERNAL_SERVER_ERROR;
-                }
+        if (!rmkdir(filename, 0755)) {
+                free(filename);
+                return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(filename);
 
