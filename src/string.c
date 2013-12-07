@@ -26,6 +26,48 @@
 #include <stdio.h>
 #include <string.h>
 
+/* return filename from full path */
+char *basefile(char *path)
+{
+        char *base;
+        char *p;
+        base = strdup(path);
+        p = memrchr(base, '/', strlen(base));
+        if (p != NULL) {
+                if (base + strlen(p) == p) {
+                        /* trailing slash - return empty string */
+                        base[0] = '\0';
+                }
+                else {
+                        memmove(base, p+1, strlen(p+1));
+                        base[strlen(p+1)] = '\0';
+                }       
+        }
+        return base;
+}
+
+/* return basefile from requested path, based on wildcards in pattern eg.
+ * for basefile_pattern("/customers/docs/123/abcd", "/customers/docs/(*)/(*)")
+ * return "123/abcd"
+ * for basefile_pattern("/customers/docs/abcd", "/customers/docs/(*)")
+ * return "abcd" */
+char *basefile_pattern(char *path, char *pattern)
+{
+        char *base = NULL;
+        int i;
+        for (i=0;i<strlen(pattern);i++) {
+                if (pattern[i] == '/' && pattern[i+1] == '*') {
+                        base = strdup(path+i+1);
+                        break;
+                }
+        }
+        if (!base) {
+                base = basefile(path);
+        }
+
+        return base;
+}
+
 /* trim leading spaces from string */
 char *lstrip(char *str)
 {

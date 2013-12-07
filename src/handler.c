@@ -908,22 +908,12 @@ http_status_code_t response_plugin(int sock, url_t *u)
 http_status_code_t response_static(int sock, url_t *u)
 {
         char *filename;
-        char *basefile;
+        char *base;
         http_status_code_t err = 0;
 
-        if (strcmp(u->url + strlen(u->url)-1, "*") == 0) {
-                /* url ends in wildcard (*) */
-                basefile = strdup(request->res + strlen(u->url) - 1);
-        }
-        else {
-                basefile = strdup("");
-        }
-
-        syslog(LOG_DEBUG, "basefile: %s", basefile);
-        syslog(LOG_DEBUG, "u->path: %s", u->path);
-
-        asprintf(&filename, "%s%s", u->path, basefile);
-        free(basefile);
+        base = basefile_pattern(request->res, u->url);
+        asprintf(&filename, "%s%s", u->path, base);
+        free(base);
         send_file(sock, filename, &err);
         free(filename);
 

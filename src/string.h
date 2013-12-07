@@ -25,6 +25,8 @@
 
 #include <stdlib.h>
 
+char *basefile(char *path);
+char *basefile_pattern(char *path, char *pattern);
 char *lstrip(char *str);
 char *memsearch(char *hay, char *pin, size_t size);
 char randchar();
