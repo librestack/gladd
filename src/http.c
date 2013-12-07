@@ -538,12 +538,12 @@ http_request_t *http_read_request(int sock, int *hcount,
         char *clen;
         char *ctype;
         char *body;
-        char httpv[16] = "";
-        char key[256] = "";
+        char httpv[LINE_MAX] = "";
+        char key[LINE_MAX] = "";
         char *line;
-        char method[16] = "";
-        char resource[MAX_RESOURCE_LEN] = "";
-        char value[256] = "";
+        char method[LINE_MAX] = "";
+        char resource[LINE_MAX] = "";
+        char value[LINE_MAX] = "";
         http_request_t *r;
         int headlen = 0;
         keyval_t *h = NULL;
