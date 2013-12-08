@@ -406,22 +406,26 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
         free(tmp);
 
         /* check cookie is valid */
-        char username[64];
-        char nonce[64];
+        char *username = malloc(strlen(cookie));
+        char *nonce = malloc(strlen(cookie));
         long timestamp;
         if (sscanf(clearcookie, "%s %li %s",
         username, &timestamp, nonce) != 3)
         {
                 syslog(LOG_DEBUG, "Invalid cookie");
+                free(username); free(nonce);
                 return HTTP_UNAUTHORIZED;
         }
         syslog(LOG_DEBUG, "Decrypted cookie: %s", clearcookie);
+        free(nonce);
+        free(clearcookie);
 
         /* check cookie freshness */
         long now = (long)time(NULL);
         if ((timestamp + config->sessiontimeout) < now) {
                 syslog(LOG_DEBUG, "Stale cookie (older than %lis)",
                         config->sessiontimeout);
+                free(username);
                 return HTTP_UNAUTHORIZED;
         }
 
@@ -429,8 +433,7 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
         syslog(LOG_INFO, "Valid cookie obtained for %s", username);
         syslog(LOG_DEBUG, "Setting username %s from session cookie", username);
         request->authuser = strdup(username);
-
-        free(clearcookie);
+        free(username);
 
         return 0;
 }

@@ -783,10 +783,10 @@ struct http_status get_status(int code)
 /* process the headers from the client http request */
 int http_validate_headers(http_request_t *r, http_status_code_t *err)
 {
-        char type[64] = "";
-        char user[64] = "";
-        char pass[64] = "";
-        char cryptauth[128] = "";
+        char type[LINE_MAX] = "";
+        char user[LINE_MAX] = "";
+        char pass[LINE_MAX] = "";
+        char cryptauth[LINE_MAX] = "";
         char *clearauth;
         keyval_t *h;
 

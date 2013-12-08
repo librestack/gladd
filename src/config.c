@@ -353,7 +353,7 @@ int add_sql(char *value)
 /* add url handler */
 int add_url_handler(char *value)
 {
-        char type[8];
+        char type[LINE_MAX];
         char params[LINE_MAX];
 
         /* TODO: refactor this */
