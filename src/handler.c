@@ -813,7 +813,8 @@ http_status_code_t response_upload(int sock, url_t *u)
         if (request->uuid) {
                 tmp = strdup(r);
                 free(r);
-                asprintf(&r, "<uuid>%s</uuid>%s", uuid, tmp);
+                asprintf(&r, "<resources><uuid>%s</uuid>\n%s\n</resources>",
+                        uuid, tmp);
                 free(tmp);
         }
         set_headers(&r); /* set any additional headers */
