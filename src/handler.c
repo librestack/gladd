@@ -896,7 +896,7 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
                         httpcode = HTTP_BAD_REQUEST;
                         break;
                 default:
-                        httpcode = HTTP_INTERNAL_SERVER_ERROR;
+                        httpcode = HTTP_OK;
                         break;
                 }
         }
