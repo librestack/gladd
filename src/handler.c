@@ -929,18 +929,21 @@ http_status_code_t response_plugin(int sock, url_t *u)
         }
         free(cmd);
 
-        /* TODO: write data to plugin */
-
-        /* TODO: write HTTP headers */
-
-        /* TODO: send as chunks */
+        /* write HTTP headers */
+        //set_headers(&r); /* set any additional headers */
+        http_response_headers(sock, HTTP_OK, 0, NULL);
 
         /* keep reading from plugin and sending output back to HTTP client */
+        char *chunksize;
         while (ibytes == BUFSIZE) {
                 ibytes = fread(pbuf, 1, BUFSIZE, fd);
                 syslog(LOG_DEBUG, "writing %i bytes to socket", (int) ibytes);
+                asprintf(&chunksize, "%i\r\n", (int)ibytes);
+                snd(sock, chunksize, strlen(chunksize), 0);
                 snd(sock, pbuf, ibytes, 0);
+                free(chunksize);
         }
+        snd(sock, "\r\n\r\n", 2, 0); /* Send blank line */
 
         /* pop TCP cork */
         setcork(sock, 0);

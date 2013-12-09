@@ -687,7 +687,12 @@ void http_response_headers(int sock, int code, int len, char *mime)
                 http_insert_header(&r, "Connection: close");
         if (mime) {
                 http_insert_header(&r, "Content-Type: %s", mime);
+        }
+        if (len) {
                 http_insert_header(&r, "Content-Length: %i", len);
+        }
+        else {
+                http_insert_header(&r, "Transfer-Encoding: chunked");
         }
         if (code == HTTP_UNAUTHORIZED) {
                 /* 401 Unauthorized MUST include WWW-Authenticate header */
