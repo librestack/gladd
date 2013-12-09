@@ -932,19 +932,21 @@ http_status_code_t response_plugin(int sock, url_t *u)
         /* write HTTP headers */
         //set_headers(&r); /* set any additional headers */
         http_response_headers(sock, HTTP_OK, 0, NULL);
+        snd(sock, "\r\n", 2, 0); /* Send blank line */
 
         /* keep reading from plugin and sending output back to HTTP client */
         char *chunksize;
-        snd(sock, "\r\n\r\n", 2, 0); /* Send blank line */
         while (ibytes == BUFSIZE) {
                 ibytes = fread(pbuf, 1, BUFSIZE, fd);
                 syslog(LOG_DEBUG, "writing %i bytes to socket", (int) ibytes);
                 asprintf(&chunksize, "%i\r\n", (int)ibytes);
                 snd(sock, chunksize, strlen(chunksize), 0);
                 snd(sock, pbuf, ibytes, 0);
+                snd(sock, "\r\n", 2, 0); /* CRLF */
                 free(chunksize);
         }
-        snd(sock, "\r\n\r\n", 2, 0); /* Send blank line */
+        snd(sock, "0\r\n", 3, 0); /* Send final (empty) chunk */
+        snd(sock, "\r\n", 2, 0); /* Send blank line */
 
         /* pop TCP cork */
         setcork(sock, 0);
