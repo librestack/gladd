@@ -935,6 +935,7 @@ http_status_code_t response_plugin(int sock, url_t *u)
 
         /* keep reading from plugin and sending output back to HTTP client */
         char *chunksize;
+        snd(sock, "\r\n\r\n", 2, 0); /* Send blank line */
         while (ibytes == BUFSIZE) {
                 ibytes = fread(pbuf, 1, BUFSIZE, fd);
                 syslog(LOG_DEBUG, "writing %i bytes to socket", (int) ibytes);
