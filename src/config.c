@@ -364,6 +364,9 @@ int add_url_handler(char *value)
                 else if (strcmp(type, "sqlview") == 0) {
                         handle_url_dynamic("sqlview", params);
                 }
+                else if (strcmp(type, "sqlexec") == 0) {
+                        handle_url_dynamic("sqlexec", params);
+                }
                 else if (strcmp(type, "xmlpost") == 0) {
                         handle_url_dynamic("xmlpost", params);
                 }

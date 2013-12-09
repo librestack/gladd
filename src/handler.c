@@ -253,6 +253,11 @@ handler_result_t handle_request(int sock, char *s)
                 if (err != 0)
                         http_response(sock, err);
         }
+        else if (strcmp(u->type, "sqlexec") == 0) {
+                err = response_sqlexec(sock, u);
+                if (err != 0)
+                        http_response(sock, err);
+        }
         else if (strcmp(u->type, "xslpost") == 0) {
                 err = response_xslpost(sock, u);
                 if (err != 0)
@@ -356,6 +361,30 @@ http_status_code_t response_sqlview(int sock, url_t *u)
         respond(sock, r);
         free(r);
         free(xml);
+
+        return 0;
+}
+
+/* handle sqlexec */
+http_status_code_t response_sqlexec(int sock, url_t *u)
+{
+        char *sql;
+        db_t *db;
+
+        if (!(db = getdb(u->db))) {
+                syslog(LOG_ERR, "db '%s' not in config", u->db);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        if (asprintf(&sql, "%s", getsql(u->view)) == -1)
+        {
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        if (db_exec_sql(db, sql) != 0) {
+                free(sql);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        free(sql);
+        http_response(sock, HTTP_OK);
 
         return 0;
 }

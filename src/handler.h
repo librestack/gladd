@@ -47,6 +47,7 @@ void setcork(int sock, int state);
 void set_headers(char **r);
 http_status_code_t response_plugin(int sock, url_t *u);
 http_status_code_t response_sqlview(int sock, url_t *u);
+http_status_code_t response_sqlexec(int sock, url_t *u);
 http_status_code_t response_static(int sock, url_t *u);
 http_status_code_t response_upload(int sock, url_t *u);
 http_status_code_t response_xml_plugin(int sock, url_t *u);
