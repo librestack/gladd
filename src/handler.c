@@ -601,7 +601,8 @@ http_status_code_t response_upload(int sock, url_t *u)
         char *tmp;
         char hash[SHA_DIGEST_LENGTH*2+1];
         char template[] = "/var/tmp/upload-XXXXXX";
-        uuid_t uuid;
+        char uuid[37];
+        uuid_t uuid_bin;
         const EVP_MD *md;
         http_status_code_t err = 0;
         int complete = 0;
@@ -767,8 +768,9 @@ http_status_code_t response_upload(int sock, url_t *u)
 
         if (request->uuid) {
                 /* rename to <path>/<uuid> */
-                uuid_generate(uuid);
-                asprintf(&filename, "%s/%s", dir, (char *) uuid);
+                uuid_generate(uuid_bin);
+                uuid_unparse(uuid_bin, uuid);
+                asprintf(&filename, "%s/%s", dir, uuid);
         }
         else {
                 /* rename to <path>/<sha1sum> */
@@ -810,7 +812,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         if (request->uuid) {
                 tmp = strdup(r);
                 free(r);
-                asprintf(&r, "<uuid>%s</uuid>%s", (char *)uuid, tmp);
+                asprintf(&r, "<uuid>%s</uuid>%s", uuid, tmp);
                 free(tmp);
         }
         set_headers(&r); /* set any additional headers */
