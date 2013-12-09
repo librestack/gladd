@@ -939,7 +939,7 @@ http_status_code_t response_plugin(int sock, url_t *u)
         while (ibytes == BUFSIZE) {
                 ibytes = fread(pbuf, 1, BUFSIZE, fd);
                 syslog(LOG_DEBUG, "writing %i bytes to socket", (int) ibytes);
-                asprintf(&chunksize, "%i\r\n", (int)ibytes);
+                asprintf(&chunksize, "%x\r\n", (int)ibytes);
                 snd(sock, chunksize, strlen(chunksize), 0);
                 snd(sock, pbuf, ibytes, 0);
                 snd(sock, "\r\n", 2, 0); /* CRLF */
