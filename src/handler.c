@@ -768,7 +768,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         if (request->uuid) {
                 /* rename to <path>/<uuid> */
                 uuid_generate(uuid);
-                asprintf(&filename, "%s/%s", dir, uuid);
+                asprintf(&filename, "%s/%s", dir, (char *) uuid);
         }
         else {
                 /* rename to <path>/<sha1sum> */
@@ -810,7 +810,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         if (request->uuid) {
                 tmp = strdup(r);
                 free(r);
-                asprintf(&r, "<uuid>%s</uuid>%s", uuid, tmp);
+                asprintf(&r, "<uuid>%s</uuid>%s", (char *)uuid, tmp);
                 free(tmp);
         }
         set_headers(&r); /* set any additional headers */
