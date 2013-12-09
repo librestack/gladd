@@ -770,6 +770,7 @@ http_status_code_t response_upload(int sock, url_t *u)
                 /* rename to <path>/<uuid> */
                 uuid_generate(uuid_bin);
                 uuid_unparse(uuid_bin, uuid);
+                syslog(LOG_DEBUG, "UUID: uuid");
                 asprintf(&filename, "%s/%s", dir, uuid);
         }
         else {
