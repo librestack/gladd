@@ -379,6 +379,7 @@ http_status_code_t response_sqlexec(int sock, url_t *u)
         {
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
+        sqlvars(&sql, request->res);
         syslog(LOG_DEBUG, "SQL: %s", sql);
         if (db_exec_sql(db, sql) != 0) {
                 free(sql);
