@@ -52,6 +52,7 @@
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
+#include <uuid/uuid.h>
 
 int sockme;
 
@@ -597,8 +598,10 @@ http_status_code_t response_upload(int sock, url_t *u)
         char *mimetype;
         char *pbuf;
         char *ptmp;
+        char *tmp;
         char hash[SHA_DIGEST_LENGTH*2+1];
         char template[] = "/var/tmp/upload-XXXXXX";
+        uuid_t uuid;
         const EVP_MD *md;
         http_status_code_t err = 0;
         int complete = 0;
@@ -762,8 +765,15 @@ http_status_code_t response_upload(int sock, url_t *u)
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
 
-        /* rename to <path>/<sha1sum> */
-        asprintf(&filename, "%s/%s", dir, hash);
+        if (request->uuid) {
+                /* rename to <path>/<uuid> */
+                uuid_generate(uuid);
+                asprintf(&filename, "%s/%s", dir, uuid);
+        }
+        else {
+                /* rename to <path>/<sha1sum> */
+                asprintf(&filename, "%s/%s", dir, hash);
+        }
         free(dir);
         syslog(LOG_ERR, "filename: %s", filename);
         if (rename(template, filename) == -1) {
@@ -797,6 +807,12 @@ http_status_code_t response_upload(int sock, url_t *u)
         /* return response to client with hash of uploaded file */
         char *r;
         asprintf(&r, "<sha1sum>%s</sha1sum>", hash);
+        if (request->uuid) {
+                tmp = strdup(r);
+                free(r);
+                asprintf(&r, "<uuid>%s</uuid>%s", uuid, tmp);
+                free(tmp);
+        }
         set_headers(&r); /* set any additional headers */
         http_response_full(sock, HTTP_CREATED, "text/xml", r);
         free(r);

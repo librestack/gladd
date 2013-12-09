@@ -121,6 +121,10 @@ int check_auth(http_request_t *r)
                                         syslog(LOG_DEBUG, "nocache");
                                         r->nocache = 1;
                                 }
+                                if (strcmp(a->auth, "uuid") == 0) {
+                                        syslog(LOG_DEBUG, "uuid");
+                                        r->uuid = 1;
+                                }
                         }
                         else if (strcmp(a->type, "allow") == 0) {
                                 /* TODO: check for ip address */
