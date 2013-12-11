@@ -26,6 +26,7 @@
 #include "gladdb/db.h"
 #include "string.h"
 #include "xml.h"
+#include <errno.h>
 #include <fnmatch.h>
 #include <grp.h>
 #include <security/pam_appl.h>
@@ -371,9 +372,18 @@ int auth_set_cookie(char **r, http_cookie_type_t type)
         cookie = encipher(dough);
         free(dough);
 
+        char *host = http_get_header(request, "Host");
+	char *domain;
+        if (host) {
+		asprintf(&domain, " Domain=.%s;", host);
+	}
+	else {
+		domain = calloc(1, sizeof (char));
+	}
         syslog(LOG_DEBUG, "setting session cookie %s", cookie);
-        http_insert_header(r, "Set-Cookie: SID=%s; Path=/; Secure; HttpOnly",
-                cookie);
+        http_insert_header(r, "Set-Cookie: SID=%s;%s Path=/; Secure; HttpOnly",
+                cookie, domain);
+	free(domain);
         free(cookie);
 
         return 0;
@@ -383,8 +393,19 @@ int auth_set_cookie(char **r, http_cookie_type_t type)
 int auth_unset_cookie(char **r)
 {
         syslog(LOG_DEBUG, "logout requested - invalidating session cookie");
+        char *host = http_get_header(request, "Host");
+	char *domain;
+        if (host) {
+		asprintf(&domain, " Domain=.%s;", host);
+	}
+	else {
+		domain = calloc(1, sizeof (char));
+	}
+	/* Use Expires with arbitrary value rather than Max-Age,
+	 * as some browsers don't support Max-Age */
         http_insert_header(r,
-                "Set-Cookie: SID=logout; Path=/; Max-Age=0; Secure; HttpOnly");
+	    "Set-Cookie: SID=logout;%s Path=/; Expires: Thu, 01 Dec 1994 16:00:00 GMT; Secure; HttpOnly", domain);
+	free(domain);
         return 0;
 }
 
@@ -397,17 +418,36 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
                 return HTTP_UNAUTHORIZED;
         }
         syslog(LOG_DEBUG, "attempting cookie auth");
+        syslog(LOG_DEBUG, "cookie: %s", cookie);
 
         /* find the first cookie called SID, ignore any others */
         char *tmp = malloc(strlen(cookie));
-        if (sscanf(cookie, "SID=%[^;]", tmp) != 1) {
+	errno = 0;
+        int ret = sscanf(cookie, "SID=%[^;]", tmp);
+	if (errno != 0) {
+                syslog(LOG_DEBUG, "%s", strerror(errno));
+                free(tmp);
+                return HTTP_UNAUTHORIZED;
+	}
+        if (ret != 1) {
                 syslog(LOG_DEBUG, "Session cookie not found");
                 free(tmp);
                 return HTTP_UNAUTHORIZED;
         }
+	if (strlen(tmp) < 80) {
+                syslog(LOG_DEBUG, "Session cookie has invalid length of %i",
+			(int)strlen(tmp));
+                free(tmp);
+                return HTTP_UNAUTHORIZED;
+	}
         /* decrypt cookie */
         char *clearcookie = decipher(tmp);
         free(tmp);
+	if (!clearcookie) {
+                syslog(LOG_DEBUG, "Failed to decipher cookie");
+		free(clearcookie);
+                return HTTP_UNAUTHORIZED;
+	}
 
         /* check cookie is valid */
         char *username = malloc(strlen(cookie));
@@ -468,6 +508,11 @@ char *decipher(char *base64)
 
         /* first, strip base64 encoding */
         unsigned char *ciphertext = (unsigned char *)decode64(base64);
+
+	if (!ciphertext) {
+		syslog(LOG_DEBUG, "base64 decoding failed");
+		return NULL;
+	}
 
         for (i=0; i< 64; i+=8) {
                 BF_ecb_encrypt(ciphertext+i, cleartext+i, &config->ctx,
