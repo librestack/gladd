@@ -882,9 +882,10 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
         fclose(fd);
 
         /* obtain plugin exit code */
-        int status;
+        int status = 0;
         int httpcode = HTTP_INTERNAL_SERVER_ERROR;
         waitpid(pid, &status, 0);
+	syslog(LOG_DEBUG, "status is %i", status);
         if (WIFEXITED(status)) {
                 syslog(LOG_DEBUG, "plugin exited with code %d",
                         WEXITSTATUS(status));
@@ -896,7 +897,6 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
                         httpcode = HTTP_BAD_REQUEST;
                         break;
                 default:
-                        httpcode = HTTP_OK;
                         break;
                 }
         }
