@@ -355,6 +355,32 @@ int check_auth_group(char *username, char *groupname)
         return ret;
 }
 
+/* return domain from Host header, with port stripped
+ * NB: free() the returned char pointer when done */
+char *auth_get_host()
+{
+	char *host = http_get_header(request, "Host");
+	char *domain;
+        if (host) {
+		asprintf(&domain, " Domain=.%s;", host);
+	}
+	else {
+		domain = calloc(1, sizeof (char));
+	}
+	
+	/* if domain contains a port number, remove it */
+	/* TODO: handle ipv6 addresses in Host
+	 * eg. https://[dead:beef:cafe::1]:4443/ */
+	char *port = memchr(domain, ':', strlen(domain));
+	if (port != NULL) {
+		syslog(LOG_DEBUG, "stripping port number from cookie domain");
+		*port = ';';
+		*(port+1) = '\0';
+	}
+
+	return domain;
+}
+
 /* set session cookie */
 int auth_set_cookie(char **r, http_cookie_type_t type)
 {
@@ -372,14 +398,7 @@ int auth_set_cookie(char **r, http_cookie_type_t type)
         cookie = encipher(dough);
         free(dough);
 
-        char *host = http_get_header(request, "Host");
-	char *domain;
-        if (host) {
-		asprintf(&domain, " Domain=.%s;", host);
-	}
-	else {
-		domain = calloc(1, sizeof (char));
-	}
+	char *domain = auth_get_host();
         syslog(LOG_DEBUG, "setting session cookie %s", cookie);
         http_insert_header(r, "Set-Cookie: SID=%s;%s Path=/; Secure; HttpOnly",
                 cookie, domain);
@@ -393,14 +412,7 @@ int auth_set_cookie(char **r, http_cookie_type_t type)
 int auth_unset_cookie(char **r)
 {
         syslog(LOG_DEBUG, "logout requested - invalidating session cookie");
-        char *host = http_get_header(request, "Host");
-	char *domain;
-        if (host) {
-		asprintf(&domain, " Domain=.%s;", host);
-	}
-	else {
-		domain = calloc(1, sizeof (char));
-	}
+	char *domain = auth_get_host();
 	/* Use Expires with arbitrary value rather than Max-Age,
 	 * as some browsers don't support Max-Age */
         http_insert_header(r,
