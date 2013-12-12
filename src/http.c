@@ -393,7 +393,7 @@ int http_insert_header(char **r, char *header, ...)
 
 void http_flush_buffer()
 {
-        buf[0] = '\0';
+	memset(buf, '\0', sizeof (buf));
         bytes = 0;
 }
 

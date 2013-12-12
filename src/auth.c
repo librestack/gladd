@@ -361,8 +361,30 @@ char *auth_get_host()
 {
 	char *host = http_get_header(request, "Host");
 	char *domain;
+	int i;
+	int dots = 0;
+	int alpha = 0;
         if (host) {
-		asprintf(&domain, " Domain=.%s;", host);
+		/* count dots and letters to give us a hint about Host */
+		for (i=0; i< strlen(host); i++) {
+			if (host[i] == '.') dots++;
+			if (host[i] >= 'a' && host[i] <= 'z') alpha++;
+		}
+		if (dots > 0 && alpha == 0) {
+			syslog(LOG_DEBUG, "Host headers appears to be ipv4");
+			domain = calloc(1, sizeof (char));
+		}
+		else if (memchr(host, '.', strlen(host)) == NULL) {
+			syslog(LOG_DEBUG, "Host header not a domain");
+			domain = calloc(1, sizeof (char));
+		}
+		else if (memchr(host, '[', strlen(host)) != NULL) {
+			syslog(LOG_DEBUG, "Host header appears to be ipv6");
+			domain = calloc(1, sizeof (char));
+		}
+		else {
+			asprintf(&domain, " Domain=.%s;", host);
+		}
 	}
 	else {
 		domain = calloc(1, sizeof (char));

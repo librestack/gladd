@@ -273,6 +273,10 @@ handler_result_t handle_request(int sock, char *s)
                 err = response_upload(sock, u);
                 if (err != 0)
                         http_response(sock, err);
+		/* close connection after an upload, otherwise Chrome 
+		 * has a habit of sending the same file again even if a 
+		 * different one is selected */
+		return HANDLER_CLOSE_CONNECTION;
         }
         else if (strcmp(u->type, "plugin") == 0) {
                 if (strcmp(u->method, "POST") == 0) {
@@ -628,6 +632,18 @@ http_status_code_t response_upload(int sock, url_t *u)
         /* first, grab any bytes already in buffer */
         size = bytes;
         syslog(LOG_DEBUG, "I already have %i bytes", (int) size);
+
+        /* fill the buffer if empty: Chrome often gets here with 0 bytes */
+	while (bytes == 0) {
+		required = ((lclen-size)>BUFSIZE) ? BUFSIZE : lclen - size;
+		syslog(LOG_DEBUG, "Initial attempt to read %i bytes",
+			(int) required);
+		if ((bytes = rcv(sock, buf, required, MSG_WAITALL)) == -1) {
+			syslog(LOG_DEBUG, "failed to fill buffer");
+			return HTTP_BAD_REQUEST;
+		}
+        	size += bytes;
+	}
 
         /* find boundary */
         pbuf = memsearch(buf, b, BUFSIZE);
