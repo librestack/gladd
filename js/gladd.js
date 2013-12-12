@@ -1,7 +1,7 @@
 /* 
  * gladd.js - gladd helper functions
  *
- * this file is part of GLADBOOKS
+ * this file is part of GLADD
  *
  * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladbooks.com>
  *
