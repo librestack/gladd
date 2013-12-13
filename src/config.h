@@ -130,6 +130,7 @@ char   *getsql(char *alias);
 user_t *getuser(char *username);
 group_t *getgroup(char *name);
 FILE   *open_config(char *configfile);
+int     process_config_file(char *configfile);
 int     process_config_line(char *line);
 int     read_config(char *configfile);
 int     set_config_defaults();

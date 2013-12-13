@@ -751,7 +751,7 @@ FILE *open_config(char *configfile)
         fd = fopen(configfile, "r");
         if (fd == NULL) {
                 int errsv = errno;
-                fprintf(stderr, "ERROR: %s\n", strerror(errsv));
+                syslog(LOG_ERR, "ERROR: %s", strerror(errsv));
         }
         return fd;
 }
@@ -834,6 +834,10 @@ int process_config_line(char *line)
                 if (strcmp(key, "encoding") == 0) {
                         return set_encoding(value);
                 }
+                else if (strcmp(key, "include") == 0) {
+                        /* read and process another config file here */
+                        return process_config_file(value);
+                }
                 else if (strcmp(key, "url_default") == 0) {
                         return asprintf(&config->urldefault, "%s", value);
                 }
@@ -892,12 +896,36 @@ int process_config_line(char *line)
 }
 
 /* read config file into memory */
-int read_config(char *configfile)
+int process_config_file(char *configfile)
 {
         FILE *fd;
         char line[LINE_MAX];
-        int i;
         int lc = 0;
+        int ret = 1;
+
+        /* open file for reading */
+        fd = open_config(configfile);
+        if (fd == NULL)
+                return 0;
+
+        /* read in config */
+        while (fgets(line, LINE_MAX, fd) != NULL) {
+                lc++;
+                if (process_config_line(line) < 0) {
+                        printf("Error in line %i of %s.\n", lc, configfile);
+                        ret = 0;
+                }
+        }
+
+        /* close file */
+        fclose(fd);
+        return ret;
+}
+
+int read_config(char *configfile)
+{
+        FILE *fd;
+        int i;
         int retval = 0;
 
         /* reset list pointers */
@@ -914,22 +942,8 @@ int read_config(char *configfile)
 
         prevurl = NULL;
 
-        /* open file for reading */
-        fd = open_config(configfile);
-        if (fd == NULL)
+        if (!process_config_file(configfile))
                 return 1;
-
-        /* read in config */
-        while (fgets(line, LINE_MAX, fd) != NULL) {
-                lc++;
-                if (process_config_line(line) < 0) {
-                        printf("Error in line %i of %s.\n", lc, configfile);
-                        retval = 1;
-                }
-        }
-
-        /* close file */
-        fclose(fd);
 
         /* generate random secretkey if none set */
         if (!config_new->secretkey) {
