@@ -48,6 +48,7 @@ config_t config_default = {
         .sessiontimeout = 300,
         .ssl            = 0,
         .xforward       = 0,
+        .uploadmax      = 0,
         .urldefault     = "index.html"
 };
 
@@ -825,6 +826,10 @@ int process_config_line(char *line)
                         return set_config_long(&config_new->ssl, 
                                                 "ssl", i, 0, 1);
                 }
+                else if (strcmp(key, "uploadmax") == 0) {
+                        return set_config_long(&config_new->uploadmax, 
+                                                "uploadmax", i, 0, LONG_MAX);
+                }
                 else if (strcmp(key, "x-forward") == 0) {
                         return set_config_long(&config_new->xforward, 
                                                 "x-forward", i, 0, 1);
@@ -902,6 +907,8 @@ int process_config_file(char *configfile)
         char line[LINE_MAX];
         int lc = 0;
         int ret = 1;
+
+        syslog(LOG_DEBUG, "processing config: %s", configfile);
 
         /* open file for reading */
         fd = open_config(configfile);

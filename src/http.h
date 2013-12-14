@@ -68,6 +68,7 @@ typedef struct http_request_t {
         char *authpass;         /* password    "      "   "     "    "   */
         char *boundary;         /* boundary for multipart data           */
         int cookie;             /* 0 (default), 1 = set session cookie   */
+        int headlen;            /* length of request headers (bytes)     */
         int nocache;            /* 0 (default), 1 = do not cache         */
         int uuid;               /* 0 (default), 1 = use uuid for uploads */
         keyval_t *headers;      /* client request headers                */

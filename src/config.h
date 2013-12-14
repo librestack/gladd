@@ -64,6 +64,7 @@ typedef struct config_t {
         char *sslcrl;
         char *secretkey;     /* secret key used for en/decrypting cookies */
         BF_KEY ctx;          /* blowfish context */
+        long uploadmax;      /* Max size of upload files (MB) 0=unlimited */
         char *urldefault;
         long xforward;
         char *xmlpath;       /* path to xml, xsl and xsd files */

@@ -545,7 +545,6 @@ http_request_t *http_read_request(int sock, int *hcount,
         char resource[LINE_MAX] = "";
         char value[LINE_MAX] = "";
         http_request_t *r;
-        int headlen = 0;
         keyval_t *h = NULL;
         keyval_t *hlast = NULL;
         long lclen;
@@ -554,6 +553,7 @@ http_request_t *http_read_request(int sock, int *hcount,
         *err = 0;
 
         r = http_init_request();
+        r->headlen = 0;
 
         /* first line has http request */
         line = http_readline(sock);
@@ -587,7 +587,7 @@ http_request_t *http_read_request(int sock, int *hcount,
                 line = http_readline(sock);
                 if (line == NULL) break;
                 if (strlen(line) == 0) break;
-                headlen += strlen(line);
+                r->headlen += strlen(line);
                 syslog(LOG_DEBUG, "[%s]", line);
                 if (sscanf(line, "%[^:]: %[^\r\n]", key, value) != 2) break;
                 free(line);
@@ -602,8 +602,8 @@ http_request_t *http_read_request(int sock, int *hcount,
                 (*hcount)++;
         }
         free(line);
-        syslog(LOG_DEBUG, "headers size: %i", headlen);
-        r->bytes += headlen;
+        syslog(LOG_DEBUG, "headers size: %i", r->headlen);
+        r->bytes += r->headlen;
 
         /* only read body if we have a Content-Type and Content-Length */
         if ((ctype = http_get_header(r, "Content-Type"))

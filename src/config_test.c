@@ -86,6 +86,7 @@ char *test_config_defaults()
                 strncmp(config->authrealm, "gladd", 5) == 0);
         mu_assert("Ensure default encoding=UTF-8", 
                 strncmp(config->encoding, "UTF-8", 5) == 0);
+        mu_assert("Ensure default uploadmax=0", config->uploadmax == 0);
         mu_assert("Ensure default url_default=index.html", 
                 strcmp(config->urldefault, "index.html") == 0);
         mu_assert("Ensure default x-forward=0", config->xforward == 0);
@@ -116,6 +117,8 @@ char *test_config_set()
                 strcmp(config->sslcert, "/path/to/ssl.crt") == 0);
         mu_assert("Ensure sslcrl is set from config", 
                 strcmp(config->sslcrl, "/path/to/crl.pem") == 0);
+        mu_assert("Ensure uploadmax is set from config",
+                config->uploadmax == 5);
         mu_assert("Ensure xmlpath is set from config", 
                 strcmp(config->xmlpath,
                 "/home/bacs/dev/gladbooksd/static/xml/") == 0);

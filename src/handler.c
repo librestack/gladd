@@ -623,6 +623,19 @@ http_status_code_t response_upload(int sock, url_t *u)
         clen = http_get_header(request, "Content-Length");
         lclen = strtol(clen, NULL, 10);
 
+        /* Ensure Content-Length is not greater than uploadmax. 
+         * If too large, just drop the connection.  We have no way to signal 
+         * an error to the client without first accepting the whole request. */
+        if (config->uploadmax > 0) {
+                long bodysize = lclen;
+                if (bodysize > config->uploadmax * 1024 * 1024) {
+                        syslog(LOG_INFO, "Upload aborted. " 
+                        "Request body of size %li exceeds uploadmax (%liMB)",
+                        bodysize, config->uploadmax);
+                        return 0;
+                }
+        }
+
         /* abort if we don't have a boundary */
         if (!b) {
                 syslog(LOG_ERR, "No boundary header for upload url");

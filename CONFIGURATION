@@ -93,6 +93,10 @@ ssl-crl
 (required for ssl=1)
 Full path to your SSL certificate revocation list.
 
+uploadmax
+Max size (MB) of file upload to accept.
+Default: 0 (unlimited)
+
 url_default
 Default: index.html
 Default url to serve up if a client requests / 
