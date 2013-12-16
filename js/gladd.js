@@ -1990,7 +1990,7 @@ function accordionClick() {
 	$(this).parent().find('div').hide();
 	$(this).parent().find('h3').removeClass('selected');
 	$(this).addClass('selected');
-	$(this).next().fadeIn();
+	$(this).next().fadeIn(250);
 }
 
 $.fn.accordionTab = function(n) {
