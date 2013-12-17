@@ -1942,13 +1942,12 @@ function divTable(div, xml) {
     var row = 0;
     $(xml).find('resources').find('row').each(function() {
         row++;
-		var eo = oddEven(row);
-        tr = $('<div class="tr ' + eo + '"/>');
+        tr = $('<div class="tr"/>');
         formtable.append(tr);
 		$(this).children().each(function() {
 			var n = 'xml-' + this.tagName;
 			var v = ($(this).text() != '') ? $(this).text() : '&nbsp;';
-			var td = $('<div class="td ' + eo + ' ' + n + '">' + v + '</div>');
+			var td = $('<div class="td ' + n + '">' + v + '</div>');
 			tr.append(td);
 		});
     });
