@@ -1987,7 +1987,7 @@ function accordionize(o) {
 
 function accordionClick() {
 	if ($(this).next().visible) return;
-	$(this).parent().find('div').hide();
+	$(this).parent().children('div').hide();
 	$(this).parent().find('h3').removeClass('selected');
 	$(this).addClass('selected');
 	$(this).next().fadeIn(250);
