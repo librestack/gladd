@@ -671,6 +671,7 @@ function showHTML(url, title, tab, collection) {
 			else {
 				tab = addTab(title, html, true);
 			}
+			accordionize(activeTab().find('div.accordion'));
 			hideSpinner();
 		},
 		error: function() {
@@ -1951,8 +1952,8 @@ function divTable(div, xml) {
 			tr.append(td);
 		});
     });
-	var clearfix = $('<div class="clearfix"/>');
-	formtable.append(clearfix);
+	//var clearfix = $('<div class="clearfix"/>');
+	//formtable.append(clearfix);
 }
 
 function oddEven(row) {
@@ -1979,25 +1980,31 @@ function selectRowSingular(o) {
 
 /* build a basic accordion object */
 function accordionize(o) {
-	o.find('h3').each(function() {
+	o.attr('height');
+	o.find('div > h3').each(function() {
 		$(this).click(accordionClick);
 	});
 }
 
 function accordionClick() {
 	if ($(this).next().visible) return;
-	$(this).parent().children('div').hide();
-	$(this).parent().find('h3').removeClass('selected');
+	$(this).parents('div.accordion').find('div.content').hide();
+	$(this).parents('div.accordion').find('div.section > h3')
+		.removeClass('selected');
 	$(this).addClass('selected');
 	$(this).next().fadeIn(250);
 }
 
 $.fn.accordionTab = function(n) {
-    return $(this).find('div.accordion h3:nth-child(' + n + ')');
+    return $(this).find('div.accordion div.section:nth-child(' + n + ') div');
+}
+
+$.fn.accordionTitle = function(n) {
+    return $(this).find('div.accordion div.section:nth-child(' + n + ') h3');
 }
 
 $.fn.accordionTabSelect = function(n) {
-    $(this).accordionTab(n).each(accordionClick);
+    $(this).accordionTitle(n).each(accordionClick);
 }
 
 
