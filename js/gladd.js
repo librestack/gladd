@@ -66,7 +66,12 @@ $(document).ready(function() {
 		logout();
 	});
 
+	$(document).keypress(docKeypress);
 });
+
+/* to be overridden in app */
+function docKeypress() {
+}
 
 function loginSetup() {
 	/* set up login box */
@@ -937,23 +942,6 @@ function uploadFile(f, url) {
 		error: function(xml) {
 			hideSpinner();
 			alert("error uploading file");
-		}
-	});
-}
-
-function csvToXml(sha) {
-	showSpinner('Converting csv to xml...');
-	$.ajax({
-		url: collection_url('csvtoxml/' + sha),
-		beforeSend: function (xhr) { setAuthHeader(xhr); },
-		dataType: 'xml',
-		success: function(xml) {
-			xml = fixXMLDates(xml);
-			xml = fixXMLRequest(xml);
-			postBankData(xml);
-		},
-		error: function(xml) {
-			displayResultsGeneric(xml, collection, title);
 		}
 	});
 }
