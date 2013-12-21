@@ -1961,6 +1961,10 @@ function deselectAllRows(o) {
 	o.parent().find('div.tr').removeClass('selected');
 }
 
+function selectAllRows(o) {
+	o.parent().find('div.tr').addClass('selected');
+}
+
 function selectRowSingular(o) {
 	deselectAllRows(o);
 	toggleSelected(o);
