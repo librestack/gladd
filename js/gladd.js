@@ -2202,12 +2202,17 @@ function collection_url(collection) {
 /*****************************************************************************/
 /* Javascript has no decimal type, so we need to teach it how to add up */
 function decimalAdd(x, y) {
-
 	x = new Big(x);
 	y = new Big(y);
-
 	return x.plus(y);
+}
 
+/*****************************************************************************/
+/* Return x-y */
+function decimalSubtract(x, y) {
+	x = new Big(x);
+	y = new Big(y);
+	return x.minus(y);
 }
 
 /*****************************************************************************/
