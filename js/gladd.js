@@ -2275,9 +2275,13 @@ function prepBusinessSelector() {
 			showBusinessSelector(xml);
 		},
 		error: function(xml) {
-			getForm('business', 'create', 'Add New Business');
+			customBusinessNotFound(xml);
 		}
 	});
+}
+
+/* to be overridden by application */
+function customBusinessNotFound(xml) {
 }
 
 /*****************************************************************************/
