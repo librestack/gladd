@@ -447,21 +447,11 @@ function loginok(xml) {
     console.log('setting auth timer');
     window.setTimeout(reauthenticate, g_authtimeout);
 
-	g_instance = '';
-	$(xml).find('instance').each(function() {
-		g_loggedin = true;
-		g_instance = $(this).text();
-		console.log('Instance selected: ' + g_instance);
-	});
-	if (g_instance == '') {
-		/* couldn't find instance for user - treat as failed login */
-		loginfailed();
-	}
-	else {
-		/* have instance, hide login dialog and get list of businesses */
-		hideLoginBox();
-		prepBusinessSelector();
-	}
+	customLoginEvents(xml);
+}
+
+/* to be overridden by application */
+function customLoginEvents(xml) {
 }
 
 /*****************************************************************************/
