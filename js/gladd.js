@@ -2408,6 +2408,11 @@ function randomString(strlen) {
     return a.join('');
 }
 
+function isDate(datestring) {
+	var dte = new Date(datestring);
+	return (!isNaN(dte));
+}
+
 /* setTimeout hacks 
   source: https://developer.mozilla.org/en-US/docs/Web/API/Window.setTimeout */
 var __nativeST__ = window.setTimeout, __nativeSI__ = window.setInterval;
