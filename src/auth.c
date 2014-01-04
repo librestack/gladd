@@ -118,13 +118,21 @@ int check_auth(http_request_t *r)
                                         syslog(LOG_DEBUG, "cookie");
                                         r->cookie = 1;
                                 }
-                                if (strcmp(a->auth, "nocache") == 0) {
+                                else if (strcmp(a->auth, "nocache") == 0) {
                                         syslog(LOG_DEBUG, "nocache");
                                         r->nocache = 1;
                                 }
-                                if (strcmp(a->auth, "uuid") == 0) {
+                                else if (strcmp(a->auth, "htmlout") == 0) {
+                                        syslog(LOG_DEBUG, "htmlout");
+                                        r->htmlout = 1;
+                                }
+                                else if (strcmp(a->auth, "uuid") == 0) {
                                         syslog(LOG_DEBUG, "uuid");
                                         r->uuid = 1;
+                                }
+                                else {
+                                        syslog(LOG_DEBUG,
+                                        "Ignoring unknown param: %s", a->auth);
                                 }
                         }
                         else if (strcmp(a->type, "allow") == 0) {

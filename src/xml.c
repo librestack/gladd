@@ -249,8 +249,6 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
         xsltSaveResultToString(&sqlout, &doclen, docsql, docxslt);
         asprintf(output, "%s", (char *)sqlout);
 
-        syslog(LOG_DEBUG, "%s", sqlout);
-
         /* cleanup */
         free(sqlout);
         xsltFreeStylesheet(docxslt);

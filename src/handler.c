@@ -407,6 +407,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         char *sql;
         char *r;
         char *action;
+        char *mime = MIME_XML;
         int err;
         field_t *filter = NULL;
 
@@ -467,23 +468,20 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         syslog(LOG_DEBUG, "Executing SQL");
 
         /* execute sql */
-        if (db_exec_sql(db, sql) != 0) {
+        if (sqltoxml(db, sql, filter, &xml, 1) < 0) {
                 free(sql);
                 syslog(LOG_ERR, "xsltpost sql execution failed");
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(sql);
 
-        /* check if we have results to return (created.xsl / updated.xsl) */
+        /* check if we have created.xsl / updated.xsl */
         assert(asprintf(&xsl, "%s/%s/%sd.xsl", config->xmlpath, u->view,
                 action) != -1);
-        free(action);
-        if (access(xsl, R_OK) != 0) {
-                /* No xsl for result, just return OK */
-                http_response(sock, HTTP_OK);
-        }
-        else {
-                /* return row(s) as result */
+        if (access(xsl, R_OK) == 0) {
+                /* use {created,updated}.xsl for result */
+                syslog(LOG_DEBUG, "overriding results using %sd.xsl", action);
+                free(xml);
                 if (xmltransform(xsl, request->data->value, &sql) != 0) {
                         free(xsl);
                         syslog(LOG_ERR, "XSLT transform failed");
@@ -494,19 +492,45 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                         return HTTP_INTERNAL_SERVER_ERROR;
                 }
                 free(sql);
-                asprintf(&headers, "%s\nContent-Length: %i", MIME_XML,
-                        (int)strlen(xml));
-                if (asprintf(&r, RESPONSE_200, headers, xml) == -1)
-                {
-                        free(xml);
-                        return HTTP_INTERNAL_SERVER_ERROR;
-                }
-                free(headers);
-                free(xml);
-                set_headers(&r); /* set any additional headers */
-                respond(sock, r);
-                free(r);
         }
+        free(xsl);
+
+        if (request->htmlout) {
+                /* html output was requested */
+                syslog(LOG_DEBUG, "html output conversion requested");
+                assert(asprintf(&xsl, "%s/%s/%s.html.xsl", config->xmlpath,
+                        u->view, action) != -1);
+                free(action);
+                if (access(xsl, R_OK) == 0) {
+                        /* convert xml result to html */
+                        syslog(LOG_DEBUG, "converting results to html");
+                        char *resultxml = strdup(xml);
+                        free(xml);
+                        if (xmltransform(xsl, resultxml, &xml) != 0) {
+                                syslog(LOG_ERR, "XSLT transform failed");
+                                free(xsl);
+                                free(resultxml);
+                                return HTTP_INTERNAL_SERVER_ERROR;
+                        }
+                        mime = MIME_HTML;
+                }
+                else {
+                        syslog(LOG_ERR, "'%s' not found", xsl);
+                }
+        }
+
+        asprintf(&headers, "%s\nContent-Length: %i", mime,
+                (int)strlen(xml));
+        if (asprintf(&r, RESPONSE_200, headers, xml) == -1)
+        {
+                free(xml);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        free(headers);
+        free(xml);
+        set_headers(&r); /* set any additional headers */
+        respond(sock, r);
+        free(r);
         free(xsl);
         db_disconnect(db);
 
