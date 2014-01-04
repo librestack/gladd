@@ -2430,3 +2430,11 @@ window.setInterval = function (vCallback, nDelay /*, argumentToPass1, argumentTo
     vCallback.apply(oThis, aArgs);
   } : vCallback, nDelay);
 };
+
+/* trim() */
+if(typeof(String.prototype.trim) === "undefined")
+{
+    String.prototype.trim = function() {
+		return String(this).replace(/^\s+|\s+$/g, '');
+	};
+}
