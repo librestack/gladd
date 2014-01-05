@@ -75,8 +75,8 @@ void *get_in_addr(struct sockaddr *sa)
  * return 1 if data available, 0 if not */
 int waitfordata(int sock, int bytes, char s[INET6_ADDRSTRLEN])
 {
-        int peek;
-        char peekbuf[1];
+        int peek = 0;
+        char peekbuf[1] = "";
         struct timeval tv;
         if (bytes > 0) return 1; /* we already have data */
         tv.tv_sec = config->keepalive; tv.tv_usec = 0;
@@ -144,12 +144,12 @@ void handle_connection(int sock, struct sockaddr_storage their_addr)
 
 handler_result_t handle_request(int sock, char *s)
 {
-        char *mtype;
-        http_status_code_t err;
+        char *mtype = NULL;
+        http_status_code_t err = 0;
         int auth = -1;
         int hcount = 0;
-        url_t *u;
-        long len;
+        url_t *u = NULL;
+        long len = 0;
 
 
         /* read http client request */
@@ -313,13 +313,13 @@ void respond (int fd, char *response)
 /* handle sqlview */
 http_status_code_t response_sqlview(int sock, url_t *u)
 {
-        char *headers;
-        char *r;
-        char *sql;
+        char *headers = NULL;
+        char *r = NULL;
+        char *sql = NULL;
         field_t *filter = NULL;
-        char *xml;
-        int err;
-        db_t *db;
+        char *xml = NULL;
+        int err = 0;
+        db_t *db = NULL;
 
         if (!(db = getdb(u->db))) {
                 syslog(LOG_ERR, "db '%s' not in config", u->db);
@@ -373,8 +373,8 @@ http_status_code_t response_sqlview(int sock, url_t *u)
 /* handle sqlexec */
 http_status_code_t response_sqlexec(int sock, url_t *u)
 {
-        char *sql;
-        db_t *db;
+        char *sql = NULL;
+        db_t *db = NULL;
 
         if (!(db = getdb(u->db))) {
                 syslog(LOG_ERR, "db '%s' not in config", u->db);
@@ -539,14 +539,14 @@ http_status_code_t response_xslpost(int sock, url_t *u)
 
 http_status_code_t response_xslt(int sock, url_t *u)
 {
-        char *headers;
-        char *r;
-        char *sql;
-        char *xml;
-        char *xsl;
-        char *html;
-        int err;
-        db_t *db;
+        char *headers = NULL;
+        char *r = NULL;
+        char *sql = NULL;
+        char *xml = NULL;
+        char *xsl = NULL;
+        char *html = NULL;
+        int err = 0;
+        db_t *db = NULL;
         field_t *filter = NULL;
 
         syslog(LOG_DEBUG, "response_xslt()");
@@ -617,31 +617,32 @@ http_status_code_t response_upload(int sock, url_t *u)
 {
         EVP_MD_CTX *mdctx;
         char *b = request->boundary;
-        char *clen;
-        char *crlf;
-        char *dir;
-        char *filename;
-        char *headstart;
-        char *mhead;
-        char *mimetype;
-        char *pbuf;
-        char *ptmp;
-        char *tmp;
+        char *clen = NULL;
+        char *crlf = NULL;
+        char *dir = NULL;
+        char *filename = NULL;
+        char *headstart = NULL;
+        char *mhead = NULL;
+        char *mimetype = NULL;
+        char *pbuf = NULL;
+        char *ptmp = NULL;
+        char *tmp = NULL;
         char hash[SHA_DIGEST_LENGTH*2+1];
         char template[] = "/var/tmp/upload-XXXXXX";
         char uuid[37];
         uuid_t uuid_bin;
-        const EVP_MD *md;
+        const EVP_MD *md = NULL;
         http_status_code_t err = 0;
         int complete = 0;
-        int fd;
-        long lclen;
-        ssize_t ret;
-        size_t required;
+        int fd = 0;
+        long lclen = 0;
+        ssize_t ret = 0;
+        size_t required = 0;
         size_t size = 0;
         size_t written = 0;
         unsigned char md_value[EVP_MAX_MD_SIZE];
-        unsigned int md_len, i;
+        unsigned int i = 0;
+        unsigned int md_len = 0;
 
         /* get expected length of body */
         clen = http_get_header(request, "Content-Length");
@@ -884,11 +885,11 @@ http_status_code_t response_upload(int sock, url_t *u)
 /* TODO: set plugin POST data limit from config */
 http_status_code_t response_xml_plugin(int sock, url_t *u)
 {
-        FILE *fd;
-        char plugout[BUFSIZE];
+        FILE *fd = NULL;
+        char plugout[BUFSIZE] = "";
         int err = 0;
         int pipes[4];
-        pid_t pid;
+        pid_t pid = 0;
 
         pipe(&pipes[0]);
         pipe(&pipes[2]);
@@ -965,12 +966,12 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
 /* call a plugin */
 http_status_code_t response_plugin(int sock, url_t *u)
 {
-        FILE *fd;
+        FILE *fd = NULL;
         char pbuf[BUFSIZE] = "";
         http_status_code_t err = 0;
-        int ret;
+        int ret = 0;
         ssize_t ibytes = BUFSIZE;
-        char *cmd;
+        char *cmd = NULL;
 
         cmd = strdup(u->path);
         sqlvars(&cmd, request->res);
@@ -1018,8 +1019,8 @@ http_status_code_t response_plugin(int sock, url_t *u)
 /* serve static files */
 http_status_code_t response_static(int sock, url_t *u)
 {
-        char *filename;
-        char *base;
+        char *filename = NULL;
+        char *base = NULL;
         http_status_code_t err = 0;
 
         base = basefile_pattern(request->res, u->url);
@@ -1034,17 +1035,17 @@ http_status_code_t response_static(int sock, url_t *u)
 /* send a static file */
 int send_file(int sock, char *file, http_status_code_t *err)
 {
-        char *path;
-        char *headers;
-        char *mimetype;
-        char *r;
+        char *path = NULL;
+        char *headers = NULL;
+        char *mimetype = NULL;
+        char *r = NULL;
         char expires[39];
-        int f;
-        int rc;
-        off_t offset;
+        int f = 0;
+        int rc = 0;
+        off_t offset = 0;
         struct stat stat_buf;
-        struct tm *tmp;
-        time_t t;
+        struct tm *tmp = NULL;
+        time_t t = 0;
 
         *err = 0;
 
@@ -1134,7 +1135,7 @@ int send_file(int sock, char *file, http_status_code_t *err)
 
 /* if not a collection, fetch the last element from the request url */
 field_t * get_element(int *err) {
-        int i;
+        int i = 0;
         field_t * filter = NULL;
 
         *err = 0;
@@ -1164,7 +1165,7 @@ field_t * get_element(int *err) {
 
 size_t rcv(int sock, void *data, size_t len, int flags)
 {
-        size_t rbytes;
+        size_t rbytes = 0;
         if (config->ssl) {
                 if ((flags & MSG_PEEK) == MSG_PEEK) {
                         rbytes = ssl_peek(data, len);/* look but don't touch */
