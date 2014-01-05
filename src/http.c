@@ -307,7 +307,7 @@ keyval_t *http_set_keyval (char *key, char *value)
 /* set http_request_t->method to new value, reallocating memory if needed */
 void http_set_request_method(http_request_t *r, char *method)
 {
-        int i;
+        int i = 0;
 
         if (r->method != NULL) {
                 free(r->method);
