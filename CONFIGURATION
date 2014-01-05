@@ -62,9 +62,14 @@ gladds, say, behind a load-balancer (or round robin DNS) then set all gladds
 in the cluster to use the same secretkey so they can read and verify each
 other's cookies.  Mmmm.  Cookies.
 
-How long should the key be?  Presently gladd uses a blowfish cipher, which can use up to 448bits (56 bytes), so you are encouraged to use *at least* 56 bytes for the key.  It doesn't matter if it is longer than 56 bytes (it will be truncated), but the key should not be shorter than this.
+How long should the key be?  Presently gladd uses a blowfish cipher, which can
+use up to 448bits (56 bytes), so you are encouraged to use *at least* 56 bytes
+for the key.  It doesn't matter if it is longer than 56 bytes (it will be
+truncated), but the key should not be shorter than this.
 
-If a secretkey is not set, gladd will generate a random one on startup.  Obviously if you restart gladd using a random key any previously issued cookies will immediately become invalid.
+If a secretkey is not set, gladd will generate a random one on startup.
+Obviously if you restart gladd using a random key any previously issued
+cookies will immediately become invalid.
 
 ssl
 0 = off (default)
@@ -235,7 +240,8 @@ and return it to the client.
 
 == Access Control ==
 
-Users and Groups can be defined in gladd.conf for testing.  Passwords for users are plaintext so this should not be used in production.
+Users and Groups can be defined in gladd.conf for testing.  Passwords for
+users are plaintext so this should not be used in production.
 
 user	<username>	<unecrypted password>
 

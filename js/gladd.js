@@ -50,7 +50,7 @@ $(document).ready(function() {
 	/* reload when logo clicked */
 	$("img#logo").click(function(event) {
 		event.preventDefault();
-		$(this).fadeTo("slow", 0, function(){location.reload(true);});
+		dashboardShow();
 	});     
 
 	loginSetup();
