@@ -2410,7 +2410,7 @@ function randomString(strlen) {
 
 function isDate(datestring) {
 	var dte = new Date(datestring);
-	return (!isNaN(dte));
+	return (!isNaN(dte) && datestring.length == 10);
 }
 
 /* setTimeout hacks 
