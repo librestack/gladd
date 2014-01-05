@@ -399,16 +399,16 @@ http_status_code_t response_sqlexec(int sock, url_t *u)
 /* handle xslpost */
 http_status_code_t response_xslpost(int sock, url_t *u)
 {
-        db_t *db;
-        char *headers;
-        char *xml;
-        char *xsd;
-        char *xsl;
-        char *sql;
-        char *r;
-        char *action;
+        db_t *db = NULL;
+        char *headers = NULL;
+        char *xml = NULL;
+        char *xsd = NULL;
+        char *xsl = NULL;
+        char *sql = NULL;
+        char *r = NULL;
+        char *action = NULL;
         char *mime = MIME_XML;
-        int err;
+        int err = 0;
         field_t *filter = NULL;
 
         syslog(LOG_DEBUG, "response_xslpost()");
