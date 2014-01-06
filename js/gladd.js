@@ -31,6 +31,7 @@ var g_loggedin = false;
 var g_tabid = 0;
 var g_max_tabtitle = '48'; /* max characters to allow in tab title */
 var g_session = false;
+var g_tabs = new Array();
 
 var STATUS_INFO = 1;
 var STATUS_WARN = 2;
@@ -144,121 +145,10 @@ function deployTabs() {
 /* add a new tab with content, optionally activating it */
 function addTab(title, content, activate, collection, refresh) {
 	console.log('addTab()');
-	var tab = newtab();
-	tab.title = title;
-	tab.content = content;
-	tab.activate = activate;
-	tab.collection = collection;
-	tab.refresh = refresh;
+	var tab = new Tab(title, content, activate, collection, refresh);
+	//return _addTab(title, content, activate, collection, refresh)
 
-	if (tab.collection) {
-		tab.contentClasses += ' ' + tab.collection;
-	}
-	if (refresh) {
-		tab.contentClasses += ' refresh';
-	}
-
-	/* truncate tab title if required */
-	tab.title = tab.title.substring(0, g_max_tabtitle);
-
-	/* check if this tab already exists */
-	var oldtabid = getTabByTitle(tab.title);
-	if (oldtabid >= 0) {
-		updateTab(oldtabid, tab.content, tab.activate);
-		return oldtabid;
-	}
-
-	/* add tab and closer */
-	$('ul.tablist').append('<li id="tabli' + tab.id
-		+ '" class="' + tab.classes + '">'
-		+ '<div id="tabhead' + tab.id + '" class="tabhead">'
-		+ '<div class="tabtitle">'
-		+ '<a class="tabtitle" href="' + tab.id + '">' + tab.title + '</a>'
-		+ '</div>'
-		+ '<div class="tabx">'
-		+ '<a id="tabcloser' + tab.id + '" class="tabcloser" href="'
-		+ tab.id  + '">'
-		+ 'X</a>'
-		+ '</div>' 
-		+ '</li>');
-
-	/* add content */
-	$('div.tabcontent').append('<div id="tab' + tab.id + '" '
-		+ 'class="' + tab.contentClasses + '">');
-	$('div#tab' + tab.id).append(tab.content);
-
-	/* store metadata */
-	setTabMeta(tab.id, 'id', tab.id);
-	setTabMeta(tab.id, 'instance', g_instance);
-	setTabMeta(tab.id, 'business', g_business);
-	setTabMeta(tab.id, 'collection', collection);
-
-	/* add closer event */
-    $('#tabcloser' + tab.id).click(function(event) {
-		event.preventDefault();
-		closeTab(tab.id);
-	});
-
-	/* set up tab navigation */
-	$(".tablist li").click(function(event) {
-		event.preventDefault();
-		var selected_tab = $(this).find("a").attr("href");
-		activateTab(selected_tab);
-	});
-	
-	/* activate our new tab */
-	if (tab.activate) {
-		activateTab(tab.id);
-	}
-
-    /* set click events */
-	getTabById(tab.id).find('a.tablink').each(function() {
-		$(this).click(clickTabLink);
-	});
-
-	/* fade in if we aren't already visible */
-	$('div.tabs').fadeIn(300);
-
-	return tab.id; /* return new tab id */
-}
-
-function setTabMeta(tab, key, value) {
-    if (isTabId(tab)) {
-		$('div#tabhead' + tab).data(key, value);
-	}
-	else if (typeof tab == 'object') {
-		tab.data(key, value);
-	}
-    else { /* something else we weren't expecting */
-        console.log(typeof tab + ' passed to setTabMeta()');
-        return false;
-    }
-}
-
-function getTabMeta(tab, key) {
-    if (isTabId(tab)) {
-        return $('div#tabhead' + tab).data(key);
-    }
-    else if (typeof tab == 'object') {
-        return tab.data(key);
-    }
-    else { /* something else we weren't expecting */
-        console.log(typeof tab + ' passed to getTabMeta()');
-        return false;
-    }
-}
-
-function clearTabMeta(tab) {
-    if (isTabId(tab)) {
-		$('div#tabhead' + tab).removeData();
-	}
-	else if (typeof tab == 'object') {
-		tab.removeData();
-	}
-    else { /* something else we weren't expecting */
-        console.log(typeof tab + ' passed to clearTabMeta()');
-        return false;
-    }
+	return tab.id;
 }
 
 /* find tab by title within active business */
@@ -822,43 +712,42 @@ function isTabId(o) {
 	return false;
 }
 
-function addOrUpdateTab(tab, content, activate, title) {
-    if (typeof tab == 'undefined') {
-		tab = addTab(title, content, activate);
+function addOrUpdateTab(container, content, activate, title) {
+    if (typeof container == 'undefined') {
+		var id = addTab(title, content, activate);
 	}
 	else {
-		tab = updateTab(tab, content, activate, title);
+		var id = updateTab(container, content, activate, title);
 	}
-	return tab;
+	return tabById(id);
 }
 
 /*****************************************************************************/
 /* display html form we've just fetched in new tab */
-function displayForm(object, action, title, html, xml, tab) {
+function displayForm(object, action, title, html, xml, container) {
 	console.log('displayForm("'+ object +'","'+ action +'","'+ title +'")');
 	var x = (action == 'update') ? 2 : 0; /* which xml to start with */
 
-	title = tabTitle(title, object, action, xml);
-	tab = addOrUpdateTab(tab, html, true, title);
+	var title = tabTitle(title, object, action, xml);
+	var tab = addOrUpdateTab(container, html, true, title);
 
 	/* add some metadata */
-	setTabMeta(tab, 'object', object);
-	setTabMeta(tab, 'action', action);
+	tab.object = object;
+	tab.action = action;
 
-	/* tab is either a numeric value or a jquery object */
-	mytab = (isTabId(tab)) ? getTabById(tab) : tab;
+	var mytab = tab.tablet;
 
 	/* populate combos with xml data */
 	mytab.find('select.populate:not(.sub)').each(function() {
-		populateCombo(xml[x++], $(this), tab);
+		populateCombo(xml[x++], $(this), tab.id);
 	});
 
 	/* pre-populate form */
-	var id = (action == 'update') ? populateForm(tab, object, xml) : 0;
+	var id = (action == 'update') ? populateForm(tab.id, object, xml) : 0;
 
 	/* deal with subforms and finalise form display */
-	handleSubforms(tab, html, id, xml);
-	finaliseForm(tab, object, action, id);
+	handleSubforms(tab.id, html, id, xml);
+	finaliseForm(tab.id, object, action, id);
 }
 
 /*****************************************************************************/
@@ -1630,9 +1519,11 @@ function submitForm(object, action, id) {
 
 	/* build xml request */
 	xml += '<' + object 
+	/*
 	if (id > 0) {
 		xml += ' id="' + id + '"';
 	}
+	*/
 	xml += '>';
 	mytab.find(
 		'div.' + object
@@ -2133,8 +2024,8 @@ function displayResultsGeneric(xml, collection, title, sorted, tab, headers) {
 
 function clickElement() {
 	var row = $(this);
-	var collection = getTabMeta(activeTabId(), 'collection');
-	if (collection == 'salesinvoices') {
+	var tab = tabActive();
+	if (tab.collection == 'salesinvoices') {
 		/* view salesinvoice pdf */
 		var a=row.find('td.xml-pdf').find('a');
 		var href=a.attr('href');
@@ -2147,19 +2038,19 @@ function clickElement() {
 		addTab(si, html, true);
 	}
 	else {
-		if (collection == 'accounts') {
+		if (tab.collection == 'accounts') {
 			var id = row.find('td.xml-nominalcode').text();
 		}
 		else {
 			var id = row.find('td.xml-id').text();
 		}
-		if (collection == 'reports/accountsreceivable') {
+		if (tab.collection == 'reports/accountsreceivable') {
 			var title = 'Statement: ' + row.find('td.xml-orgcode').text();
 		}
 		else {
 			var title = null;
 		}
-		displayElement(collection, id, title);
+		displayElement(tab.collection, id, title);
 	}
 }
 
@@ -2437,4 +2328,146 @@ if(typeof(String.prototype.trim) === "undefined")
     String.prototype.trim = function() {
 		return String(this).replace(/^\s+|\s+$/g, '');
 	};
+}
+
+/* Tab() */
+function Tab(title, content, activate, collection, refresh) {
+	title = title.substring(0, g_max_tabtitle); /* truncate title */
+
+	/* if exists, update content */
+	var tab = tabByTitle(title);
+	console.log(tab);
+	if (tab) {
+		console.log('Tab with title "' + title + '" exists.  Updating.');
+		tab.setContent(content);
+		if (activate) { tab.activate(); }
+		return tab.id;
+	}
+
+	g_tabs.push(this);
+	this.id = g_tabid++;
+	this.title = title;
+	this.business = g_business;
+	this.collection = collection;
+	this.frozen = false;	/* whether this tab can be refreshed */
+	this.refresh = refresh; /* whether this tab should autorefresh */
+	this.active = false;
+	this.object = null;
+	this.action = null;
+	console.log('creating new Tab(id=' + this.id + ')');
+
+	/* build array of css classes */
+	this.classes = new Array();
+	this.classes.push('business' + this.business);
+	this.classes.push('tablet' + this.id);
+	if (this.collection) {
+		this.classes.push(collection);
+	}
+	if (this.refresh) {
+		this.classes.push('refresh');
+	}
+	var classes = this.classes.join(' ');
+
+	/* create tab in DOM */
+	this.tabli =  $('<li/>', { id: "tabli" + this.id, "class": "tabhead" });
+	this.tabli.addClass(classes);
+    this.tabhead = $('<div/>', { id: "tabhead" + this.id, "class": "tabhead"});
+	this.tabtitle = $('<div/>', { "class": "tabtitle" });
+	this.tabtitlelink = $('<a/>', { "class": "tabtitle", href: this.id });
+	this.tabtitlelink.append(this.title);
+	this.tabtitle.append(this.tabtitlelink);
+	this.tabx = $('<div/>', { "class": "tabx" });
+
+	/* TODO: add tab.refresh() button */
+
+	this.tabcloser = $('<a/>', {
+		id: "tabcloser" + this.id,
+		"class": "tabcloser",
+		href: this.id
+	}).append('X');
+	this.tabx.append(this.tabcloser);
+	this.tabhead.append(this.tabtitle);
+	this.tabli.append(this.tabhead);
+	this.tabhead.append(this.tabx);
+    $('ul.tablist').append(this.tabli);
+
+	/* set up tab navigation */
+	var id = this.id;
+	this.tabli.click(function(event) {
+		event.preventDefault();
+		activateTab(id);
+	});
+
+	/* tab closer */
+	this.tabx.click(function(event) {
+		event.preventDefault();
+		closeTab(id);
+	});
+
+	/* set content */
+	this.tablet = $('<div/>', { id: "tab" + this.id });
+	this.tablet.addClass(classes);
+	this.tablet.addClass('tablet');
+	$('div.tabcontent').append(this.tablet);
+	this.setContent(content);
+
+	/* activate */
+	if (activate) { this.activate(); }
+}
+
+Tab.prototype.activate = function() {
+	console.log('activating Tab ' + this.id);
+
+	/* remove "active" styling from all tabs for this business */
+	$(".business" + g_business).removeClass('active');
+
+	/* mark selected tab as active */
+	$(".tablet" + this.id).addClass("active");
+
+	/* set focus to control with class "focus" */
+	var tab = $('#tab' + this.id);
+	tab.find(".focus").focus();
+
+	/* fade in if we aren't already visible */
+	$(".tablet" + this.id).find(".focus").fadeIn(300);
+
+	/* update metadata */
+	for (var i=0; i<g_tabs.length; i++) {
+		if (g_tabs[i].business == g_business) { g_tabs[i].active = false; }
+	}
+	this.active = true;
+};
+
+Tab.prototype.refresh = function(content) {
+	if (this.collection && !this.frozen) {
+		console.log('refreshing tab ' + this.id);
+		showQuery(collection, this.title, this.sort, this.tablet)
+	}
+};
+
+Tab.prototype.setContent = function(content) {
+	console.log('tab(' + this.id + ').setContent()');
+	var tab = $('#tab' + this.id);
+	tab.empty().append(content);
+};
+
+function tabActive() {
+	for (var i=0; i<g_tabs.length; i++) {
+		if (g_tabs[i].active) { return g_tabs[i]; }
+	}
+	return null;
+}
+
+function tabById(id) {
+	for (var i=0; i<g_tabs.length; i++) {
+		if (g_tabs[i].id == id) { return g_tabs[i]; }
+	}
+	return null;
+}
+
+function tabByTitle(title) {
+	for (var i=0; i<g_tabs.length; i++) {
+		if (g_tabs[i].title == title) { return g_tabs[i]; }
+	}
+	return null;
 }
