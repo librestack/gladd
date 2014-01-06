@@ -2392,10 +2392,10 @@ function Tab(title, content, activate, collection, refresh) {
 	});
 
 	/* tab closer */
+	var tab = this;
 	this.tabx.click(function(event) {
 		event.preventDefault();
-		$(this).attr('href')
-		tabById(id).close();
+		tab.close();
 	});
 
 	/* set content */
