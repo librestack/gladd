@@ -726,8 +726,6 @@ function displayForm(object, action, title, html, xml, container) {
 	var title = tabTitle(title, object, action, xml);
 	var tab = addOrUpdateTab(container, html, true, title);
 
-	console.log(tab);
-
 	/* add some metadata */
 	tab.object = object;
 	tab.action = action;
