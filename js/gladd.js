@@ -203,16 +203,7 @@ function getTabById(tabid) {
 /*****************************************************************************/
 function activateTab(tabid) {
 	if (isTabId(tabid)) {
-		console.log("activating tab " + tabid);
-        /* remove "active" styling from all tabs for this business */
-        $(".tabhead.business" + g_business).removeClass('active');
-        $(".tablet.business" + g_business).removeClass('active');
-
-        /* mark selected tab as active */
-        $(".tablet" + tabid).addClass("active");
-
-		/* set focus to control with class "focus" */
-        $(".tablet" + tabid).find(".focus").focus();
+		tabById(tabid).activate();
 	}
 }
 
@@ -512,7 +503,6 @@ function clickTabLink(event) {
 /*****************************************************************************/
 /* Display query results as list */
 function showQuery(collection, title, sort, tab) {
-	showSpinner();
 	$.ajax({
 		url: collection_url(collection),
 		beforeSend: function (xhr) { setAuthHeader(xhr); },
@@ -1624,16 +1614,9 @@ function submitFormSuccess(object, action, id, collection, xml) {
         return;
     }
 
-	// lets check for tabs that will need refreshing
-	$('div.refresh.' + collection).each(function() {
-		/* TODO: ensure tab is within current business */
-		var tabid = $(this).attr('id').substr(3);
-		var title = $('#tabli' + tabid).find(
-			'a[href="' + tabid + '"]:not(.tabcloser)'
-		).text();
-		showQuery(collection, title, false, tabid);
-	});
-
+	/* check for tabs that will need refreshing */
+	tabRefresh(collection);
+	
 	/* We received some data back. Display it. */
 	newid = $(xml).find(object).text();
 	if (newid) {
@@ -1879,17 +1862,12 @@ function displayResultsGeneric(xml, collection, title, sorted, tab, headers) {
 
 	statusHide();
 
-	/* TODO: refactor */
-	if (collection == 'contacts') {
+	if ([ 'accounts', 'contacts', 'organisations', 'products', ]
+	.indexOf(collection) != -1) 
+	{
 		refresh = true;
 	}
-	else if (collection == 'organisations') {
-		refresh = true;
-	}
-	else if (collection == 'products') {
-		refresh = true;
-	}
-
+	
 	if ($(xml).find('resources').children().length == 0) {
 		/* No results found */
 		hideSpinner();
@@ -2367,9 +2345,6 @@ function Tab(title, content, activate, collection, refresh) {
 	this.tabtitlelink.append(this.title);
 	this.tabtitle.append(this.tabtitlelink);
 	this.tabx = $('<div/>', { "class": "tabx" });
-
-	/* TODO: add tab.refresh() button */
-
 	this.tabcloser = $('<a/>', {
 		id: "tabcloser" + this.id,
 		"class": "tabcloser",
@@ -2407,6 +2382,7 @@ function Tab(title, content, activate, collection, refresh) {
 }
 
 Tab.prototype.activate = function() {
+	if (this.active) { this.reload(); return false; }
 	console.log('activating Tab ' + this.id);
 
 	/* remove "active" styling from all tabs for this business */
@@ -2416,7 +2392,7 @@ Tab.prototype.activate = function() {
 	$(".tablet" + this.id).addClass("active");
 
 	/* set focus to control with class "focus" */
-	var tab = $('#tab' + this.id);
+	var tab = this.workspace();
 	tab.find(".focus").focus();
 
 	/* fade in if we aren't already visible */
@@ -2437,10 +2413,10 @@ Tab.prototype.close = function() {
 	delete g_tabs[this.id];
 };
 
-Tab.prototype.refresh = function() {
-	if (this.collection && !this.frozen) {
+Tab.prototype.reload = function() {
+	if (this.collection && !this.frozen && this.business == g_business) {
 		console.log('refreshing tab ' + this.id);
-		showQuery(collection, this.title, this.sort, this.tablet)
+		showQuery(this.collection, this.title, this.sort, this.workspace());
 	}
 };
 
@@ -2474,10 +2450,28 @@ function tabById(id) {
 	return g_tabs[id];
 }
 
+/* refresh any tabs in the specified collection (or all if undefined) */
+function tabRefresh(collection) {
+	console.log('tabRefresh(' + collection + ')');
+	for (var i=0; i<g_tabs.length; i++) {
+		if (g_tabs[i] != undefined) {
+			if (g_tabs[i].refresh && g_tabs[i].collection != undefined) {
+				if (collection == undefined
+				|| collection == g_tabs[i].collection)
+				{
+					g_tabs[i].reload();
+				}
+			}
+		}
+	}
+}
+
 function tabByTitle(title) {
 	for (var i=0; i<g_tabs.length; i++) {
 		if (g_tabs[i] != undefined) {
-			if (g_tabs[i].title == title) { return g_tabs[i]; }
+			if (g_tabs[i].title == title && g_tabs[i].business == g_business) {
+				return g_tabs[i];
+			}
 		}
 	}
 	return undefined;
