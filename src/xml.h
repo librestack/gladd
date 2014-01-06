@@ -28,7 +28,8 @@
 int buildxml(char **xmldoc);
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty);
 void sqlvars(char **sql, char *url);
-int xmltransform(const char *xslt_filename, const char *xml, char **output);
+int xmltransform(const char *xslt_filename, const char *xml, char **output,
+        field_t *filter);
 int xml_validate(const char *schema_filename, const char *xml);
 
 #endif /* __GLADD_XML_H__ */

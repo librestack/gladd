@@ -455,7 +455,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
 
         syslog(LOG_DEBUG, "Performing XSLT Transformation");
 
-        if (xmltransform(xsl, request->data->value, &sql) != 0) {
+        if (xmltransform(xsl, request->data->value, &sql, filter) != 0) {
                 free(xsl);
                 syslog(LOG_ERR, "XSLT transform failed");
                 return HTTP_INTERNAL_SERVER_ERROR;
@@ -468,7 +468,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         syslog(LOG_DEBUG, "Executing SQL");
 
         /* execute sql */
-        if (sqltoxml(db, sql, filter, &xml, 1) < 0) {
+        if (sqltoxml(db, sql, NULL, &xml, 1) < 0) {
                 free(sql);
                 syslog(LOG_ERR, "xsltpost sql execution failed");
                 return HTTP_INTERNAL_SERVER_ERROR;
@@ -482,7 +482,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                 /* use {created,updated}.xsl for result */
                 syslog(LOG_DEBUG, "overriding results using %sd.xsl", action);
                 free(xml);
-                if (xmltransform(xsl, request->data->value, &sql) != 0) {
+                if (xmltransform(xsl, request->data->value, &sql, filter)!= 0){
                         free(xsl);
                         syslog(LOG_ERR, "XSLT transform failed");
                         return HTTP_INTERNAL_SERVER_ERROR;
@@ -506,7 +506,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                         syslog(LOG_DEBUG, "converting results to html");
                         char *resultxml = strdup(xml);
                         free(xml);
-                        if (xmltransform(xsl, resultxml, &xml) != 0) {
+                        if (xmltransform(xsl, resultxml, &xml, NULL) != 0) {
                                 syslog(LOG_ERR, "XSLT transform failed");
                                 free(xsl);
                                 free(resultxml);
@@ -587,7 +587,7 @@ http_status_code_t response_xslt(int sock, url_t *u)
 
         /* transform xml data into html */
         syslog(LOG_DEBUG, "Performing XSLT Transformation");
-        if (xmltransform(xsl, xml, &html) != 0) {
+        if (xmltransform(xsl, xml, &html, NULL) != 0) {
                 free(xsl); free(xml);
                 syslog(LOG_ERR, "XSLT transform failed");
                 return HTTP_BAD_REQUEST;

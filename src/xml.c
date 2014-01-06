@@ -201,7 +201,8 @@ char *toutf8(char *str)
 
 /* perform xslt transformation on xml
  * remember to free() output in calling function when done */
-int xmltransform(const char *xslt_filename, const char *xml, char **output)
+int xmltransform(const char *xslt_filename, const char *xml, char **output,
+        field_t *filter)
 {
         xsltStylesheetPtr docxslt;
         xmlDocPtr docxml;
@@ -238,6 +239,10 @@ int xmltransform(const char *xslt_filename, const char *xml, char **output)
         }
         else {
                 xml_prepend_element(docxml, "clientip", request->clientip);
+        }
+        if (filter) {
+                syslog(LOG_DEBUG, "prepending id (%s) element",filter->fvalue);
+                xml_prepend_element(docxml, "id", filter->fvalue);
         }
         xml_prepend_element(docxml, "authuser", request->authuser);
 
