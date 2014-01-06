@@ -1512,16 +1512,12 @@ function submitForm(object, action, id) {
 	console.log('submitting to url: ' + url);
 
 	/* build xml request */
-	xml += '<' + object 
-	/*
-	if (id > 0) {
-		xml += ' id="' + id + '"';
-	}
-	*/
-	xml += '>';
+	xml += '<' + object + '>';
 	mytab.find(
 		'div.' + object
-	).find('input:not(.nosubmit,default),select:not(.nosubmit,.default)').each(function() {
+	)
+	.find('input:not(.nosubmit,default),select:not(.nosubmit,.default)')
+	.each(function() {
 		var name = $(this).attr('name');
 		if (name) {
             var o = new Object();
@@ -1535,7 +1531,8 @@ function submitForm(object, action, id) {
 				}
 				console.log('processing input ' + name);
 				if ((name != 'id') && (name != 'subid')
-				&& ((name != 'relationship')||(object == 'organisation_contacts')))
+				&& ((name != 'relationship')
+				||(object == 'organisation_contacts')))
 				{
 					if ($(this).attr('type') == "checkbox") {
                         xml += '<' + name + '>';
