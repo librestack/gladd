@@ -137,7 +137,7 @@ function auth_encode(username, password) {
 function deployTabs() {
 	$('.tabcloser').click(function(event) {
 		event.preventDefault();
-		closeTab($(this).attr('href'));
+		tabById($(this).attr('href')).close();
 	});
 }
 
@@ -146,8 +146,6 @@ function deployTabs() {
 function addTab(title, content, activate, collection, refresh) {
 	console.log('addTab()');
 	var tab = new Tab(title, content, activate, collection, refresh);
-	//return _addTab(title, content, activate, collection, refresh)
-
 	return tab.id;
 }
 
@@ -170,36 +168,22 @@ function updateTab(o, content, activate, title) {
 	console.log('updateTab()');
 	/* figure out what o represents */
 	if (isTabId(o)) { 				/* numeric */
-		console.log('updating tab ' + o);
-		var tab = $('#tab' + o);
-		var tabid = o;
+		var tab = tabById(o);
+		tab.setContent(content);
+		tab.setTitle(title);
+		if (activate) { tab.activate(); }
 	}
 	else if (typeof o == 'object'){ /* jquery object (probably) */
-		var tab = o;
-		var tabid = getTabMeta(o, 'id');
+		o.empty().append(content);
 	}
 	else { 							/* unexpected type */
 		console.log(typeof o + ' passed to updateTab()');
 		return false;
 	}
 
-	var statusmsg = tab.find('.statusmsg').detach();/* preserve status msg */
-	tab.empty().append(content);					/* replace content */
-	clearTabMeta(o);								/* clear metadata */
-	tab.find('a.tablink').click(clickTabLink);		/* set click events */
+	console.log('finished updating tab ' + tab.id);
 
-	if (title) setTabTitle(tabid, title);
-	if (statusmsg) tab.find('.statusmsg').replaceWith(statusmsg);
-	if (activate) activateTab(tabid);
-
-	console.log('finished updating tab ' + tabid);
-
-	/* return tab id, or the object we started with */
-	return (tabid) ? tabid : o;
-}
-
-function setTabTitle(tabid, title) {
-	$('a.tabtitle[href="' + tabid + '"]').text(title);
+	return o;
 }
 
 /******************************************************************************
@@ -551,20 +535,22 @@ function showHTML(url, title, tab, collection) {
 		beforeSend: function (xhr) { setAuthHeader(xhr); },
 		success: function(html) {
 			if (tab) {
-				tab = updateTab(tab, html);
+				tab.setContent(html);
+				if (title) { tab.setTitle(title); }
+				if (collection) { tab.collection = collection; }
 			}
 			else {
-				tab = addTab(title, html, true);
+				tab = new Tab(title, html, true);
 			}
-			accordionize(activeTab().find('div.accordion'));
+			//accordionize(activeTab().find('div.accordion'));
 			hideSpinner();
 		},
 		error: function() {
 			if (tab) {
-				tab = updateTab(tab, 'Not found.');
+				tab.setContent('Not found.');
 			}
 			else {
-				tab = addTab(title, 'Not found.', false);
+				tab = new Tab(title, 'Not found.', false);
 			}
 			hideSpinner();
 		}
@@ -635,8 +621,9 @@ function activeTab() {
 /*****************************************************************************/
 /* pre-populate form with xml data                                           */
 function populateForm(tab, object, xml) {
-	var locString = '';
+	var geodata = new Array();
 	var id = '';
+	var locString = '';
 	var mytab = getTabById(tab);
 
 	if (xml) {
@@ -657,15 +644,22 @@ function populateForm(tab, object, xml) {
 			fld.trigger("liszt:updated");/* ensure chosen type combos update */
 
 			/* get location data, giving preference to postcode */
-			if ((tagName == 'town') || (tagName == 'postcode')) {
-				if (tagValue.length > 0) {
-					locString = tagValue;
-				}
+			if ([
+				'line_1',
+				'line_2',
+				'line_3',
+				'town',
+				'county',
+				'postcode',
+				'country',
+			].indexOf(tagName) != -1 && tagValue.length > 0) {
+				geodata.push(tagValue);
 			}
 		});
 
 		/* load map */
-		if (locString.length > 0) {
+		if (geodata.length > 0) {
+			var locString = geodata.join();
 			console.log('locString:' + locString);
 			loadMap(locString, tab);
 		}
@@ -714,12 +708,13 @@ function isTabId(o) {
 
 function addOrUpdateTab(container, content, activate, title) {
     if (typeof container == 'undefined') {
-		var id = addTab(title, content, activate);
+		var tab = new Tab(title, content, activate);
 	}
 	else {
 		var id = updateTab(container, content, activate, title);
+		var tab = tabById(id);
 	}
-	return tabById(id);
+	return tab;
 }
 
 /*****************************************************************************/
@@ -731,11 +726,13 @@ function displayForm(object, action, title, html, xml, container) {
 	var title = tabTitle(title, object, action, xml);
 	var tab = addOrUpdateTab(container, html, true, title);
 
+	console.log(tab);
+
 	/* add some metadata */
 	tab.object = object;
 	tab.action = action;
 
-	var mytab = tab.tablet;
+	var mytab = tab.workspace();
 
 	/* populate combos with xml data */
 	mytab.find('select.populate:not(.sub)').each(function() {
@@ -774,7 +771,7 @@ function formEvents(tab, object, action, id) {
 	/* Cancel button closes tab */
 	mytab.find('button.cancel').click(function()
 	{
-		closeTab();
+		tabActive().close();
 	});
 
 	/* Reset button resets form */
@@ -1917,7 +1914,7 @@ function displayResultsGeneric(xml, collection, title, sorted, tab, headers) {
 				updateTab(tab, $t);
 			}
 			else {
-				addTab(title, $t, true, collection, refresh);
+				var tab = new Tab(title, $t, true, collection, refresh);
 			}
 		}
 		return;
@@ -2401,7 +2398,8 @@ function Tab(title, content, activate, collection, refresh) {
 	/* tab closer */
 	this.tabx.click(function(event) {
 		event.preventDefault();
-		closeTab(id);
+		$(this).attr('href')
+		tabById(id).close();
 	});
 
 	/* set content */
@@ -2433,12 +2431,20 @@ Tab.prototype.activate = function() {
 
 	/* update metadata */
 	for (var i=0; i<g_tabs.length; i++) {
-		if (g_tabs[i].business == g_business) { g_tabs[i].active = false; }
+		if (g_tabs[i] != undefined) {
+			if (g_tabs[i].business == g_business) { g_tabs[i].active = false; }
+		}
 	}
 	this.active = true;
 };
 
-Tab.prototype.refresh = function(content) {
+Tab.prototype.close = function() {
+	console.log('Tab(' + this.id + ').close()');
+	closeTab(this.id);
+	delete g_tabs[this.id];
+};
+
+Tab.prototype.refresh = function() {
 	if (this.collection && !this.frozen) {
 		console.log('refreshing tab ' + this.id);
 		showQuery(collection, this.title, this.sort, this.tablet)
@@ -2448,26 +2454,38 @@ Tab.prototype.refresh = function(content) {
 Tab.prototype.setContent = function(content) {
 	console.log('tab(' + this.id + ').setContent()');
 	var tab = $('#tab' + this.id);
+	var statusmsg = tab.find('.statusmsg').detach();/* preserve status msg */
 	tab.empty().append(content);
+	if (statusmsg) tab.find('.statusmsg').replaceWith(statusmsg);
+};
+
+Tab.prototype.setTitle = function(title) {
+	this.title = title;
+	$('a.tabtitle[href="' + tabid + '"]').text(title);
+};
+
+Tab.prototype.workspace = function() {
+	return $('#tab' + this.id);
 };
 
 function tabActive() {
 	for (var i=0; i<g_tabs.length; i++) {
-		if (g_tabs[i].active) { return g_tabs[i]; }
+		if (g_tabs[i] != undefined) {
+			if (g_tabs[i].active) { return g_tabs[i]; }
+		}
 	}
-	return null;
+	return undefined;
 }
 
 function tabById(id) {
-	for (var i=0; i<g_tabs.length; i++) {
-		if (g_tabs[i].id == id) { return g_tabs[i]; }
-	}
-	return null;
+	return g_tabs[id];
 }
 
 function tabByTitle(title) {
 	for (var i=0; i<g_tabs.length; i++) {
-		if (g_tabs[i].title == title) { return g_tabs[i]; }
+		if (g_tabs[i] != undefined) {
+			if (g_tabs[i].title == title) { return g_tabs[i]; }
+		}
 	}
-	return null;
+	return undefined;
 }
