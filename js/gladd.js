@@ -527,30 +527,29 @@ function showQuery(collection, title, sort, tab) {
 
 /*****************************************************************************/
 /* Fetch HTML fragment and display in new tab */
-function showHTML(url, title, tab, collection) {
+function showHTML(url, title, div, collection) {
+	console.log('showHTML()');
 	if (collection) url = collection_url(url);
 	showSpinner();
 	return $.ajax({
 		url: url,
 		beforeSend: function (xhr) { setAuthHeader(xhr); },
 		success: function(html) {
-			if (tab) {
-				tab.setContent(html);
-				if (title) { tab.setTitle(title); }
-				if (collection) { tab.collection = collection; }
+			hideSpinner();
+			if (div) {
+				updateTab(div, html);
 			}
 			else {
-				tab = new Tab(title, html, true);
+				addTab(title, html, true);
 			}
 			//accordionize(activeTab().find('div.accordion'));
-			hideSpinner();
 		},
 		error: function() {
-			if (tab) {
-				tab.setContent('Not found.');
+			if (div) {
+				updateTab(div, 'Not found.');
 			}
 			else {
-				tab = new Tab(title, 'Not found.', false);
+				addTab(title, 'Not found.', false);
 			}
 			hideSpinner();
 		}
@@ -2331,7 +2330,6 @@ function Tab(title, content, activate, collection, refresh) {
 
 	/* if exists, update content */
 	var tab = tabByTitle(title);
-	console.log(tab);
 	if (tab) {
 		console.log('Tab with title "' + title + '" exists.  Updating.');
 		tab.setContent(content);
