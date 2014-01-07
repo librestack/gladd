@@ -488,6 +488,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                         return HTTP_INTERNAL_SERVER_ERROR;
                 }
                 if (sqltoxml(db, sql, filter, &xml, 1) != 0) {
+                        free(xsl);
                         free(sql);
                         return HTTP_INTERNAL_SERVER_ERROR;
                 }
@@ -517,6 +518,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                 else {
                         syslog(LOG_ERR, "'%s' not found", xsl);
                 }
+                free(xsl);
         }
 
         asprintf(&headers, "%s\nContent-Length: %i", mime,
@@ -531,8 +533,9 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         set_headers(&r); /* set any additional headers */
         respond(sock, r);
         free(r);
-        free(xsl);
         db_disconnect(db);
+
+        syslog(LOG_DEBUG, "xsltpost complete");
 
         return 0;
 }
@@ -1215,4 +1218,5 @@ void set_headers(char **r)
                 http_insert_header(r, "Pragma: no-cache");
                 http_insert_header(r, "Expires: 0");
         }
+        syslog(LOG_DEBUG, "set_headers() done");
 }
