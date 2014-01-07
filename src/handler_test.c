@@ -68,9 +68,8 @@ char *test_handler_plugin()
         read(sv[0], pbuf, BUFSIZE);
 
         /* test the response */
-        mu_assert("... correct result",
-                strcmp(pbuf, "e7df7cd2ca07f4f1ab415d457a6e1c13  -\n") == 0);
-       
+        mu_assert("... correct result", strcmp(pbuf, "HTTP/1.1 200 OK\r\nServer: gladd\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n24\r\ne7df7cd2ca07f4f1ab415d457a6e1c13  -\n\r\n0\r\n\r\n") == 0);
+
         /* tidy up */
         free(u->type);
         free(u->method);
