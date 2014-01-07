@@ -83,7 +83,7 @@ char *test_xml_to_sql()
         asprintf(&request->authuser, "testuser");
         asprintf(&request->clientip, "::1");
         mu_assert("Transform XML using XSLT",
-                xmltransform(xslt, goodxml, &sql) == 0);
+                xmltransform(xslt, goodxml, &sql, NULL) == 0);
 
         fprintf(stderr, "%s\n", sql);
 
