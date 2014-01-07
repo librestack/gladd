@@ -96,6 +96,7 @@ static char * all_tests()
         mu_run_test(test_auth_groups_00);
         mu_run_test(test_auth_groups_01);
         mu_run_test(test_auth_groups_02);
+        mu_run_test(test_auth_goto);
         mu_run_test(test_http_read_request_post_large);
         mu_run_test(test_handler_plugin);
         printline("*", 80);

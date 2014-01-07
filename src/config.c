@@ -72,6 +72,7 @@ int add_acl (char *value)
         char type[LINE_MAX] = "";
         char auth[LINE_MAX] = "";
         char authtype[LINE_MAX] = "";
+        int skip = 0;
 
         if ((sscanf(value, "%s %s %s %s", 
                 method, url, type, auth) != 4) &&
@@ -80,6 +81,13 @@ int add_acl (char *value)
         {
                 /* config line didn't match expected patterns */
                 return -1;
+        }
+        
+        /* check for [{success,fail}=2] in type */
+        char tmp[LINE_MAX] = "";
+        char skipon[LINE_MAX] = "";
+        if (sscanf(type, "%[^[]%*c%[^=]%*c%i]", tmp, skipon, &skip) == 3) {
+                strcpy(type, tmp);
         }
 
         newacl = malloc(sizeof(struct acl_t));
@@ -91,10 +99,13 @@ int add_acl (char *value)
                 newacl->type = strndup(type, LINE_MAX);
                 newacl->auth = strndup(auth, LINE_MAX);
                 newacl->params = NULL;
+                newacl->skipon = strndup(skipon, LINE_MAX);
+                newacl->skip = skip;
                 newacl->next = NULL;
         }
         else if ((strcmp(type, "require") == 0) ||
                  (strcmp(type, "sufficient") == 0) ||
+                 (strcmp(type, "optional") == 0) ||
                  (strcmp(type, "params") == 0)) 
         {
                 newacl->method = strndup(method, LINE_MAX);
@@ -102,10 +113,12 @@ int add_acl (char *value)
                 newacl->type = strndup(type, LINE_MAX);
                 newacl->auth = strndup(auth, LINE_MAX);
                 newacl->params = strndup(authtype, LINE_MAX);
+                newacl->skipon = strndup(skipon, LINE_MAX);
+                newacl->skip = skip;
                 newacl->next = NULL;
         }
         else {
-                fprintf(stderr, "Invalid acl type\n");
+                fprintf(stderr, "Invalid acl type: %s\n", type);
                 return -1;
         }
         if (prevacl != NULL) {
@@ -442,6 +455,7 @@ void free_acls()
                 free(a->type);
                 free(a->auth);
                 free(a->params);
+                free(a->skipon);
                 tmp = a;
                 a = a->next;
                 free(tmp);

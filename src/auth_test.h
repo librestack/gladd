@@ -31,5 +31,6 @@ char *test_auth_patterns();
 char *test_auth_groups_00();
 char *test_auth_groups_01();
 char *test_auth_groups_02();
+char *test_auth_goto();
 
 #endif /* __GLADD_AUTH_TEST_H__ */

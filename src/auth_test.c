@@ -301,3 +301,75 @@ char *test_auth_groups_02()
 
         return 0;
 }
+
+/* (cookie OR user) AND (accounts OR sysop) */
+char *test_auth_goto()
+{
+        http_request_t *r = NULL;
+
+        read_config("test.acl.conf");
+
+        /* Fred: (allow)
+         *   Authenticated by username/password
+         *   Authorised using group accounts */
+        r = http_init_request();
+        asprintf(&r->method, "GET");
+        asprintf(&r->res, "/a/");
+        asprintf(&r->authuser, "fred");
+        asprintf(&r->authpass, "secret");
+        mu_assert("(cookie OR user) AND (accounts OR sysop) => allow Fred",
+                check_auth(r) == 0);
+        free_request(&r);
+
+        /* Barney: (allow)
+         *   Authenticated by username/password
+         *   Authorised using group sysop */
+        r = http_init_request();
+        asprintf(&r->method, "GET");
+        asprintf(&r->res, "/a/");
+        asprintf(&r->authuser, "barney");
+        asprintf(&r->authpass, "secret");
+        mu_assert("(cookie OR user) AND (accounts OR sysop) => allow Barney",
+                check_auth(r) == 0);
+        free_request(&r);
+
+        /* Dino: (deny)
+         *   Authenticated by username/password
+         *   Not in any group */
+        r = http_init_request();
+        asprintf(&r->method, "GET");
+        asprintf(&r->res, "/a/");
+        asprintf(&r->authuser, "dino");
+        asprintf(&r->authpass, "secret");
+        mu_assert("(cookie OR user) AND (accounts OR sysop) => deny Dino",
+                check_auth(r) == HTTP_UNAUTHORIZED);
+        free_request(&r);
+
+        /* Betty: (allow)
+         *   Authenticated by username/password
+         *   In group accounts */
+        r = http_init_request();
+        asprintf(&r->method, "GET");
+        asprintf(&r->res, "/a/");
+        asprintf(&r->authuser, "betty");
+        asprintf(&r->authpass, "secret");
+        mu_assert("(cookie OR user) AND (accounts OR sysop) => allow Betty",
+                check_auth(r) == 0);
+        free_request(&r);
+
+        /* Betty: (deny)
+         *   NOT Authenticated (wrong password)
+         *   In group accounts */
+        r = http_init_request();
+        asprintf(&r->method, "GET");
+        asprintf(&r->res, "/a/");
+        asprintf(&r->authuser, "betty");
+        asprintf(&r->authpass, "wrong");
+        mu_assert("(cookie OR user) AND (accounts OR sysop) => deny Betty",
+                check_auth(r) == HTTP_UNAUTHORIZED);
+        free_request(&r);
+
+        free_config();
+
+        return 0;
+}

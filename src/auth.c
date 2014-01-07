@@ -90,12 +90,13 @@ int check_auth_pam(char *service, char *username, char *password)
  */
 int check_auth(http_request_t *r)
 {
-        acl_t *a;
-        int i;
+        acl_t *acls = malloc(sizeof (acl_t));
+        acl_t *a = NULL;
+        int i = 0;
         int pass = 0;
         http_status_code_t res = HTTP_FORBIDDEN;
 
-        a = config->acls;
+        a = memcpy(acls, config->acls, sizeof (acl_t));
         while (a != NULL) {
                 syslog(LOG_DEBUG, 
                         "Checking acls for %s %s ... trying %s %s", 
@@ -109,8 +110,11 @@ int check_auth(http_request_t *r)
                         syslog(LOG_DEBUG,
                                 "Found matching acl - checking credentials");
 
+                        i = 0;
+
                         if (strcmp(a->type, "deny") == 0) {
                                 syslog(LOG_DEBUG, "acl deny");
+                                free(acls);
                                 return HTTP_FORBIDDEN;
                         }
                         else if (strcmp(a->type, "params") == 0) {
@@ -138,6 +142,7 @@ int check_auth(http_request_t *r)
                         else if (strcmp(a->type, "allow") == 0) {
                                 /* TODO: check for ip address */
                                 syslog(LOG_DEBUG, "acl allow");
+                                free(acls);
                                 return 0;
                         }
                         else if (strcmp(a->type, "sufficient") == 0) {
@@ -146,10 +151,15 @@ int check_auth(http_request_t *r)
                                 i = check_auth_sufficient(a->auth, r);
                                 if (i == 0) {
                                         syslog(LOG_DEBUG, "auth sufficient");
+                                        free(acls);
                                         return i;
                                 }
                                 /* if we fail later, code is 401, not 403 */
                                 res = HTTP_UNAUTHORIZED;
+                        }
+                        else if (strcmp(a->type, "optional") == 0) {
+                                syslog(LOG_DEBUG, "acl optional...");
+                                i = check_auth_alias(a->auth, r);
                         }
                         else if (strcmp(a->type, "require") == 0) {
                                 syslog(LOG_DEBUG, "acl require ...");
@@ -157,6 +167,7 @@ int check_auth(http_request_t *r)
                                 i = check_auth_require(a->auth, r);
                                 if (i != 0) {
                                         syslog(LOG_DEBUG, "auth require fail");
+                                        free(acls);
                                         return i;
                                 }
                                 pass++;
@@ -164,16 +175,33 @@ int check_auth(http_request_t *r)
                         else {
                                 syslog(LOG_DEBUG,
                                 "acl auth type '%s' not understood", a->type);
+                                free(acls);
                                 return HTTP_INTERNAL_SERVER_ERROR;
                         }
+
+                        /* skip forward a->skip acls if condition met */
+                        if ((i == 0 && strcmp(a->skipon,"success")==0)
+                        || (i != 0 && strcmp(a->skipon,"fail")==0)){
+                                for (i=a->skip; i>0; i--) {
+                                        a = a->next;
+                                        if (a == NULL) {
+                                                free(acls);
+                                                return i; 
+                                        }
+                                }
+                                continue;
+                        }
+
                 }
                 a = a->next;
         }
         if (a != NULL) {
                 if (strcmp(a->type, "sufficient") == 0) {
+                        free(acls);
                         return 0;
                 }
         }
+        free(acls);
         if (pass > 0) return 0;
         syslog(LOG_DEBUG, "no acl matched");
         return res;

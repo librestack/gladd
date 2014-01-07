@@ -35,6 +35,8 @@ typedef struct acl_t {
         char *url;
         char *auth;
         char *params;
+        char *skipon;
+        int  skip;
         struct acl_t *next;
 } acl_t;
 
