@@ -32,6 +32,7 @@ var g_tabid = 0;
 var g_max_tabtitle = '48'; /* max characters to allow in tab title */
 var g_session = false;
 var g_tabs = new Array();
+var g_timeout = 5000; /* timeout for ajax requests */
 
 var STATUS_INFO = 1;
 var STATUS_WARN = 2;
@@ -102,9 +103,18 @@ function auth_check()
 {
 	$.ajax({
 		url: g_authurl,
+		timeout: g_timeout,
 		beforeSend: function (xhr) { setAuthHeader(xhr); },
 		success: function(data) { loginok(data); },
-		error: function(data) { loginfailed(); }
+		error: function(data, s, e) {
+			if (t == 'timeout') {
+				console.log('auth_check() timeout.  Retrying.');
+				auth_check();
+			}
+			else {
+				loginfailed();
+			}
+		}
 	});
 }
 
@@ -505,11 +515,21 @@ function clickTabLink(event) {
 function showQuery(collection, title, sort, tab) {
 	$.ajax({
 		url: collection_url(collection),
+		timeout: g_timeout,
 		beforeSend: function (xhr) { setAuthHeader(xhr); },
 		success: function(xml) {
 			displayResultsGeneric(xml, collection, title, sort, tab);
 		},
 		error: function(xml) {
+			if (tab) {
+				if (tab.children().length > 0) {
+					/* tab has contents - leave them alone on failure */
+					console.log('failed to load ' + collection 
+						+ '.  Retrying.');
+					showQuery(collection, title, sort, tab);
+					return false;
+				}
+			}
 			displayResultsGeneric(xml, collection, title, sort, tab);
 		}
 	});
@@ -1572,16 +1592,31 @@ function submitForm(object, action, id) {
 	else {
 		showSpinner(); 
 	}
+	postXML(url, xml, object, action, id, collection);
+}
 
+function postXML(url, xml, object, action, id, collection) {
 	/* send request */
     $.ajax({
         url: url,
         type: 'POST',
         data: xml,
         contentType: 'text/xml',
+		timeout: g_timeout,
 		beforeSend: function (xhr) { setAuthHeader(xhr); },
         success: function(xml) { submitFormSuccess(object, action, id, collection, xml); },
-        error: function(xml) { submitFormError(object, action, id); }
+        error: function(xhr, s, err) {
+			console.log(err);
+			if (s == 'timeout') {
+				console.log('timeout');
+				statusMessage('Timeout.  ' + object + ' not ' + action + 'd.',
+					STATUS_CRIT);
+				hideSpinner();
+			}
+			else {
+				submitFormError(object, action, id);
+			}
+		}
     });
 }
 
@@ -1767,7 +1802,12 @@ function getXML(url, async) {
 		type: 'GET',
 		async: async,
 		dataType: 'xml',
-		beforeSend: function (xhr) { setAuthHeader(xhr); }
+		timeout: g_timeout,
+		beforeSend: function (xhr) { setAuthHeader(xhr); },
+		fail: function() {
+			console.log('getXML(' + url + ') failed.  Retrying');
+			getXML(url, async);
+		},
 	});
 }
 
@@ -1862,8 +1902,14 @@ function displayResultsGeneric(xml, collection, title, sorted, tab, headers) {
 
 	statusHide();
 
-	if ([ 'accounts', 'contacts', 'organisations', 'products', ]
-	.indexOf(collection) != -1) 
+	if ([
+		'accounts',
+		'contacts',
+		'departments',
+		'divisions',
+		'organisations',
+		'products',
+	].indexOf(collection) != -1) 
 	{
 		refresh = true;
 	}
