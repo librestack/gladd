@@ -271,6 +271,14 @@ control	- allow, deny, require, sufficient, params
 		   	cached.
 		   cookie:session - set a session cookie in response, if auth
 		   	succeeds.
+	optional => the acl is checked as normal, but the outcome does not
+		    directly affect the outcome of the acl stack.  This is 
+		    mostly useful in conjunction with a success/fail argument.
+	The sufficient, optional and required acls may have
+	[condition=n] appended, where condition is either 'success' or 'fail'
+	and n is the number of acls to skip forward if the condition is met.
+	eg. optional[success=2] will skip forward 2 acls.  [success=1] is the
+	same as the default (ie. process the next acl as normal).
 
 auth	- the auth alias to use (see below) for authentication and/or
 	authorization.  If '*', and control is 'sufficient' then each auth
