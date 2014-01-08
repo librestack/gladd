@@ -191,8 +191,6 @@ function updateTab(o, content, activate, title) {
 		return false;
 	}
 
-	console.log('finished updating tab ' + tab.id);
-
 	return o;
 }
 
@@ -293,10 +291,12 @@ function removeAllTabs() {
 /*****************************************************************************/
 /* Add Authentication header with logged-in user's credentials */
 /* only send if no session active */
-function setAuthHeader(xhr) {
+function setAuthHeader(xhr, username, password) {
+	if (username == undefined) { username = g_username; }
+	if (password == undefined) { password = g_password; }
 	if (!g_session) {
 		console.log('setting auth header');
-		var hash = auth_encode(g_username, g_password);
+		var hash = auth_encode(username, password);
 		xhr.setRequestHeader("Authorization", "Silent " + hash);
 	}
 	else {
@@ -645,10 +645,10 @@ function populateForm(tab, object, xml) {
 				id = tagValue;
 			}
 
+			console.log(tagName + '=' + tagValue);
+
 			/* set field value */
-			var fld = mytab.find('form.' + object).find(
-				"[name='" + tagName + "']"
-			);
+			var fld = mytab.find('form.'+ object +" [name='"+ tagName +"']");
 			fld.val(tagValue);
 			fld.trigger("liszt:updated");/* ensure chosen type combos update */
 
@@ -2040,33 +2040,15 @@ function displayResultsGeneric(xml, collection, title, sorted, tab, headers) {
 function clickElement() {
 	var row = $(this);
 	var tab = tabActive();
-	if (tab.collection == 'salesinvoices') {
-		/* view salesinvoice pdf */
-		var a=row.find('td.xml-pdf').find('a');
-		var href=a.attr('href');
-		var si = a.attr('id');
-		var html = '<div class="pdf">';
-		html += '<object class="pdf" data="' + href + '"';
-		html += 'type="application/pdf">';
-		html += 'alt : <a href="' + href + '">PDF</a>';
-		html += '</object></div>';
-		addTab(si, html, true);
+	if (!customClickElement(row)) {
+		var id = row.find('td.xml-id').text();
+		displayElement(tab.collection, id);
 	}
-	else {
-		if (tab.collection == 'accounts') {
-			var id = row.find('td.xml-nominalcode').text();
-		}
-		else {
-			var id = row.find('td.xml-id').text();
-		}
-		if (tab.collection == 'reports/accountsreceivable') {
-			var title = 'Statement: ' + row.find('td.xml-orgcode').text();
-		}
-		else {
-			var title = null;
-		}
-		displayElement(tab.collection, id, title);
-	}
+}
+
+/* to be overridden by application */
+function customClickElement(row) {
+	return false;
 }
 
 /*****************************************************************************/
