@@ -62,6 +62,7 @@ int buildxml(char **xml)
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 {
         int isconn = 0;
+        int err = 0;
         int rowc = 0;
         row_t *rows = NULL;
         row_t *r = NULL;
@@ -92,6 +93,7 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 
         if (db_fetch_all(db, newsql, filter, &rows, &rowc) < 0) {
                 syslog(LOG_ERR, "Error in db_fetch_all()");
+                err = -1;
         }
         free(newsql);
 
@@ -137,7 +139,7 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
         if (isconn == 1)
                 db_disconnect(db);
 
-        return 0;
+        return err;
 }
 
 /* subsitute variables in sql for their values */
