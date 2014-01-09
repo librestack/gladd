@@ -2505,3 +2505,14 @@ function tabByTitle(title) {
 	}
 	return undefined;
 }
+
+/* strip any fields listed in array from xml and result the result */
+function stripXmlFields(xml, fields) {
+	console.log('stripXmlFields()');
+	console.log(fields);
+	for (var i=0; i<fields.length; i++) {
+		console.log(fields[i]);
+		xml.find(fields[i]).remove();
+	}
+	return xml;
+}
