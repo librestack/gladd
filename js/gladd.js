@@ -22,7 +22,6 @@
 
 var g_authurl = '/auth/';
 var g_authtimeout = 60000; /* milliseconds - every 60s */
-var g_resourcedefaultsurl = '/defaults/';
 var g_username = '';
 var g_password = '';
 var g_instance = '';
@@ -118,12 +117,14 @@ function auth_check()
 	});
 }
 
-function auth_session_logout()
+function auth_session_logout(async)
 {
 	console.log('session logout...');
+	if (async == undefined) { async = true }; /*run asynchronously by default*/
 	g_session = false;
-	$.ajax({
+	return $.ajax({
 		url: g_authurl,
+		async: async,
 		beforeSend: function (xhr) { 
 			setAuthHeader(xhr);
 			xhr.setRequestHeader("Logout", g_username);
