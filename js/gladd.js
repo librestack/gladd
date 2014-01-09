@@ -2232,6 +2232,26 @@ function switchBusiness(business) {
 }
 
 /*****************************************************************************/
+function mapUpdate() {
+	console.log('mapUpdate()');
+	var tab = activeTab();
+	var addressFields = ['line_1','line_2','line_3','town','county',
+            'country','postcode'];
+	var geodata = new Array();
+	var selector = addressFields.join('"],input[name="'); 
+	selector = 'input[name="' + selector + '"]';
+	mytab.find(selector).each(function() {
+		if ($(this).val().length > 0) { geodata.push($(this).val()); }
+	});
+
+	/* load map */
+	if (geodata.length > 0) {
+		var locString = geodata.join();
+		console.log('locString:' + locString);
+		loadMap(locString, mytab);
+	}
+}
+
 function loadMap(locationString, tab) {
 	var canvas;
 	var map;
