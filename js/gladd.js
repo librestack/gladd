@@ -571,7 +571,7 @@ function showHTML(url, title, div, collection) {
 /* fetch html form from server to display */
 /* TODO: clean up - xml arg no longer needed? */
 function getForm(object, action, title, xml, tab) {
-	console.log('getForm()');
+	console.log('getForm(' + object + ',' + action + ',' + title + ')');
 	showSpinner(); /* tell user to wait */
 
 	var d = fetchFormData(object, action);
@@ -579,7 +579,7 @@ function getForm(object, action, title, xml, tab) {
 	.done(function(html) {
 		var args = Array.prototype.splice.call(arguments, 1);
 		var safeHTML = $.parseHTML(html[0]);
-		cacheData(object, action, args);
+		cacheData(object, action, args); /* FIXME: remove */
 		displayForm(object, action, title, safeHTML, args, tab);
 	})
 	.fail(function() {
@@ -718,9 +718,11 @@ function isTabId(o) {
 
 function addOrUpdateTab(container, content, activate, title) {
     if (typeof container == 'undefined') {
+		console.log('no container => new tab');
 		var tab = new Tab(title, content, activate);
 	}
 	else {
+		console.log('container => update tab');
 		var id = updateTab(container, content, activate, title);
 		var tab = tabById(id);
 	}
@@ -743,6 +745,7 @@ function displayForm(object, action, title, html, xml, container) {
 	var mytab = tab.workspace();
 
 	/* populate combos with xml data */
+	//mytab.find('select.populate:not(.sub)').populate(mytab);
 	mytab.find('select.populate:not(.sub)').each(function() {
 		populateCombo(xml[x++], $(this), tab.id);
 	});
@@ -1103,6 +1106,7 @@ function populateCombos(tab) {
 		$(this).parent().find('a.datasource').each(function() {
 			datasource = $(this).attr('href');
 			console.log('datasource: ' + datasource );
+			/* FIXME: remove or update caching */
 			if ((datasource == 'relationships') && (g_xml_relationships)) {
 				/* here's one we prepared earlier */
 				console.log('using cached relationship data');
@@ -1540,6 +1544,7 @@ function submitForm(object, action, id) {
 				if (name == 'subid') {
 					subid = $(this).val();
 				}
+				/* FIXME: move to application */
 				console.log('processing input ' + name);
 				if ((name != 'id') && (name != 'subid')
 				&& ((name != 'relationship')
@@ -1579,6 +1584,7 @@ function submitForm(object, action, id) {
 	});
 
 	/* TODO: temp - add Standard Rate VAT to products by default */
+	/* FIXME */
 	if (object == 'product') {
 		xml += '<tax id="1"/>';
 	}
@@ -1656,6 +1662,7 @@ function submitFormSuccess(object, action, id, collection, xml) {
 	/* We received some data back. Display it. */
 	newid = $(xml).find(object).text();
 	if (newid) {
+		console.log('data returned from POST');
 		if (action == 'create') {
 			console.log('id of ' + object + ' created was ' + newid);
 			action = 'update';
@@ -1675,7 +1682,9 @@ function submitFormSuccess(object, action, id, collection, xml) {
 
 	if (action == 'create') {
 		/* clear form ready for more data entry */
-		getForm(object, action, null, null, activeTabId());
+		console.log('refreshing data entry form');
+		//getForm(object, action, null, null, activeTabId());
+		getForm(object, action, tabActive().title);
 	}
 
 	hideSpinner();
@@ -2350,15 +2359,18 @@ if(typeof(String.prototype.trim) === "undefined")
 
 /* Tab() */
 function Tab(title, content, activate, collection, refresh) {
+	if (!(this instanceof Tab))
+		return new Tab(title, content, activate, collection, refresh);
+
 	title = title.substring(0, g_max_tabtitle); /* truncate title */
 
 	/* if exists, update content */
 	var tab = tabByTitle(title);
 	if (tab) {
 		console.log('Tab with title "' + title + '" exists.  Updating.');
-		tab.setContent(content);
+		if (content) { tab.setContent(content); }
 		if (activate) { tab.activate(); }
-		return tab.id;
+		return tab;
 	}
 
 	g_tabs.push(this);
