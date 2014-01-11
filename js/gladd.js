@@ -21,6 +21,7 @@
  */
 
 var g_authurl = '/auth/';
+var g_url_form = '/html/forms/';
 var g_authtimeout = 60000; /* milliseconds - every 60s */
 var g_username = '';
 var g_password = '';
@@ -30,7 +31,7 @@ var g_loggedin = false;
 var g_tabid = 0;
 var g_max_tabtitle = '48'; /* max characters to allow in tab title */
 var g_session = false;
-var g_tabs = new Array();
+var TABS = new Tabs();
 var g_timeout = 5000; /* timeout for ajax requests */
 
 var STATUS_INFO = 1;
@@ -148,7 +149,7 @@ function auth_encode(username, password) {
 function deployTabs() {
 	$('.tabcloser').click(function(event) {
 		event.preventDefault();
-		tabById($(this).attr('href')).close();
+		TABS.byId[$(this).attr('href')].close();
 	});
 }
 
@@ -179,7 +180,7 @@ function updateTab(o, content, activate, title) {
 	console.log('updateTab()');
 	/* figure out what o represents */
 	if (isTabId(o)) { 				/* numeric */
-		var tab = tabById(o);
+		var tab = TABS.byId[o];
 		tab.setContent(content);
 		tab.setTitle(title);
 		if (activate) { tab.activate(); }
@@ -212,50 +213,11 @@ function getTabById(tabid) {
 /*****************************************************************************/
 function activateTab(tabid) {
 	if (isTabId(tabid)) {
-		tabById(tabid).activate();
+		TABS.byId[tabid].activate();
 	}
 }
 
-/******************************************************************************
- * activateNextTab(tabid)
- *
- * Activate the "next" tab.
- *
- * Which tab is next?  Users have come to expect that if they close 
- * the active tab, the next tab to the right will become active,
- * unless there isn't one, in which case we go left instead.
- * See Mozilla Firefox tabs for an example.
- *
- *****************************************************************************/
-function activateNextTab(tabid) {
-	var trytab = tabid + 1;
 
-	console.log("Looking for a tab to activate...");
-	/* Try right first */
-	while (trytab < g_tabid) {
-		console.log("Trying tab " + trytab);
-		if ($('.tablet' + trytab).length != 0) {
-			if ($('.tablet' + trytab).hasClass('business' + g_business)) {
-				activateTab(trytab);
-				return true;
-			}
-		}
-		trytab++;
-	}
-	/* now go left */
-	trytab = tabid - 1;
-	while (trytab >= 0) {
-		console.log("Trying tab " + trytab);
-		if ($('.tablet' + trytab).length != 0) {
-			if ($('.tablet' + trytab).hasClass('business' + g_business)) {
-				activateTab(trytab);
-				return true;
-			}
-		}
-		trytab--;
-	}
-	return false; /* no tab to activate */
-}
 
 /*****************************************************************************/
 /* remove a tab */
@@ -651,6 +613,7 @@ function populateForm(tab, object, xml) {
 			/* set field value */
 			var fld = mytab.find('form.'+ object +" [name='"+ tagName +"']");
 			fld.val(tagValue);
+			fld.data('old', tagValue);/* keep a note of the unmodifed value */
 			fld.trigger("liszt:updated");/* ensure chosen type combos update */
 
 			/* get location data, giving preference to postcode */
@@ -673,6 +636,9 @@ function populateForm(tab, object, xml) {
 			console.log('locString:' + locString);
 			loadMap(locString, tab);
 		}
+	}
+	else {
+		console.log('No data to populate form.');
 	}
 	return id;
 }
@@ -724,7 +690,7 @@ function addOrUpdateTab(container, content, activate, title) {
 	else {
 		console.log('container => update tab');
 		var id = updateTab(container, content, activate, title);
-		var tab = tabById(id);
+		var tab = TABS.byId[id];
 	}
 	return tab;
 }
@@ -733,7 +699,6 @@ function addOrUpdateTab(container, content, activate, title) {
 /* display html form we've just fetched in new tab */
 function displayForm(object, action, title, html, xml, container) {
 	console.log('displayForm("'+ object +'","'+ action +'","'+ title +'")');
-	var x = (action == 'update') ? 2 : 0; /* which xml to start with */
 
 	var title = tabTitle(title, object, action, xml);
 	var tab = addOrUpdateTab(container, html, true, title);
@@ -742,9 +707,11 @@ function displayForm(object, action, title, html, xml, container) {
 	tab.object = object;
 	tab.action = action;
 
-	var mytab = tab.workspace();
+	var mytab = tab.tablet;
 
 	/* populate combos with xml data */
+	/* NB: on update, skip first xml as this contains the record itself */
+	var x = (action == 'update') ? 1 : 0; /* which xml to start with */
 	//mytab.find('select.populate:not(.sub)').populate(mytab);
 	mytab.find('select.populate:not(.sub)').each(function() {
 		populateCombo(xml[x++], $(this), tab.id);
@@ -782,7 +749,7 @@ function formEvents(tab, object, action, id) {
 	/* Cancel button closes tab */
 	mytab.find('button.cancel').click(function()
 	{
-		tabActive().close();
+		TABS.active.close();
 	});
 
 	/* Reset button resets form */
@@ -1145,31 +1112,15 @@ function loadCombo(datasource, combo) {
 }
 
 /* a simpler combo population function */
-$.fn.populate = function(tab) {
+$.fn.populate = function(xml) {
 	$(this).each(function() { /* wrapped in case many objects selected */
-		$(this)._populate(tab);
+		$(this)._populate(xml);
 	});
 }
-$.fn._populate = function(tab) {
-	if (tab == undefined) tab = activeTab();
-	var combo = $(this);
-	var datasource = $(this).attr('data-source');
-	var xml = tab.data('data-' + datasource);
-	var selections = [];
-
+$.fn._populate = function(xml) {
 	console.log('$.populate()');
-	/* FIXME: data frequently can't be found */
-	console.log('populating combo from datasource: ' + datasource);
-	if (!xml) {
-		/* data lost: go fetch it now, and wait for it */
-		console.log('datasource not found, fetching it');
-		showSpinner();
-		getXML(collection_url(datasource), false).done(function(xdata) {
-			xml = xdata;
-			tab.data('data-' + datasource, xml);
-			hideSpinner();
-		});
-	}
+	var combo = $(this);
+	var selections = [];
 
 	/* first, preserve selections */
 	for (var x=0; x < combo[0].options.length; x++) {
@@ -1179,7 +1130,7 @@ $.fn._populate = function(tab) {
 	combo.empty();
 
 	/* add placeholder */
-	if ((combo.attr('data-placeholder')) && (combo.attr('multiple') != true)) {
+	if (combo.attr('data-placeholder') && combo.attr('multiple') != true) {
 		console.log('combo has placeholder');
 		var placeholder = combo.attr('data-placeholder');
 		combo.append($("<option />").val(-1).text(placeholder));
@@ -1194,24 +1145,6 @@ $.fn._populate = function(tab) {
             combo[0].options[id].selected = selections[id];
         }
     });
-}
-
-/* save form data sources to object */
-$.fn.updateDataSources = function(data) {
-	console.log('$.updateDataSources()');
-	var object = $(this).data('object');
-	var action = $(this).data('action');
-	var sources = dataSources(object, action);
-	for (var i in  sources) {
-		console.log('updateDataSources() - saving ' + sources[i]);
-		$(this).data('data-' + sources[i], data[i].responseText);
-	}
-}
-
-function dataSources(object, action) {
-	return $.grep(g_formdata, function(n, i) {
-		return (n[0] == object && n[1] == action);
-	})[0][2];
 }
 
 /*****************************************************************************/
@@ -1566,12 +1499,11 @@ function submitForm(object, action, id) {
 							}
 							xml += '>';
 						}
-						if ($(this).val()) {
-							if ($(this).val().length > 0) { /* skip blanks */
-								xml += '<' + name + '>';
-								xml += escapeHTML($(this).val());
-								xml += '</' + name + '>';
-							}
+						/* save anything that has changed */
+						if ($(this).val() != $(this).data('old')) {
+							xml += '<' + name + '>';
+							xml += escapeHTML($(this).val());
+							xml += '</' + name + '>';
 						}
 						if ($(this).hasClass('endsub')) {
 							/* this is a subform entry, so close extra xml tag */
@@ -1684,7 +1616,7 @@ function submitFormSuccess(object, action, id, collection, xml) {
 		/* clear form ready for more data entry */
 		console.log('refreshing data entry form');
 		//getForm(object, action, null, null, activeTabId());
-		getForm(object, action, tabActive().title);
+		getForm(object, action, TABS.active.title);
 	}
 
 	hideSpinner();
@@ -2049,7 +1981,7 @@ function displayResultsGeneric(xml, collection, title, sorted, tab, headers) {
 
 function clickElement() {
 	var row = $(this);
-	var tab = tabActive();
+	var tab = TABS.active;
 	if (!customClickElement(row)) {
 		var id = row.find('td.xml-id').text();
 		displayElement(tab.collection, id);
@@ -2357,15 +2289,317 @@ if(typeof(String.prototype.trim) === "undefined")
 	};
 }
 
+function form_url(form) {
+	return g_url_form + form.object + '/' + form.action + '.html';
+}
+
+/* Create a Form, populate and display it in a Tab */
+function showForm(object, action, title) {
+	showSpinner();
+	var form = new Form(object, action, title);
+	form.load()
+	.done(function() {
+		form.activate();
+		hideSpinner();
+	})
+	.fail(function () {
+		hideSpinner();
+	});
+	return form.tab;
+}
+
+/* Form() */
+function Form(object, action, title) {
+	if (!(this instanceof Form))
+		return new Form(object, action, title);
+	console.log('Form() constructor');
+	this.object = object;
+	this.action = action;
+	this.title = title;
+	this.data = {};
+	this.sources = FORMDATA[this.object][this.action];
+}
+
+/* Activate this Form's Tab, .show()ing it first if needed */
+Form.prototype.activate = function() {
+	if (this.tab == undefined) this.show();
+	console.log('Form().activate()');
+	this.tab.activate();
+	return this;
+}
+
+/* to be overridden by application */
+Form.prototype.customXML = function() {
+	/* append any extra bits to this.xml */
+}
+
+/* Set up Form events */
+Form.prototype.events = function() {
+	console.log('Form().events()');
+	var form = this;
+	var t = this.tab.tablet;
+	t.find('button.cancel').off().click(function() {
+		form.tab.close();
+		return false;
+	});
+	t.find('button.save').off().click(function() {
+		if (form.validate()) form.submit();
+		return false;
+	});
+}
+
+/* load some data */
+Form.prototype.fetchData = function() {
+	console.log('Form().fetchData()');
+	var d = new Array(); /* array of deferreds */
+	d.push(getHTML(form_url(this)));
+	for (var i=0, l=this.sources.length; i < l; i++) {
+		console.log(this.sources[i]);
+		d.push(getXML(collection_url(this.sources[i])));
+	}
+	console.log('loading 1 html + ' + l + ' xml documents');
+	return d;
+}
+
+/* put finishing touches on form */
+Form.prototype.finalize = function() {
+	console.log('Form().finalize()');
+	//formatDatePickers(this.tab);                   /* date pickers */
+	//formatRadioButtons(tab, object);          /* tune the radio */
+	//formBlurEvents(this.tab.id);
+	//formEvents(this.tab.id, this.object, this.action, this.id);
+	this.events();
+}
+
+Form.prototype.formatDatePickers = function() {
+	console.log(this.tab.tablet.find('.datefield'));
+	/*
+	this.tab.tablet.find('.datefield').datepicker({
+		dateFormat: "yy-mm-dd",
+		constrainInput: true
+	});
+	*/
+}
+
+/* Does the tab for this form have a map? */
+Form.prototype.hasMap = function() {
+	if (this.tab) {
+		if (this.tab.map) {
+			return (this.tab.map.fields.length > 0);
+		}
+	}
+	return false;
+}
+
+/* Load HTML form + XML data sources.  Return deferred. */
+Form.prototype.load = function() {
+	console.log('Form().load()');
+	var form = this;
+	var object = this.object;
+	var action = this.action;
+	var d = this.fetchData();
+	return $.when.apply(null, d)
+	.done(function(html) {
+		console.log('Form() data loaded');
+		form.html = html[0];
+		var data = Array.prototype.splice.call(arguments, 1);
+		if (action == 'create') {
+			form.data['FORMDATA'] = null;
+		}
+		else {
+			form.data['FORMDATA'] = data.shift();
+		}
+		form.updateDataSources(data);
+		console.log('Form(' + object + '.' + action + ').load() done');
+	})
+	.fail(function() {
+		console.log('Form(' + object + '.' + action + ').load() fail');
+	});
+	return this;
+}
+
+/* Fill html form with data */
+Form.prototype.populate = function() {
+	console.log('Form().populate()');
+	if (this.data.length == 0) {
+		console.log('No data to populate form.');
+	}
+	var id = undefined;
+	var form = this;
+	this.workspace = $(this.html); /* start with base html */
+	this.collection = this.workspace.find('form:not(.subform)').first()
+		.attr('action');
+	var w = this.workspace.filter('div.' + this.object + '.' + this.action)
+		.first();
+	/* populate form fields using first xml doc */
+	$(this.data["FORMDATA"]).find('resources').find('row').children()
+	.first(function() {
+		var tagName = this.tagName;
+		var tagValue = $(this).text();
+		console.log(tagName + '=' + tagValue);
+		if (tagName == 'id' || tagName == object) {
+			form.id = tagValue; /* grab id */
+		}
+		var fld = w.find('[name="' + tagName + '"]');
+		fld.val(tagValue); /* set field value */
+		fld.data('old', tagValue);/* keep a note of the unmodifed value */
+		if (form.hasMap()) { /* store map geo data */
+			if (form.map.fields.indexOf(tagName) != -1
+			&& tagValue.length > 0)
+			{
+				form.map.addGeo(tagValue);
+			}
+		}
+	});
+	w.find('select.populate:not(.sub)').each(function() {
+		var xml = form.data[$(this).attr('data-source')];
+		$(this).populate(xml);
+	});
+	/* where do we POST this form? */
+	this.url = collection_url(this.collection);
+	if (id) this.url += id;
+	console.log('Form().url=' + this.url);
+}
+
+/* Create/Update tab with Form content */
+Form.prototype.show = function(tab) {
+	console.log('Form().show()');
+	if (tab == undefined) {
+		tab = new Tab(this.title);
+	}
+	this.tab = tab; tab.form = this; /* link form and tab to each other */
+	console.log('setting tab title');
+	if (this.title != undefined) {
+		tab.setTitle(this.title);
+	}
+	if (this.html != undefined) {
+		console.log('setting tab content');
+		this.populate();
+		tab.setContent(this.workspace);
+		this.finalize();
+		/* TODO: subforms */
+		/* TODO: events */
+	}
+	else {
+		console.log('no tab content empty');
+	}
+	return this;
+}
+
+/* submit form */
+Form.prototype.submit = function() {
+	console.log('Form().submit() => ' + this.url);
+	var xml = createRequestXml();
+
+	xml += '<' + this.object + '>';
+	this.tab.tablet.find('div.' + this.object)
+	.find('input:not(.nosubmit,default),select:not(.nosubmit,.default)')
+	.each(function() {
+		var name = $(this).attr('name');
+		if (name) {
+			var o = new Object();
+			if (customFormFieldHandler($(this), o)) {
+				xml += o.xml;
+			}
+			else {
+				if (name === 'subid') {
+					subid = $(this).val()
+				}
+				console.log('processing input ' + name);
+				if ($(this).attr('type') == "checkbox") {
+				}
+				else {
+					console.log($(this).val());
+					if ($(this).hasClass('sub')) {
+						/* this is a subform entry, so add extra xml tag */
+						xml += '<' + subobject;
+						if (subid) {
+							xml += ' id="' + subid + '"';
+							subid = null;
+						}
+						xml += '>';
+					}
+					/* save anything that has changed */
+					if (($(this).val() !== $(this).data('old')) 
+					&& (!($(this).data('old') === undefined &&
+					$(this).val() === '')))
+					{
+						console.log(name + ' has changed from "'
+							+ $(this).data('old') + '" to "' + $(this).val()
+							+ '"');
+						xml += '<' + name + '>';
+						xml += escapeHTML($(this).val());
+						xml += '</' + name + '>';
+					}
+					if ($(this).hasClass('endsub')) {
+						/* this is a subform entry, so close extra xml tag */
+						xml += '</' + subobject + '>';
+					}
+				}
+			}
+		}
+	});
+	this.xml = xml;
+	this.customXML();
+	this.xml += '</' + this.object + '>';
+	this.xml += '</data></request>';
+	console.log(this.xml);
+	/* tell user to wait */
+	if (this.action === 'create' || this.action === 'update') {
+		showSpinner('Saving ' + this.object + '...');
+	}
+	else {
+		showSpinner();
+	}
+	postXML(this.url, this.xml, this.object, this.action, this.id,
+		this.collection);
+}
+
+Form.prototype.updateDataSources = function(data) {
+	console.log('Form().updateDataSources()');
+	var sources = FORMDATA[this.object][this.action];
+	for (var i in sources) {
+		console.log('Form().updateDataSources() - saving ' + sources[i]);
+		this.data[sources[i]] = data[i][0];
+	}
+}
+
+Form.prototype.validate = function() {
+	console.log('Form().validate()');
+	return customFormValidation(this.object, this.action, this.id);
+}
+
+/* Map() */
+function Map() {
+	if (!(this instanceof Map))
+		return new Map();
+	this.geodata = new Array();
+	this.fields = new Array();
+}
+
+Map.prototype.addGeo = function(s) {
+	this.geodata.push(s);
+}
+
+Map.prototype.clearGeo = function() {
+	this.geodata.length = 0;
+}
+
+Map.prototype.load = function() {
+	this.geostring = this.geodata.join();
+	//loadMap(this.geostring, tab);
+}
+
 /* Tab() */
 function Tab(title, content, activate, collection, refresh) {
 	if (!(this instanceof Tab))
 		return new Tab(title, content, activate, collection, refresh);
+	console.log('Tab() constructor');
 
 	title = title.substring(0, g_max_tabtitle); /* truncate title */
 
 	/* if exists, update content */
-	var tab = tabByTitle(title);
+	var tab = TABS.byTitle[title];
 	if (tab) {
 		console.log('Tab with title "' + title + '" exists.  Updating.');
 		if (content) { tab.setContent(content); }
@@ -2373,8 +2607,7 @@ function Tab(title, content, activate, collection, refresh) {
 		return tab;
 	}
 
-	g_tabs.push(this);
-	this.id = g_tabid++;
+	TABS.add(this);
 	this.title = title;
 	this.business = g_business;
 	this.collection = collection;
@@ -2443,6 +2676,7 @@ function Tab(title, content, activate, collection, refresh) {
 }
 
 Tab.prototype.activate = function() {
+	console.log('Tab().activate()');
 	if (this.active) { this.reload(); return false; }
 	console.log('activating Tab ' + this.id);
 
@@ -2453,89 +2687,144 @@ Tab.prototype.activate = function() {
 	$(".tablet" + this.id).addClass("active");
 
 	/* set focus to control with class "focus" */
-	var tab = this.workspace();
+	var tab = this.tablet;
 	tab.find(".focus").focus();
 
 	/* fade in if we aren't already visible */
 	$(".tablet" + this.id).find(".focus").fadeIn(300);
 
 	/* update metadata */
-	for (var i=0; i<g_tabs.length; i++) {
-		if (g_tabs[i] != undefined) {
-			if (g_tabs[i].business == g_business) { g_tabs[i].active = false; }
+	for (var i=0; i < TABS.byId.length; i++) {
+		if (TABS.byId[i] != undefined) {
+			if (TABS.byId[i].business == g_business) {
+				TABS.byId[i].active = false;
+			}
 		}
 	}
 	this.active = true;
+	TABS.active = this;
+	return this;
 };
 
 Tab.prototype.close = function() {
 	console.log('Tab(' + this.id + ').close()');
-	closeTab(this.id);
-	delete g_tabs[this.id];
+	if (this.active) {
+		console.log('closing active tab');
+		TABS.activateNext();
+	}
+	$('.tablet' + this.id).remove(); /* remove tab head and content */
+	if (TABS.count() == 1) $('div#tabs').fadeOut(300);
+	TABS.close(this);
+	return this;
+};
+
+/* perform jquery select on tab contents */
+Tab.prototype.find = function(selector) {
+	return this.tablet.find(selector);
 };
 
 Tab.prototype.reload = function() {
 	if (this.collection && !this.frozen && this.business == g_business) {
 		console.log('refreshing tab ' + this.id);
-		showQuery(this.collection, this.title, this.sort, this.workspace());
+		showQuery(this.collection, this.title, this.sort, this.tablet);
 	}
+	return this;
 };
 
 Tab.prototype.setContent = function(content) {
 	console.log('tab(' + this.id + ').setContent()');
-	var tab = $('#tab' + this.id);
-	var statusmsg = tab.find('.statusmsg').detach();/* preserve status msg */
-	tab.empty().append(content);
-	if (statusmsg) tab.find('.statusmsg').replaceWith(statusmsg);
+	if (content == undefined) return;
+	var t = this.tablet;
+	var statusmsg = t.find('.statusmsg').detach();/* preserve status msg */
+	t.empty().append(content);
+	if (statusmsg) t.find('.statusmsg').replaceWith(statusmsg);
+	return this;
 };
 
 Tab.prototype.setTitle = function(title) {
 	this.title = title;
-	$('a.tabtitle[href="' + tabid + '"]').text(title);
+	this.tabtitlelink.empty().append(title);
+	return this;
 };
 
-Tab.prototype.workspace = function() {
-	return $('#tab' + this.id);
-};
-
-function tabActive() {
-	for (var i=0; i<g_tabs.length; i++) {
-		if (g_tabs[i] != undefined) {
-			if (g_tabs[i].active) { return g_tabs[i]; }
-		}
-	}
-	return undefined;
+/* collection of Tab()s */
+function Tabs() {
+	console.log('Tabs() constructor');
+	this.byId = new Array();
+	this.byTitle = {};
 }
 
-function tabById(id) {
-	return g_tabs[id];
+Tabs.prototype.activate = function(id) {
+	this.active = id;
+	this.byId[id].activate();
+}
+
+/******************************************************************************
+ * activateNextTab(tabid)
+ *
+ * Activate the "next" tab.
+ *
+ * Which tab is next?  Users have come to expect that if they close 
+ * the active tab, the next tab to the right will become active,
+ * unless there isn't one, in which case we go left instead.
+ * See Mozilla Firefox tabs for an example.
+ *
+ *****************************************************************************/
+Tabs.prototype.activateNext = function() {
+	console.log("Looking for a tab to activate...");
+	/* Try right first */
+	for (var i = this.active.id + 1; i < this.byId.length; ++i) {
+		console.log("Trying tab " + i);
+		if (this.byId[i] != undefined) {
+			if (this.byId[i].business == g_business) {
+				this.activate(i);
+				return true;
+			}
+		}
+	}
+	/* now go left */
+	for (var i = this.active.id - 1; i >= 0; --i) {
+		console.log("Trying tab " + i);
+		if (this.byId[i] != undefined) {
+			if (this.byId[i].business == g_business) {
+				this.activate(i);
+				return true;
+			}
+		}
+	}
+	return false; /* no tab to activate */
+}
+
+Tabs.prototype.add = function(tab) {
+	tab.id = this.byId.length;
+	this.byId.push(tab);
+}
+
+Tabs.prototype.close = function(tab) {
+	delete this.byId[tab.id];
+	delete this.byTitle[tab.title];
+	if (tab.active) this.activateNext();
+}
+
+Tabs.prototype.count = function() {
+	return this.byId.length;
 }
 
 /* refresh any tabs in the specified collection (or all if undefined) */
-function tabRefresh(collection) {
-	console.log('tabRefresh(' + collection + ')');
-	for (var i=0; i<g_tabs.length; i++) {
-		if (g_tabs[i] != undefined) {
-			if (g_tabs[i].refresh && g_tabs[i].collection != undefined) {
+
+Tabs.prototype.refresh = function(collection) {
+	console.log('Tabs().refresh(' + collection + ')');
+	for (var i=0; i < this.byId.length; i++) {
+		if (TABS.byId[i] != undefined) {
+			if (TABS.byId[i].refresh && TABS.byId[i].collection != undefined) {
 				if (collection == undefined
-				|| collection == g_tabs[i].collection)
+				|| collection == TABS.byId[i].collection)
 				{
-					g_tabs[i].reload();
+					TABS.byId[i].reload();
 				}
 			}
 		}
 	}
-}
-
-function tabByTitle(title) {
-	for (var i=0; i<g_tabs.length; i++) {
-		if (g_tabs[i] != undefined) {
-			if (g_tabs[i].title == title && g_tabs[i].business == g_business) {
-				return g_tabs[i];
-			}
-		}
-	}
-	return undefined;
 }
 
 /* strip any fields listed in array from xml and result the result */
