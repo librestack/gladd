@@ -2309,12 +2309,13 @@ function showForm(object, action, title) {
 }
 
 /* Form() */
-function Form(object, action, title) {
+function Form(object, action, title, id) {
 	if (!(this instanceof Form))
 		return new Form(object, action, title);
 	console.log('Form() constructor');
 	this.object = object;
 	this.action = action;
+	this.id = id;
 	this.title = title;
 	this.data = {};
 	this.sources = FORMDATA[this.object][this.action];
@@ -2355,7 +2356,8 @@ Form.prototype.fetchData = function() {
 	d.push(getHTML(form_url(this)));
 	for (var i=0, l=this.sources.length; i < l; i++) {
 		console.log(this.sources[i]);
-		d.push(getXML(collection_url(this.sources[i])));
+		var url = collection_url(this.sources[i]);
+		d.push(getXML(url));
 	}
 	console.log('loading 1 html + ' + l + ' xml documents');
 	return d;
@@ -2406,7 +2408,7 @@ Form.prototype.load = function() {
 		if (action == 'create') {
 			form.data['FORMDATA'] = null;
 		}
-		else {
+		else if (form.data['FORMDATA'] === undefined){
 			form.data['FORMDATA'] = data.shift();
 		}
 		form.updateDataSources(data);
@@ -2431,57 +2433,85 @@ Form.prototype.populate = function() {
 		.attr('action');
 	var w = this.workspace.filter('div.' + this.object + '.' + this.action)
 		.first();
-	/* populate form fields using first xml doc */
-	$(this.data["FORMDATA"]).find('resources').find('row').children()
-	.first(function() {
-		var tagName = this.tagName;
-		var tagValue = $(this).text();
-		console.log(tagName + '=' + tagValue);
-		if (tagName == 'id' || tagName == object) {
-			form.id = tagValue; /* grab id */
-		}
-		var fld = w.find('[name="' + tagName + '"]');
-		fld.val(tagValue); /* set field value */
-		fld.data('old', tagValue);/* keep a note of the unmodifed value */
-		if (form.hasMap()) { /* store map geo data */
-			if (form.map.fields.indexOf(tagName) != -1
-			&& tagValue.length > 0)
-			{
-				form.map.addGeo(tagValue);
-			}
-		}
-	});
+	/* populate combos */
 	w.find('select.populate:not(.sub)').each(function() {
 		var xml = form.data[$(this).attr('data-source')];
 		$(this).populate(xml);
 	});
+	/* populate form fields using first xml doc */
+	if (this.data["FORMDATA"]) {
+		this.data["FORMDATA"].find('resources row').first().children()
+		.each(function()
+		{
+			var tagName = this.tagName;
+			var tagValue = $(this).text();
+			console.log(tagName + '=' + tagValue);
+			if (tagName == 'id' || tagName == this.object) {
+				form.id = tagValue; /* grab id */
+			}
+			var fld = w.find('[name="' + tagName + '"]');
+			if (fld.length > 0) {
+				fld.val(tagValue); /* set field value */
+				fld.data('old', tagValue);/* note the unmodifed value */
+				if (form.hasMap()) { /* store map geo data */
+					if (form.map.fields.indexOf(tagName) != -1
+					&& tagValue.length > 0)
+					{
+						form.map.addGeo(tagValue);
+					}
+				}
+			}
+			else {
+				console.log('field "' + tagName + '" not found on form');
+			}
+		});
+	}
 	/* where do we POST this form? */
 	this.url = collection_url(this.collection);
-	if (id) this.url += id;
+	if (this.id) this.url += this.id;
 	console.log('Form().url=' + this.url);
+}
+
+/* POST data */
+Form.prototype.post = function() {
+	var form = this;
+	return $.ajax({
+        url: this.url,
+        type: 'POST',
+        data: this.xml,
+        contentType: 'text/xml',
+        timeout: g_timeout,
+        beforeSend: function (xhr) { setAuthHeader(xhr); },
+        success: function(xml) {
+			form.submitSuccess(xml);
+		},
+        error: function(xhr, s, err) {
+			form.submitError(xhr, s, err);
+        }
+    });
 }
 
 /* Create/Update tab with Form content */
 Form.prototype.show = function(tab) {
 	console.log('Form().show()');
-	if (tab == undefined) {
+	if (tab === undefined && this.tab === undefined) {
 		tab = new Tab(this.title);
+		this.tab = tab; tab.form = this; /* link form and tab to each other */
 	}
-	this.tab = tab; tab.form = this; /* link form and tab to each other */
-	console.log('setting tab title');
-	if (this.title != undefined) {
-		tab.setTitle(this.title);
+	if (this.title !== undefined) {
+		console.log('setting tab title');
+		this.tab.setTitle(this.title);
 	}
-	if (this.html != undefined) {
+	if (this.html !== undefined) {
 		console.log('setting tab content');
 		this.populate();
-		tab.setContent(this.workspace);
+		this.tab.setContent(this.workspace);
 		this.finalize();
 		/* TODO: subforms */
 		/* TODO: events */
 	}
 	else {
-		console.log('no tab content empty');
+		console.log('no tab content');
 	}
 	return this;
 }
@@ -2551,17 +2581,64 @@ Form.prototype.submit = function() {
 	else {
 		showSpinner();
 	}
-	postXML(this.url, this.xml, this.object, this.action, this.id,
-		this.collection);
+	this.post();
+}
+
+Form.prototype.submitError = function(xhr, s, err) {
+	console.log(err);
+	hideSpinner();
+	if (s === 'timeout') {
+		console.log('timeout');
+		statusMessage('Timeout. ' + this.object + ' not ' + this.action + 'd.',
+			STATUS_CRIT);
+	}
+	else if (!this.submitErrorCustom(xhr, s, err)) {
+		statusMessage('Error saving ' + object, STATUS_CRIT);
+	}
+}
+
+/* to be overridden by application */
+Form.prototype.submitErrorCustom = function(xhr, s, err) {
+	return false;
+}
+
+Form.prototype.submitSuccess = function(xml) {
+	console.log('form submitted successfully');
+	hideSpinner();
+	//if (this.submitSuccessCustom(xml)) return;
+
+	//tabRefresh(this.collection); /* check for tabs that will need refreshing */
+
+	/* We received some data back. Display it. */
+	this.id = $(xml).find('id').text();
+	if (!this.id ) console.log('id not found');
+	if (this.id && this.action === 'create') {
+		console.log('POST returned new ' + this.object + ' with id='+ this.id);
+		this.data['FORMDATA'] = $(xml);
+		this.action = 'update';
+		this.sources = FORMDATA[this.object][this.action];
+		this.url += this.id;
+		this.title = tabTitle('Edit ' + this.object + ' ' + this.id, 
+			this.object, this.action, [xml]);
+		this.tab.setTitle(this.title);
+		this.html = undefined;
+		var form = this;
+		this.load()
+		.done(function() {
+			form.show();
+		});
+	}
 }
 
 Form.prototype.updateDataSources = function(data) {
 	console.log('Form().updateDataSources()');
 	var sources = FORMDATA[this.object][this.action];
+	console.log(data.length + ' datii and ' + sources.length + ' sauces');
 	for (var i in sources) {
 		console.log('Form().updateDataSources() - saving ' + sources[i]);
 		this.data[sources[i]] = data[i][0];
 	}
+	console.log('Form().updateDataSources() done');
 }
 
 Form.prototype.validate = function() {
@@ -2811,7 +2888,6 @@ Tabs.prototype.count = function() {
 }
 
 /* refresh any tabs in the specified collection (or all if undefined) */
-
 Tabs.prototype.refresh = function(collection) {
 	console.log('Tabs().refresh(' + collection + ')');
 	for (var i=0; i < this.byId.length; i++) {
