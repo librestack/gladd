@@ -2343,6 +2343,9 @@ Form.prototype.events = function() {
 		form.tab.close();
 		return false;
 	});
+	t.find('button.reset').off().click(function() {
+		return false;
+	});
 	t.find('button.save').off().click(function() {
 		if (form.validate()) form.submit();
 		return false;
@@ -2517,7 +2520,6 @@ Form.prototype.show = function(tab) {
 		this.populate();
 		this.tab.setContent(this.workspace);
 		this.finalize();
-		/* TODO: events */
 	}
 	else {
 		console.log('no tab content');
@@ -2531,7 +2533,7 @@ Form.prototype.submit = function() {
 	var xml = createRequestXml();
 
 	xml += '<' + this.object + '>';
-	this.tab.tablet.find('div.' + this.object)
+	this.tab.tablet.find('form.' + this.object + '.' + this.action)
 	.find('input:not(.nosubmit,default),select:not(.nosubmit,.default)')
 	.each(function() {
 		var name = $(this).attr('name');
