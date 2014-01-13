@@ -106,7 +106,7 @@ int waitfordata(int sock, int bytes, char s[INET6_ADDRSTRLEN])
  */
 void handle_connection(int sock, struct sockaddr_storage their_addr)
 {
-        char s[INET6_ADDRSTRLEN];
+        char s[INET6_ADDRSTRLEN] = "";
         handler_result_t err = HANDLER_OK;
         int i = 0;
 
