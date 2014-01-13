@@ -2466,10 +2466,20 @@ Form.prototype.populate = function() {
 			}
 		});
 	}
+	this._populateSubforms();
+
 	/* where do we POST this form? */
 	this.url = collection_url(this.collection);
 	if (this.id) this.url += this.id;
 	console.log('Form().url=' + this.url);
+}
+
+Form.prototype._populateSubforms = function() {
+	var form = this;
+	this.workspace.find('form.subform').each(function() {
+		var view = $(this).attr('action');
+		loadSubformData(view, form.id, form.tab.id);
+	});
 }
 
 /* POST data */
@@ -2507,7 +2517,6 @@ Form.prototype.show = function(tab) {
 		this.populate();
 		this.tab.setContent(this.workspace);
 		this.finalize();
-		/* TODO: subforms */
 		/* TODO: events */
 	}
 	else {
