@@ -2294,9 +2294,9 @@ function form_url(form) {
 }
 
 /* Create a Form, populate and display it in a Tab */
-function showForm(object, action, title) {
+function showForm(object, action, title, id) {
 	showSpinner();
-	var form = new Form(object, action, title);
+	var form = new Form(object, action, title, id);
 	form.load()
 	.done(function() {
 		form.activate();
@@ -2313,6 +2313,7 @@ function Form(object, action, title, id) {
 	if (!(this instanceof Form))
 		return new Form(object, action, title);
 	console.log('Form() constructor');
+	this.collection = object + 's';
 	this.object = object;
 	this.action = action;
 	this.id = id;
@@ -2357,6 +2358,9 @@ Form.prototype.fetchData = function() {
 	console.log('Form().fetchData()');
 	var d = new Array(); /* array of deferreds */
 	d.push(getHTML(form_url(this)));
+	if (this.action !== 'create') {
+		d.push(getXML(collection_url(this.collection) + this.id));
+	}
 	for (var i=0, l=this.sources.length; i < l; i++) {
 		console.log(this.sources[i]);
 		var url = collection_url(this.sources[i]);
@@ -2412,7 +2416,7 @@ Form.prototype.load = function() {
 			form.data['FORMDATA'] = null;
 		}
 		else if (form.data['FORMDATA'] === undefined){
-			form.data['FORMDATA'] = data.shift();
+			form.data['FORMDATA'] = $(data.shift()[0]);
 		}
 		form.updateDataSources(data);
 		console.log('Form(' + object + '.' + action + ').load() done');
@@ -2644,8 +2648,8 @@ Form.prototype.submitSuccess = function(xml) {
 Form.prototype.updateDataSources = function(data) {
 	console.log('Form().updateDataSources()');
 	var sources = FORMDATA[this.object][this.action];
-	console.log(data.length + ' datii and ' + sources.length + ' sauces');
-	for (var i in sources) {
+	console.log('data[' + data.length + ']; sources[' + sources.length + ']');
+	for (var i=0; i < sources.length && data[i] !== undefined; i++) {
 		console.log('Form().updateDataSources() - saving ' + sources[i]);
 		this.data[sources[i]] = data[i][0];
 	}
@@ -2917,9 +2921,7 @@ Tabs.prototype.refresh = function(collection) {
 /* strip any fields listed in array from xml and result the result */
 function stripXmlFields(xml, fields) {
 	console.log('stripXmlFields()');
-	console.log(fields);
 	for (var i=0; i<fields.length; i++) {
-		console.log(fields[i]);
 		xml.find(fields[i]).remove();
 	}
 	return xml;
