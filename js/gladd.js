@@ -2351,6 +2351,16 @@ Form.prototype.events = function() {
 		if (form.validate()) form.submit();
 		return false;
 	});
+	t.find('input.price').off().change(function() {
+		var p = $(this).val();
+		if (isNaN(p)) {
+			$(this).val('');
+		}
+		else {
+			$(this).val(decimalPad($(this).val(),2));
+		}
+		return false;
+	});
 }
 
 /* load some data */
