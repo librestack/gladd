@@ -1546,7 +1546,11 @@ function postXML(url, xml, object, action, id, collection) {
         contentType: 'text/xml',
 		timeout: g_timeout,
 		beforeSend: function (xhr) { setAuthHeader(xhr); },
-        success: function(xml) { submitFormSuccess(object, action, id, collection, xml); },
+        success: function(xml) {
+            hideSpinner();
+            TABS.refresh(collection);
+            submitFormSuccess(object, action, id, collection, xml);
+        },
         error: function(xhr, s, err) {
 			console.log(err);
 			if (s == 'timeout') {
@@ -2716,6 +2720,8 @@ function Tab(title, content, activate, collection, refresh) {
 
 	title = title.substring(0, g_max_tabtitle); /* truncate title */
 
+    console.log('title: ' + title);
+
 	/* if exists, update content */
 	var tab = TABS.byTitle[title];
 	if (tab) {
@@ -2725,8 +2731,8 @@ function Tab(title, content, activate, collection, refresh) {
 		return tab;
 	}
 
-	TABS.add(this);
 	this.title = title;
+	TABS.add(this);
 	this.business = g_business;
 	this.collection = collection;
 	this.frozen = false;	/* whether this tab can be refreshed */
@@ -2914,8 +2920,10 @@ Tabs.prototype.activateNext = function() {
 }
 
 Tabs.prototype.add = function(tab) {
+    console.log('Tabs().add()');
 	tab.id = this.byId.length;
 	this.byId.push(tab);
+	this.byTitle[tab.title] = tab;
 }
 
 Tabs.prototype.close = function(tab) {
