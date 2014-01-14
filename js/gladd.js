@@ -2379,10 +2379,12 @@ Form.prototype.fetchData = function() {
 	if (this.action !== 'create' && this['FORMDATA'] === undefined) {
 		d.push(getXML(collection_url(this.collection) + this.id));
 	}
-	for (var i=0, l=this.sources.length; i < l; i++) {
-		var url = collection_url(this.sources[i]);
-		d.push(getXML(url));
-	}
+    if (this.sources !== undefined) {
+        for (var i=0, l=this.sources.length; i < l; i++) {
+            var url = collection_url(this.sources[i]);
+            d.push(getXML(url));
+        }
+    }
 	console.log('loading 1 html + ' + l + ' xml documents');
 	return d;
 }
@@ -2427,9 +2429,8 @@ Form.prototype.load = function() {
 	return $.when.apply(null, d)
 	.done(function(html) {
 		console.log('Form() data loaded');
-		form.html = html[0];
+		form.html = (Array.isArray(html)) ? html[0] : html;
 		var data = Array.prototype.splice.call(arguments, 1);
-        console.log(form.data['FORMDATA']);
 		if (action == 'create') {
 			form.data['FORMDATA'] = null;
 		}
@@ -2652,7 +2653,7 @@ Form.prototype.submitSuccess = function(xml) {
 		console.log('POST returned new ' + this.object + ' with id='+ this.id);
 		this.data['FORMDATA'] = $(xml);
 		this.action = 'update';
-		this.sources = FORMDATA[this.object][this.action];
+		this.sources = this.dataSources();
 		this.url += this.id;
 		this.title = tabTitle('Edit ' + this.object + ' ' + this.id, 
 			this.object, this.action, [xml]);
@@ -2667,6 +2668,7 @@ Form.prototype.submitSuccess = function(xml) {
 }
 
 Form.prototype.updateDataSources = function(data) {
+    if (this.sources === undefined) return;
 	console.log('Form().updateDataSources()');
 	var sources = this.sources;
 	console.log('data[' + data.length + ']; sources[' + sources.length + ']');
