@@ -2647,7 +2647,7 @@ Form.prototype.submitSuccess = function(xml) {
 	hideSpinner();
 	//if (this.submitSuccessCustom(xml)) return;
 
-	//tabRefresh(this.collection); /* check for tabs that will need refreshing */
+	TABS.refresh(this.collection); /* refresh any tabs for this collection */
 
 	/* We received some data back. Display it. */
 	this.id = $(xml).find('id').text();
