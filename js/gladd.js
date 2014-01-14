@@ -2319,7 +2319,7 @@ function Form(object, action, title, id) {
 	this.id = id;
 	this.title = title;
 	this.data = {};
-	this.sources = FORMDATA[this.object][this.action];
+	this.sources = this.dataSources();
 }
 
 /* Activate this Form's Tab, .show()ing it first if needed */
@@ -2333,6 +2333,14 @@ Form.prototype.activate = function() {
 /* to be overridden by application */
 Form.prototype.customXML = function() {
 	/* append any extra bits to this.xml */
+}
+
+Form.prototype.dataSources = function() {
+    if (FORMDATA !== undefined) {
+        if (FORMDATA[this.object] !== undefined) {
+            return FORMDATA[this.object][this.action];
+        }
+    }
 }
 
 /* Set up Form events */
@@ -2368,11 +2376,10 @@ Form.prototype.fetchData = function() {
 	console.log('Form().fetchData()');
 	var d = new Array(); /* array of deferreds */
 	d.push(getHTML(form_url(this)));
-	if (this.action !== 'create') {
+	if (this.action !== 'create' && this['FORMDATA'] === undefined) {
 		d.push(getXML(collection_url(this.collection) + this.id));
 	}
 	for (var i=0, l=this.sources.length; i < l; i++) {
-		console.log(this.sources[i]);
 		var url = collection_url(this.sources[i]);
 		d.push(getXML(url));
 	}
@@ -2422,11 +2429,15 @@ Form.prototype.load = function() {
 		console.log('Form() data loaded');
 		form.html = html[0];
 		var data = Array.prototype.splice.call(arguments, 1);
+        console.log(form.data['FORMDATA']);
 		if (action == 'create') {
 			form.data['FORMDATA'] = null;
 		}
-		else if (form.data['FORMDATA'] === undefined){
+		else if (form.data['FORMDATA'] === undefined) {
 			form.data['FORMDATA'] = $(data.shift()[0]);
+        }
+		else {
+			data.shift();
 		}
 		form.updateDataSources(data);
 		console.log('Form(' + object + '.' + action + ').load() done');
@@ -2657,7 +2668,7 @@ Form.prototype.submitSuccess = function(xml) {
 
 Form.prototype.updateDataSources = function(data) {
 	console.log('Form().updateDataSources()');
-	var sources = FORMDATA[this.object][this.action];
+	var sources = this.sources;
 	console.log('data[' + data.length + ']; sources[' + sources.length + ']');
 	for (var i=0; i < sources.length && data[i] !== undefined; i++) {
 		console.log('Form().updateDataSources() - saving ' + sources[i]);
