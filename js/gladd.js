@@ -1139,9 +1139,12 @@ $.fn._populate = function(xml) {
     /* now, repopulate and reselect options */
     $(xml).find('row').each(function() {
         var id = $(this).find('id').text();
+        if (!isNaN(id)) {
+            id = String(parseInt(id, 10)); /* strip leading zeros */
+        }
         var name = $(this).find('name').text();
         combo.append($("<option />").val(id).text(name));
-        if (selections[id]) {
+        if (selections[id] !== undefined) {
             combo[0].options[id].selected = selections[id];
         }
     });
