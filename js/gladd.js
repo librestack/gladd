@@ -2362,7 +2362,7 @@ Form.prototype.events = function() {
 	});
 	t.find('button.reset').off().click(function(event) {
         event.preventDefault();
-        t.find('form:not(.subform)').get(0).reset();
+        form.reset();
 		return false;
 	});
 	t.find('button.save').off().click(function() {
@@ -2539,6 +2539,20 @@ Form.prototype.post = function() {
     });
 }
 
+Form.prototype.reset = function() {
+    console.log('Form().reset()');
+    var t = this.tab.tablet;
+    t.find('form:not(.subform)').get(0).reset();
+    /* re-populate form */
+    t.find('form:not(.subform)').find('input,select').each(function() {
+        if (($(this).val() !== $(this).data('old'))
+        && (!($(this).data('old') === undefined && $(this).val() === '')))
+        {
+            $(this).val($(this).data('old'));
+        }
+    });
+}
+
 /* Create/Update tab with Form content */
 Form.prototype.show = function(tab) {
 	console.log('Form().show()');
@@ -2658,22 +2672,22 @@ Form.prototype.submitSuccess = function(xml) {
 	/* We received some data back. Display it. */
 	this.id = $(xml).find('id').text();
 	if (!this.id ) console.log('id not found');
-	if (this.id && this.action === 'create') {
-		console.log('POST returned new ' + this.object + ' with id='+ this.id);
-		this.data['FORMDATA'] = $(xml);
-		this.action = 'update';
-		this.sources = this.dataSources();
-		this.url += this.id;
-		this.title = tabTitle('Edit ' + this.object + ' ' + this.id, 
-			this.object, this.action, [xml]);
-		this.tab.setTitle(this.title);
-		this.html = undefined;
-		var form = this;
-		this.load()
-		.done(function() {
-			form.show();
-		});
-	}
+    if (this.id && this.action === 'create') {
+        console.log('POST returned new ' + this.object + ' with id='+ this.id);
+        this.data['FORMDATA'] = $(xml);
+        this.action = 'update';
+        this.sources = this.dataSources();
+        this.url += this.id;
+        this.title = tabTitle('Edit ' + this.object + ' ' + this.id,
+            this.object, this.action, [xml]);
+        this.tab.setTitle(this.title);
+        this.html = undefined;
+        var form = this;
+        this.load()
+        .done(function() {
+            form.show();
+        });
+    }
 }
 
 Form.prototype.updateDataSources = function(data) {
@@ -2721,8 +2735,10 @@ Map.prototype.clearGeo = function() {
 Map.prototype.load = function() {
     console.log('Map().load()');
     if (this.tab === undefined) return; /* not attached to tab */
-	this.geostring = this.geodata.join();
-	loadMap(this.geostring, this.tab.id);
+    if (this.geodata.length > 0) {
+        this.geostring = this.geodata.join();
+        loadMap(this.geostring, this.tab.id);
+    }
 }
 
 /* Tab() */
