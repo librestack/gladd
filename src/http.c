@@ -657,7 +657,6 @@ http_request_t *http_read_request(int sock, int *hcount,
                 }
                 else {
                         /* read body, after skipping the blank line */
-                        syslog(LOG_DEBUG, "entering loop");
                         while ((line = http_readline(sock))) {
                                 bodyline(r, line);
                                 free(line);
