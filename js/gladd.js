@@ -2289,7 +2289,7 @@ window.setInterval = function (vCallback, nDelay /*, argumentToPass1, argumentTo
 };
 
 /* selector for elements that do not have the specified parents
- * eg. $('div.blerk').filter(':notparents(div.blah)'); */
+ * eg. $('div.blerk:notparents(div.blah)'); */
 jQuery.expr[':'].notparents = function(a, i, m) {
     return jQuery(a).parents(m[3]).length === 0;
 };
