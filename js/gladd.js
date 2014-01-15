@@ -2356,6 +2356,10 @@ Form.prototype.events = function() {
 	console.log('Form().events()');
 	var form = this;
 	var t = this.tab.tablet;
+	t.find('button.addrow').off().click(function() {
+        console.log('button.addrow');
+		return false;
+	});
 	t.find('button.cancel').off().click(function() {
 		form.tab.close();
 		return false;
@@ -2542,11 +2546,12 @@ Form.prototype.post = function() {
 Form.prototype.reset = function() {
     console.log('Form().reset()');
     var t = this.tab.tablet;
+    /*TODO: select forms, excluding forms with parent forms */
     t.find('form:not(.subform)').get(0).reset();
     /* re-populate form */
     t.find('form:not(.subform)').find('input,select').each(function() {
         if (($(this).val() !== $(this).data('old'))
-        && (!($(this).data('old') === undefined && $(this).val() === '')))
+        && ($(this).data('old') !== undefined))
         {
             $(this).val($(this).data('old'));
         }
