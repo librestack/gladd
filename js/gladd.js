@@ -2557,8 +2557,7 @@ Form.prototype.post = function() {
 Form.prototype.reset = function() {
     console.log('Form().reset()');
     var t = this.tab.tablet;
-    /* select forms, excluding forms with parent forms */
-    var f = t.find('form:notparents(form)');
+    var f = t.find('form');
     f.get(0).reset();
     /* re-populate form */
     f.find('input,select').each(function() {
@@ -2568,6 +2567,8 @@ Form.prototype.reset = function() {
             $(this).val($(this).data('old'));
         }
     });
+    /* reset subforms */
+    f.find('div.form div.tr.sub:not(.template)').remove();
 }
 
 /* add row to subform */
@@ -2577,6 +2578,21 @@ Form.prototype.rowAdd = function(subform) {
     console.log('subform object: ' + object);
     var row = subform.find('.sub.template').clone(true, true);
     row.removeClass('template');
+
+    /* reset values of cloned row */
+    row.find('input').each(function() {
+        var d = $(this).data('default');
+        if (d !== undefined) {
+            $(this).val(d);
+        }
+        else {
+            $(this).val('');
+        }
+    });
+    row.find('select').each(function() { 
+        $(this).val($(this).find('option:first').val());
+    });
+
     subform.append(row);
 }
 
