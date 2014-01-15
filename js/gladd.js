@@ -2665,23 +2665,24 @@ Form.prototype.submitErrorCustom = function(xhr, s, err) {
 Form.prototype.submitSuccess = function(xml) {
 	console.log('form submitted successfully');
 	hideSpinner();
-	//if (this.submitSuccessCustom(xml)) return;
 
 	TABS.refresh(this.collection); /* refresh any tabs for this collection */
 
 	/* We received some data back. Display it. */
 	this.id = $(xml).find('id').text();
 	if (!this.id ) console.log('id not found');
-    if (this.id && this.action === 'create') {
-        console.log('POST returned new ' + this.object + ' with id='+ this.id);
+    if (this.id) {
         this.data['FORMDATA'] = $(xml);
-        this.action = 'update';
-        this.sources = this.dataSources();
-        this.url += this.id;
+        if (this.action === 'create') {
+            console.log('POST returned new ' + this.object + ' with id='+ this.id);
+            this.action = 'update';
+            this.sources = this.dataSources();
+            this.url += this.id;
+            this.html = undefined;
+        }
         this.title = tabTitle('Edit ' + this.object + ' ' + this.id,
             this.object, this.action, [xml]);
         this.tab.setTitle(this.title);
-        this.html = undefined;
         var form = this;
         this.load()
         .done(function() {
