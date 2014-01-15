@@ -2362,12 +2362,17 @@ Form.prototype.events = function() {
 	console.log('Form().events()');
 	var form = this;
 	var t = this.tab.tablet;
-	t.find('button.addrow').off().click(function() {
-        console.log('button.addrow');
+	t.find('button.add').off().click(function() {
+        var subform = $(this).closest('div.form'); /* form parent */
+        form.rowAdd(subform);
 		return false;
 	});
 	t.find('button.cancel').off().click(function() {
 		form.tab.close();
+		return false;
+	});
+	t.find('button.del').off().click(function() {
+        $(this).closest('div.tr').remove();
 		return false;
 	});
 	t.find('button.reset').off().click(function(event) {
@@ -2563,6 +2568,16 @@ Form.prototype.reset = function() {
             $(this).val($(this).data('old'));
         }
     });
+}
+
+/* add row to subform */
+Form.prototype.rowAdd = function(subform) {
+    console.log('Form().rowAdd()');
+    var object = subform.data('object');
+    console.log('subform object: ' + object);
+    var row = subform.find('.sub.template').clone(true, true);
+    row.removeClass('template');
+    subform.append(row);
 }
 
 /* Create/Update tab with Form content */
