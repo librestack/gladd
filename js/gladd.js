@@ -2569,6 +2569,7 @@ Form.prototype.reset = function() {
     });
     /* reset subforms */
     f.find('div.form div.tr.sub:not(.template)').remove();
+    statusHide(); /* clear status Message */
 }
 
 /* add row to subform */
