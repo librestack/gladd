@@ -419,8 +419,6 @@ ssize_t http_fill_buffer(int sock)
         }
         bytes += newbytes;
 
-        //syslog(LOG_DEBUG, "buffer topped up with %i bytes", (int)newbytes);
-
         return newbytes;
 }
 
@@ -432,16 +430,22 @@ ssize_t http_fill_buffer(int sock)
 char *http_readline(int sock)
 {
         char *line = NULL;
-        char *nl;
-        int pos;
+        char *nl = NULL;
+        int pos = 0;
+        int t = 0;
         size_t ll = 0;  /* line length */
 
         line = calloc(1, LINE_MAX + 1);
         for (;;) {
                 /* fill the buffer if empty */
-                while (bytes == 0) {
+                /* loop until we have some data, or ~5s have passed */
+                for (t=0; bytes == 0; t++) {
                         if (http_fill_buffer(sock) == -1) {
                                 syslog(LOG_DEBUG, "failed to fill buffer");
+                                return line;
+                        }
+                        if (t == 5000) {
+                                syslog(LOG_DEBUG, "timeout filling buffer");
                                 return line;
                         }
                 }
@@ -563,6 +567,7 @@ http_request_t *http_read_request(int sock, int *hcount,
                 free(line);
                 return r;
         }
+        syslog(LOG_INFO, "%s", line);
         r->bytes = strlen(line);
         if (sscanf(line, "%s %s HTTP/%s", method, resource, httpv) != 3) {
                 syslog(LOG_ERR, "HTTP request invalid");
@@ -609,6 +614,7 @@ http_request_t *http_read_request(int sock, int *hcount,
         if ((ctype = http_get_header(r, "Content-Type"))
           && (clen = http_get_header(r, "Content-Length")))
         {
+                syslog(LOG_DEBUG, "reading request body");
                 errno = 0;
                 lclen = strtol(clen, NULL, 10);
                 if (errno != 0)
@@ -651,6 +657,7 @@ http_request_t *http_read_request(int sock, int *hcount,
                 }
                 else {
                         /* read body, after skipping the blank line */
+                        syslog(LOG_DEBUG, "entering loop");
                         while ((line = http_readline(sock))) {
                                 bodyline(r, line);
                                 free(line);
