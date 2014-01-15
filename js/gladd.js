@@ -2288,6 +2288,12 @@ window.setInterval = function (vCallback, nDelay /*, argumentToPass1, argumentTo
   } : vCallback, nDelay);
 };
 
+/* selector for elements that do not have the specified parents
+ * eg. $('div.blerk').filter(':notparents(div.blah)'); */
+jQuery.expr[':'].notparents = function(a, i, m) {
+    return jQuery(a).parents(m[3]).length === 0;
+};
+
 /* trim() */
 if(typeof(String.prototype.trim) === "undefined")
 {
@@ -2546,10 +2552,11 @@ Form.prototype.post = function() {
 Form.prototype.reset = function() {
     console.log('Form().reset()');
     var t = this.tab.tablet;
-    /*TODO: select forms, excluding forms with parent forms */
-    t.find('form:not(.subform)').get(0).reset();
+    /* select forms, excluding forms with parent forms */
+    var f = t.find('form:notparents(form)');
+    f.get(0).reset();
     /* re-populate form */
-    t.find('form:not(.subform)').find('input,select').each(function() {
+    f.find('input,select').each(function() {
         if (($(this).val() !== $(this).data('old'))
         && ($(this).data('old') !== undefined))
         {
