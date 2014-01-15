@@ -2302,6 +2302,7 @@ function form_url(form) {
 
 /* Create a Form, populate and display it in a Tab */
 function showForm(object, action, title, id) {
+    console.log('showForm(' + object + '.' + action + ')');
 	showSpinner();
 	var form = new Form(object, action, title, id);
 	form.load()
@@ -2405,6 +2406,7 @@ Form.prototype.finalize = function() {
     this.formatDatePickers();                   /* date pickers */ 
     this.formatRadioButtons();                  /* tune the radio */
 	this.events();
+    this.updateMap();
 }
 
 Form.prototype.formatDatePickers = function() {
@@ -2419,12 +2421,7 @@ Form.prototype.formatRadioButtons = function() {
 
 /* Does the tab for this form have a map? */
 Form.prototype.hasMap = function() {
-	if (this.tab) {
-		if (this.tab.map) {
-			return (this.tab.map.fields.length > 0);
-		}
-	}
-	return false;
+    return (this.map !== undefined);
 }
 
 /* Load HTML form + XML data sources.  Return deferred. */
@@ -2466,6 +2463,10 @@ Form.prototype.populate = function() {
 	var id = undefined;
 	var form = this;
 	this.workspace = $(this.html); /* start with base html */
+    /* set up Map */
+	if (this.workspace.filter('div.map-canvas').length !== 0) {
+        this.map = new Map();
+    }
 	this.collection = this.workspace.find('form:not(.subform)').first()
 		.attr('action');
 	var w = this.workspace.filter('div.' + this.object + '.' + this.action)
@@ -2491,7 +2492,7 @@ Form.prototype.populate = function() {
 				fld.val(tagValue); /* set field value */
 				fld.data('old', tagValue);/* note the unmodifed value */
 				if (form.hasMap()) { /* store map geo data */
-					if (form.map.fields.indexOf(tagName) != -1
+					if (MAPFIELDS[form.object].indexOf(tagName) != -1
 					&& tagValue.length > 0)
 					{
 						form.map.addGeo(tagValue);
@@ -2687,6 +2688,14 @@ Form.prototype.updateDataSources = function(data) {
 	console.log('Form().updateDataSources() done');
 }
 
+Form.prototype.updateMap = function() {
+    console.log('Form().updateMap()');
+    if (this.hasMap()) {
+        this.map.tab = this.tab;
+        this.map.load();
+    }
+}
+
 Form.prototype.validate = function() {
 	console.log('Form().validate()');
 	return customFormValidation(this.object, this.action, this.id);
@@ -2701,6 +2710,7 @@ function Map() {
 }
 
 Map.prototype.addGeo = function(s) {
+    console.log('Map().addGeo(' + s + ')');
 	this.geodata.push(s);
 }
 
@@ -2709,8 +2719,10 @@ Map.prototype.clearGeo = function() {
 }
 
 Map.prototype.load = function() {
+    console.log('Map().load()');
+    if (this.tab === undefined) return; /* not attached to tab */
 	this.geostring = this.geodata.join();
-	//loadMap(this.geostring, tab);
+	loadMap(this.geostring, this.tab.id);
 }
 
 /* Tab() */
