@@ -2359,7 +2359,9 @@ Form.prototype.events = function() {
 		form.tab.close();
 		return false;
 	});
-	t.find('button.reset').off().click(function() {
+	t.find('button.reset').off().click(function(event) {
+        event.preventDefault();
+        t.find('form:not(.subform)').get(0).reset();
 		return false;
 	});
 	t.find('button.save').off().click(function() {
@@ -2376,6 +2378,7 @@ Form.prototype.events = function() {
 		}
 		return false;
 	});
+    customBlurEvents(this.tab.id);
 }
 
 /* load some data */
@@ -2399,21 +2402,19 @@ Form.prototype.fetchData = function() {
 /* put finishing touches on form */
 Form.prototype.finalize = function() {
 	console.log('Form().finalize()');
-	//formatDatePickers(this.tab);                   /* date pickers */
-	//formatRadioButtons(tab, object);          /* tune the radio */
-	//formBlurEvents(this.tab.id);
-	//formEvents(this.tab.id, this.object, this.action, this.id);
+    this.formatDatePickers();                   /* date pickers */ 
+    this.formatRadioButtons();                  /* tune the radio */
 	this.events();
 }
 
 Form.prototype.formatDatePickers = function() {
-	console.log(this.tab.tablet.find('.datefield'));
-	/*
-	this.tab.tablet.find('.datefield').datepicker({
-		dateFormat: "yy-mm-dd",
-		constrainInput: true
-	});
-	*/
+    console.log('Form().formatDatePickers()');
+    formatDatePickers(this.tab.id);
+}
+
+Form.prototype.formatRadioButtons = function() {
+    console.log('Form().formatRadioButtons()');
+    formatRadioButtons(this.tab.id, this.object);
 }
 
 /* Does the tab for this form have a map? */
