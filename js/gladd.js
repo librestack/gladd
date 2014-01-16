@@ -2460,7 +2460,9 @@ Form.prototype.formFill = function(ctl) {
             if (fld.data('placeholder.orig') === undefined) {
                 fld.data('placeholder.orig', fld.attr('placeholder'));
             }
-            fld.attr('placeholder', $(this).text());
+            var newval = $(this).text();
+            if (fld.hasClass('currency')) newval = decimalPad(newval, 2);
+            fld.attr('placeholder', newval);
             /* field blank, so placeholder change triggers change event */
             if (fld.val() === '') fld.trigger('change');
         }
