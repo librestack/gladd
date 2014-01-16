@@ -2384,6 +2384,10 @@ Form.prototype.events = function() {
 		if (form.validate()) form.submit();
 		return false;
 	});
+	t.find('.onchange').off().change(function() {
+        form.onChange($(this));
+        return false;
+    });
 	t.find('input.price').off().change(function() {
 		var p = $(this).val();
 		if (isNaN(p)) {
@@ -2467,6 +2471,23 @@ Form.prototype.load = function() {
 		console.log('Form(' + object + '.' + action + ').load() fail');
 	});
 	return this;
+}
+
+/* handle form controls with onchange events */
+Form.prototype.onChange = function(ctl) {
+    if (ctl.hasClass('formfill')) {
+        var d = $(this.data[ctl.data('source')]);
+        var row = ctl.closest('div.tr');
+        /* find matching row in data source */
+        var r = d.find('resources row').filter(function() {
+            return $(this).find('id').text() === ctl.val();
+        });
+        /* fill row from datasource */
+        r.children().each(function() {
+            var fld = row.find('[name="' + this.tagName + '"]');
+            if (fld !== undefined) fld.val($(this).text());
+        });
+    }
 }
 
 /* Fill html form with data */
