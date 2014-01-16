@@ -2488,6 +2488,9 @@ Form.prototype.onChange = function(ctl) {
         r.children().each(function() {
             var fld = row.find('[name="' + this.tagName + '"]');
             if (fld !== undefined) {
+                if (fld.data('placeholder.orig') === undefined) {
+                    fld.data('placeholder.orig', fld.attr('placeholder'));
+                }
                 fld.attr('placeholder', $(this).text());
                 /* field blank, so placeholder change triggers change event */
                 if ($(this).val() === '') $(this).trigger('change');
@@ -2593,9 +2596,13 @@ Form.prototype.reset = function() {
         {
             $(this).val($(this).data('old'));
         }
+        /* reset placeholder */
+        if ($(this).data('placeholder.orig') !== undefined) {
+            $(this).attr('placeholder', $(this).data('placeholder.orig'));
+        }
     });
     /* reset subforms */
-    f.find('div.form div.tr.sub:not(.template)').remove();
+    f.find('div.form div.tr.sub:not(:first)').remove();
     statusHide(); /* clear status Message */
 }
 
@@ -2604,8 +2611,7 @@ Form.prototype.rowAdd = function(subform) {
     console.log('Form().rowAdd()');
     var object = subform.data('object');
     console.log('subform object: ' + object);
-    var row = subform.find('.sub.template').clone(true, true);
-    row.removeClass('template');
+    var row = subform.find('.sub:first').clone(true, true);
 
     /* reset values of cloned row */
     row.find('input').each(function() {
@@ -2615,6 +2621,10 @@ Form.prototype.rowAdd = function(subform) {
         }
         else {
             $(this).val('');
+        }
+        /* reset placeholder */
+        if ($(this).data('placeholder.orig') !== undefined) {
+            $(this).attr('placeholder', $(this).data('placeholder.orig'));
         }
     });
     row.find('select').each(function() { 
