@@ -2513,6 +2513,7 @@ Form.prototype.onChange = function(ctl) {
     if (ctl.hasClass('currency') && ctl.val() !== '' && !isNaN(ctl.val())) {
         ctl.val(decimalPad(roundHalfEven(ctl.val(), 2), 2));
     }
+    if (ctl.hasClass('sum')) this.updateFormTotals(ctl);
 }
 
 /* Fill html form with data */
@@ -2679,6 +2680,7 @@ Form.prototype.rowMultiply = function(ctl) {
                 t = decimalPad(roundHalfEven(t, 2), 2);
             }
             sum.val(t);
+            sum.trigger('change');
         });
     });
 }
@@ -2704,6 +2706,7 @@ Form.prototype.rowSum = function(ctl) {
             else if (!isNaN($(this).val())) {
                 sum.val(decimalAdd(sum.val(), $(this).val()));
             }
+            sum.trigger('change');
         });
     });
 }
@@ -2861,6 +2864,18 @@ Form.prototype.updateDataSources = function(data) {
 		this.data[sources[i]] = data[i][0];
 	}
 	console.log('Form().updateDataSources() done');
+}
+
+Form.prototype.updateFormTotals = function(ctl) {
+    console.log('Form().updateFormTotals()');
+    var t = this.tab.tablet;
+    var subtotal = Big('0.00');
+    t.find('.sum').each(function() {
+        subtotal = decimalAdd(subtotal, $(this).val());
+    });
+    var c = t.find('.subtotal');
+    if (c.hasClass('currency')) subtotal = decimalPad(subtotal, 2);
+    c.val(subtotal);
 }
 
 Form.prototype.updateMap = function() {
