@@ -2736,45 +2736,55 @@ Form.prototype.submit = function() {
 	var xml = createRequestXml();
 
 	xml += '<' + this.object + '>';
-	this.tab.tablet.find('form.' + this.object + '.' + this.action)
-	.find('input:not(.nosubmit,default):notparents(div.form)')
-    .add('select:not(.nosubmit,.default):notparents(div.form)')
+    var tag;
+	this.tab.tablet.find('div.' + this.object + '.' + this.action + ' form')
+	.find('div.td').children()
 	.each(function() {
 		var name = $(this).attr('name');
-		if (name) {
-			var o = new Object();
-			if (customFormFieldHandler($(this), o)) {
-				xml += o.xml;
-			}
-			else {
-				console.log('processing input ' + name);
-				if ($(this).attr('type') !== "checkbox") {
-					console.log(name + '=' + $(this).val());
-                    /* this is a subform entry, so add extra xml tag */
-                    /*
-					if ($(this).hasClass('sub')) {
-						xml += '<' + subobject;
-						if (subid) {
-							xml += ' id="' + subid + '"';
-							subid = null;
-						}
-						xml += '>';
-					}
-                    */
-					/* save anything that has changed */
-					if (($(this).val() !== $(this).data('old')) 
-					&& (!($(this).data('old') === undefined &&
-					$(this).val() === '')))
-					{
-						console.log(name + ' has changed from "'
-							+ $(this).data('old') + '" to "' + $(this).val()
-							+ '"');
-						xml += '<' + name + '>';
-						xml += escapeHTML($(this).val());
-						xml += '</' + name + '>';
-					}
-				}
-			}
+        /* process everything except checkboxes */
+        if ($(this).attr('type') !== "checkbox") {
+            /* not a checkbox */
+            if (name) console.log(name + '=' + $(this).val());
+            var subform = $(this).closest('div.form');
+
+            /* open subform tag? */
+            if (subform.length === 1) {
+                if ($(this).closest('div.td').is(':first-child')) {
+                    /* use data-tag if available, otherwise data-object */
+                    if (subform.data('tag') !== undefined) {
+                        tag = subform.data('tag');
+                    }
+                    else {
+                        tag = subform.data('object');
+                    }
+                    xml += '<' + tag + '>';
+                }
+            }
+
+            /* save anything that has changed */
+            if (name) {
+                if ((!$(this).hasClass('nosubmit')
+                && $(this).val() !== $(this).data('old')) 
+                && (!($(this).data('old') === undefined &&
+                $(this).val() === '')))
+                {
+                    console.log(name + ' has changed from "'
+                        + $(this).data('old') + '" to "' + $(this).val()
+                        + '"');
+                    xml += '<' + name + '>';
+                    xml += escapeHTML($(this).val());
+                    xml += '</' + name + '>';
+                }
+            }
+
+            /* close subform tag ? */
+            if (subform.length === 1) {
+                if ($(this).closest('div.td').is(':last-child')
+                && $(this).is(':last-child')) 
+                {
+                    xml += '</' + tag + '>';
+                }
+            }
 		}
 	});
 	this.xml = xml;
@@ -2883,6 +2893,7 @@ Form.prototype.validate = function() {
             b = false;
         }
     });
+    /* TODO: minOccurs subform items */
     if (b) b = customFormValidation(this.object, this.action, this.id);
 
     return b;
