@@ -2389,11 +2389,12 @@ Form.prototype.events = function() {
         return false;
     });
 	t.find('input.price').off().change(function() {
+        console.log('input.price.change()');
 		var p = $(this).val();
 		if (isNaN(p)) {
 			$(this).val('');
 		}
-		else {
+		else if ($(this).val() !== '') {
 			$(this).val(decimalPad($(this).val(),2));
 		}
 		return false;
@@ -2475,6 +2476,7 @@ Form.prototype.load = function() {
 
 /* handle form controls with onchange events */
 Form.prototype.onChange = function(ctl) {
+    console.log('Form().onChange()');
     if (ctl.hasClass('formfill')) {
         var d = $(this.data[ctl.data('source')]);
         var row = ctl.closest('div.tr');
@@ -2485,7 +2487,11 @@ Form.prototype.onChange = function(ctl) {
         /* fill row from datasource */
         r.children().each(function() {
             var fld = row.find('[name="' + this.tagName + '"]');
-            if (fld !== undefined) fld.val($(this).text());
+            if (fld !== undefined) {
+                fld.attr('placeholder', $(this).text());
+                /* field blank, so placeholder change triggers change event */
+                if ($(this).val() === '') $(this).trigger('change');
+            }
         });
     }
 }
