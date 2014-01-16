@@ -2586,11 +2586,23 @@ Form.prototype.populate = function() {
 }
 
 Form.prototype._populateSubforms = function() {
+    console.log('Form()._populateSubforms()');
 	var form = this;
-	this.workspace.find('form.subform').each(function() {
-		var view = $(this).attr('action');
-		loadSubformData(view, form.id, form.tab.id);
-	});
+    var subform = this.workspace.find('form.subform');
+    if (subform.length === 0) {
+        subform = this.workspace.find('form div.form');
+        subform.each(function() {
+            var view = $(this).data('tag') + 's';
+            loadSubformData(view, form.id, form.tab.id);
+        });
+    }
+    else {
+        /* deprecated - used by organisations form */
+        subform.each(function() {
+            var view = $(this).attr('action');
+            loadSubformData(view, form.id, form.tab.id);
+        });
+    }
 }
 
 /* POST data */
