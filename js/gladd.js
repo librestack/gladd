@@ -2737,7 +2737,8 @@ Form.prototype.submit = function() {
 
 	xml += '<' + this.object + '>';
 	this.tab.tablet.find('form.' + this.object + '.' + this.action)
-	.find('input:not(.nosubmit,default),select:not(.nosubmit,.default)')
+	.find('input:not(.nosubmit,default):notparents(div.form)')
+    .add('select:not(.nosubmit,.default):notparents(div.form)')
 	.each(function() {
 		var name = $(this).attr('name');
 		if (name) {
@@ -2746,16 +2747,12 @@ Form.prototype.submit = function() {
 				xml += o.xml;
 			}
 			else {
-				if (name === 'subid') {
-					subid = $(this).val()
-				}
 				console.log('processing input ' + name);
-				if ($(this).attr('type') == "checkbox") {
-				}
-				else {
-					console.log($(this).val());
+				if ($(this).attr('type') !== "checkbox") {
+					console.log(name + '=' + $(this).val());
+                    /* this is a subform entry, so add extra xml tag */
+                    /*
 					if ($(this).hasClass('sub')) {
-						/* this is a subform entry, so add extra xml tag */
 						xml += '<' + subobject;
 						if (subid) {
 							xml += ' id="' + subid + '"';
@@ -2763,6 +2760,7 @@ Form.prototype.submit = function() {
 						}
 						xml += '>';
 					}
+                    */
 					/* save anything that has changed */
 					if (($(this).val() !== $(this).data('old')) 
 					&& (!($(this).data('old') === undefined &&
@@ -2774,10 +2772,6 @@ Form.prototype.submit = function() {
 						xml += '<' + name + '>';
 						xml += escapeHTML($(this).val());
 						xml += '</' + name + '>';
-					}
-					if ($(this).hasClass('endsub')) {
-						/* this is a subform entry, so close extra xml tag */
-						xml += '</' + subobject + '>';
 					}
 				}
 			}
@@ -2867,7 +2861,31 @@ Form.prototype.updateMap = function() {
 
 Form.prototype.validate = function() {
 	console.log('Form().validate()');
-	return customFormValidation(this.object, this.action, this.id);
+
+    /* check required fields are filled in */
+    var t = this.tab.tablet;
+    var b = true;
+    t.find('[required="required"]').each(function() {
+        if (($(this).is('select') && $(this).val() < 0)
+        || ($(this).is('input') && $(this).val() === ''))
+        {
+            console.log($(this).attr('name'));
+            if (b) {
+                if ($(this).data('required-message') !== undefined) {
+                    statusMessage($(this).data('required-message'),
+                        STATUS_WARN);
+                }
+                else {
+                    statusMessage($(this).attr('name') + ' is required',
+                        STATUS_WARN);
+                }
+            }
+            b = false;
+        }
+    });
+    if (b) b = customFormValidation(this.object, this.action, this.id);
+
+    return b;
 }
 
 /* Map() */
