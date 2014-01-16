@@ -2388,17 +2388,6 @@ Form.prototype.events = function() {
         form.onChange($(this));
         return false;
     });
-	t.find('input.price').off().change(function() {
-        console.log('input.price.change()');
-		var p = $(this).val();
-		if (isNaN(p)) {
-			$(this).val('');
-		}
-		else if ($(this).val() !== '') {
-			$(this).val(decimalPad($(this).val(),2));
-		}
-		return false;
-	});
     customBlurEvents(this.tab.id);
 }
 
@@ -2439,6 +2428,29 @@ Form.prototype.formatRadioButtons = function() {
     formatRadioButtons(this.tab.id, this.object);
 }
 
+/* fill form row based on data source */
+Form.prototype.formFill = function(ctl) {
+    console.log('Form().formFill()');
+    var d = $(this.data[ctl.data('source')]);
+    var row = ctl.closest('div.tr');
+    /* find matching row in data source */
+    var r = d.find('resources row').filter(function() {
+        return $(this).find('id').text() === ctl.val();
+    });
+    /* fill row from datasource */
+    r.children().each(function() {
+        var fld = row.find('[name="' + this.tagName + '"]');
+        if (fld !== undefined) {
+            if (fld.data('placeholder.orig') === undefined) {
+                fld.data('placeholder.orig', fld.attr('placeholder'));
+            }
+            fld.attr('placeholder', $(this).text());
+            /* field blank, so placeholder change triggers change event */
+            if (fld.val() === '') fld.trigger('change');
+        }
+    });
+}
+
 /* Does the tab for this form have a map? */
 Form.prototype.hasMap = function() {
     return (this.map !== undefined);
@@ -2477,25 +2489,11 @@ Form.prototype.load = function() {
 /* handle form controls with onchange events */
 Form.prototype.onChange = function(ctl) {
     console.log('Form().onChange()');
-    if (ctl.hasClass('formfill')) {
-        var d = $(this.data[ctl.data('source')]);
-        var row = ctl.closest('div.tr');
-        /* find matching row in data source */
-        var r = d.find('resources row').filter(function() {
-            return $(this).find('id').text() === ctl.val();
-        });
-        /* fill row from datasource */
-        r.children().each(function() {
-            var fld = row.find('[name="' + this.tagName + '"]');
-            if (fld !== undefined) {
-                if (fld.data('placeholder.orig') === undefined) {
-                    fld.data('placeholder.orig', fld.attr('placeholder'));
-                }
-                fld.attr('placeholder', $(this).text());
-                /* field blank, so placeholder change triggers change event */
-                if ($(this).val() === '') $(this).trigger('change');
-            }
-        });
+    if (ctl.hasClass('formfill')) this.formFill(ctl);
+    if (ctl.hasClass('addend')) this.rowSum(ctl);
+    if (ctl.hasClass('multiplicand')) this.rowMultiply(ctl);
+    if (ctl.hasClass('currency') && ctl.val() !== '' && !isNaN(ctl.val())) {
+        ctl.val(decimalPad(roundHalfEven(ctl.val(), 2), 2));
     }
 }
 
@@ -2599,6 +2597,7 @@ Form.prototype.reset = function() {
         /* reset placeholder */
         if ($(this).data('placeholder.orig') !== undefined) {
             $(this).attr('placeholder', $(this).data('placeholder.orig'));
+            $(this).trigger('change');
         }
     });
     /* reset subforms */
@@ -2633,6 +2632,64 @@ Form.prototype.rowAdd = function(subform) {
 
     subform.append(row);
 }
+
+/* muliply each .multiplicand for this row, placing the result in .sum */
+Form.prototype.rowMultiply = function(ctl) {
+    console.log('Form().rowMultiply()');
+    var row = ctl.closest('div.tr');
+
+    /* start with 1, and multiply by each .multiplicand to find .sum */
+    row.find('.sum').each(function() {
+        $(this).val('1.00');
+        var sum = $(this);
+        row.find('.multiplicand').each(function() {
+            var p = Big(sum.val());
+            var q = Big(0);
+            if ($(this).val() === '') {
+                /* val is blank, use placeholder if numeric */
+                if ($(this).attr('placeholder') !== undefined 
+                && !isNaN($(this).attr('placeholder'))) 
+                {
+                    q = Big($(this).attr('placeholder'));
+                }
+            }
+            else if (!isNaN($(this).val())) {
+                q = Big($(this).val());
+            }
+            var t = p.times(q);
+            if (sum.hasClass('currency')) {
+                t = decimalPad(roundHalfEven(t, 2), 2);
+            }
+            sum.val(t);
+        });
+    });
+}
+
+/* sum each .addend for this row, placing the result in .sum */
+Form.prototype.rowSum = function(ctl) {
+    console.log('Form().rowSum()');
+    var row = ctl.closest('div.tr');
+
+    /* for controls with class "sum", update with the sum of all "addends"*/
+    row.find('.sum').each(function() {
+        $(this).val('0.00');
+        var sum = $(this);
+        row.find('.addend').each(function() {
+            if ($(this).val() === '') {
+                /* val is blank, use placeholder if numeric */
+                if ($(this).attr('placeholder') !== undefined 
+                && !isNaN($(this).attr('placeholder'))) 
+                {
+                    sum.val(decimalAdd(sum.val(),$(this).attr('placeholder')));
+                }
+            }
+            else if (!isNaN($(this).val())) {
+                sum.val(decimalAdd(sum.val(), $(this).val()));
+            }
+        });
+    });
+}
+
 
 /* Create/Update tab with Form content */
 Form.prototype.show = function(tab) {
