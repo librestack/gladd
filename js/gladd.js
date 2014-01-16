@@ -2753,9 +2753,11 @@ Form.prototype.submit = function() {
 
 	xml += '<' + this.object + '>';
     var tag;
-	this.tab.tablet.find('div.' + this.object + '.' + this.action + ' form')
-	.find('div.td').children()
-	.each(function() {
+    var form = this.tab.tablet.find('div.' + this.object + '.' + this.action 
+        + ' form');
+    var inputs = form.find('div.td').children();
+    if (inputs.length === 0) inputs = form.find('input,select');
+    inputs.each(function() {
 		var name = $(this).attr('name');
         /* process everything except checkboxes */
         if ($(this).attr('type') !== "checkbox") {
