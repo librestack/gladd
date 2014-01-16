@@ -2431,8 +2431,24 @@ Form.prototype.formatRadioButtons = function() {
 /* fill form row based on data source */
 Form.prototype.formFill = function(ctl) {
     console.log('Form().formFill()');
-    var d = $(this.data[ctl.data('source')]);
     var row = ctl.closest('div.tr');
+
+    /* if control is select and nothing selected */
+    if (ctl.is('select')) {
+        if (ctl.val() === ctl.find('option:first').val()) {
+            /* nothing selected, reset placeholders */
+            row.find('input').each(function() {
+                if ($(this).data('placeholder.orig') !== undefined) {
+                    $(this).attr('placeholder',
+                        $(this).data('placeholder.orig'));
+                    $(this).trigger('change');
+                }
+            });
+            return this;
+        }
+    }
+
+    var d = $(this.data[ctl.data('source')]);
     /* find matching row in data source */
     var r = d.find('resources row').filter(function() {
         return $(this).find('id').text() === ctl.val();
