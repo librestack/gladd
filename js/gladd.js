@@ -2302,6 +2302,17 @@ if(typeof(String.prototype.trim) === "undefined")
 	};
 }
 
+/* currency format 
+ * (bankers rounding => 2 decimal places, comma-separate '000s */
+if (typeof (String.prototype.formatCurrency) === "undefined") {
+    String.prototype.formatCurrency = function() {
+        var tmp = String(this);
+        tmp = roundHalfEven(this, 2);
+        tmp = decimalPad(tmp, 2);
+        return formatThousands(tmp);
+    };
+}
+
 function form_url(form) {
 	return g_url_form + form.object + '/' + form.action + '.html';
 }
@@ -2869,12 +2880,14 @@ Form.prototype.updateDataSources = function(data) {
 Form.prototype.updateFormTotals = function(ctl) {
     console.log('Form().updateFormTotals()');
     var t = this.tab.tablet;
-    var subtotal = Big('0.00');
+    var subtotal = '0.00';
     t.find('.sum').each(function() {
         subtotal = decimalAdd(subtotal, $(this).val());
     });
     var c = t.find('.subtotal');
-    if (c.hasClass('currency')) subtotal = decimalPad(subtotal, 2);
+    if (c.hasClass('currency')) {
+        subtotal = String(subtotal).formatCurrency();
+    }
     c.val(subtotal);
 }
 
