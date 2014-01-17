@@ -2406,6 +2406,7 @@ Form.prototype.events = function() {
 	});
 	t.find('button.del').off().click(function() {
         $(this).closest('div.tr').remove();
+        form.updateAllTotals();
 		return false;
 	});
 	t.find('button.reset').off().click(function(event) {
@@ -2451,6 +2452,7 @@ Form.prototype.finalize = function() {
     this.formatRadioButtons();                  /* tune the radio */
 	this.events();
     this.updateMap();
+    this.updateAllTotals();
 }
 
 Form.prototype.formatDatePickers = function() {
@@ -2613,7 +2615,7 @@ Form.prototype._populateSubforms = function() {
     console.log('Form()._populateSubforms()');
 	var form = this;
     var subform = this.workspace.find('form.subform');
-    var i, j, d, s, tag;
+    var i, d, tag;
     if (subform.length === 0) {
         subform = this.workspace.find('form div.form');
         subform.each(function() {
@@ -2629,7 +2631,8 @@ Form.prototype._populateSubforms = function() {
                 $(d).children().each(function(k, tag) {
                     var tagName = tag.tagName;
                     var tagValue = $(tag).text();
-                    subrows.eq(i).find('[name="'+ tagName +'"]').val(tagValue);
+                    var ctl = subrows.eq(i).find('[name="'+ tagName +'"]');
+                    ctl.val(tagValue);
                 });
             });
         });
@@ -2777,7 +2780,6 @@ Form.prototype.rowSum = function(ctl) {
         });
     });
 }
-
 
 /* Create/Update tab with Form content */
 Form.prototype.show = function(tab) {
@@ -2933,6 +2935,19 @@ Form.prototype.updateDataSources = function(data) {
 		this.data[sources[i]] = data[i][0];
 	}
 	console.log('Form().updateDataSources() done');
+}
+
+/* refresh all totals on form */
+Form.prototype.updateAllTotals = function() {
+    console.log('Form().updateAllTotals()');
+    var form = this;
+    var t = this.tab.tablet;
+    t.find('input.onchange.multiplicand').each(function() {
+        form.rowMultiply($(this));
+    });
+    t.find('input.onchange.addend').each(function() {
+        form.rowSum(this);
+    });
 }
 
 Form.prototype.updateFormTotals = function(ctl) {
