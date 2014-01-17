@@ -2405,8 +2405,7 @@ Form.prototype.events = function() {
 		return false;
 	});
 	t.find('button.del').off().click(function() {
-        $(this).closest('div.tr').remove();
-        form.updateAllTotals();
+        form.rowDelete($(this));
 		return false;
 	});
 	t.find('button.reset').off().click(function(event) {
@@ -2628,6 +2627,8 @@ Form.prototype._populateSubforms = function() {
             }
             subrows = subform.find('div.subformwrapper div.tr');
             $.each(datarows, function(i, d) {
+                var id = $(d).find('id');
+                if (id.length === 1) subrows.eq(i).data('id', id.text());
                 $(d).children().each(function(k, tag) {
                     var tagName = tag.tagName;
                     var tagValue = $(tag).text();
@@ -2694,9 +2695,10 @@ Form.prototype.reset = function() {
 Form.prototype.rowAdd = function(subform) {
     console.log('Form().rowAdd()');
     var object = subform.data('object');
-    var row = subform.find('.sub:first').clone(true, true); /* FIXME */
+    var row = subform.find('div.subformwrapper div.tr:first').clone(true,true);
 
     /* reset values of cloned row */
+    row.removeData();
     row.find('input').each(function() {
         var d = $(this).data('default');
         if (d !== undefined) {
@@ -2722,6 +2724,25 @@ Form.prototype.rowAdd = function(subform) {
     else {
         subform.append(row);
     }
+}
+
+/* Delete a row.  Actually, we hide it and mark it deleted so it is deleted
+ * when we save. */
+Form.prototype.rowDelete = function(ctl) {
+    console.log('Form().rowDelete()');
+    var row = ctl.closest('div.tr')
+    var id = row.data('id');
+    if (id === undefined) { /* row has never been saved, just remove it */
+        row.remove();
+    }
+    else {                  /* row needs to be marked deleted on the server */
+        row.hide();
+        var td = row.find('div.td');
+        td.children(':not(.stet)').remove();
+        td.append('<input type="hidden"/>'); /* placeholder for record */
+        row.data('deleted', 'true');
+    }
+    this.updateAllTotals();
 }
 
 /* muliply each .multiplicand for this row, placing the result in .sum */
@@ -2827,7 +2848,9 @@ Form.prototype.submit = function() {
 
             /* open subform tag? */
             if (subform.length === 1) {
-                if ($(this).closest('div.td').is(':first-child')) {
+                if ($(this).closest('div.td').is(':first-child')
+                && $(this).is(':first-child')) 
+                {
                     /* use data-tag if available, otherwise data-object */
                     if (subform.data('tag') !== undefined) {
                         tag = subform.data('tag');
@@ -2835,7 +2858,13 @@ Form.prototype.submit = function() {
                     else {
                         tag = subform.data('object');
                     }
-                    xml += '<' + tag + '>';
+                    /* tack in attributes */
+                    var attrs = '';
+                    var id = $(this).closest('div.tr').data('id');
+                    var del = $(this).closest('div.tr').data('deleted');
+                    if (id !== undefined) attrs += ' id="' + id + '"';
+                    if (del !== undefined) attrs += ' is_deleted="true"';
+                    xml += '<' + tag + attrs + '>';
                 }
             }
 
