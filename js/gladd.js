@@ -2685,6 +2685,8 @@ Form.prototype.reset = function() {
     });
     /* reset subforms */
     f.find('div.form div.tr.sub:not(:first)').remove();
+    this._populateSubforms();
+    this.updateAllTotals();
     statusHide(); /* clear status Message */
 }
 
