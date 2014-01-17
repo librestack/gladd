@@ -2038,7 +2038,8 @@ function hideSpinner() {
 /* return url for collection */
 function collection_url(collection) {
 	var url;
-	url =  '/' + g_instance + '/' + g_business + '/' + collection + '/';
+	url =  '/' + g_instance + '/' + g_business + '/' + collection;
+    if (collection.substr(collection.length-1, 1) !== '/') url += '/';
 	return url;
 }
 
@@ -2377,11 +2378,13 @@ Form.prototype.customXML = function() {
 }
 
 Form.prototype.dataSources = function() {
+    var sources;
     if (FORMDATA !== undefined) {
         if (FORMDATA[this.object] !== undefined) {
-            return FORMDATA[this.object][this.action];
+            sources = FORMDATA[this.object][this.action].slice();
         }
     }
+    return sources;
 }
 
 /* Set up Form events */
@@ -2431,7 +2434,9 @@ Form.prototype.fetchData = function() {
 	}
     if (this.sources !== undefined) {
         for (var i=0, l=this.sources.length; i < l; i++) {
-            var url = collection_url(this.sources[i]);
+            var collection = this.sources[i].replace('{id}', this.id);
+            if (this.sources[i] !== collection) this.sources[i] = collection;
+            var url = collection_url(collection);
             d.push(getXML(url));
         }
     }
@@ -2608,11 +2613,25 @@ Form.prototype._populateSubforms = function() {
     console.log('Form()._populateSubforms()');
 	var form = this;
     var subform = this.workspace.find('form.subform');
+    var i, j, d, s, tag;
     if (subform.length === 0) {
         subform = this.workspace.find('form div.form');
         subform.each(function() {
-            var view = $(this).data('tag') + 's';
-            loadSubformData(view, form.id, form.tab.id);
+            var source = $(this).data('tag') + 's/' + form.id + '/';
+            var data = $(form.data[source]);
+            var datarows = data.find('row');
+            var subrows = subform.find('div.subformwrapper div.tr');
+            for (i = subrows.length; i < datarows.length; i++) {
+                form.rowAdd(subform);
+            }
+            subrows = subform.find('div.subformwrapper div.tr');
+            $.each(datarows, function(i, d) {
+                $(d).children().each(function(k, tag) {
+                    var tagName = tag.tagName;
+                    var tagValue = $(tag).text();
+                    subrows.eq(i).find('[name="'+ tagName +'"]').val(tagValue);
+                });
+            });
         });
     }
     else {
@@ -2670,8 +2689,7 @@ Form.prototype.reset = function() {
 Form.prototype.rowAdd = function(subform) {
     console.log('Form().rowAdd()');
     var object = subform.data('object');
-    console.log('subform object: ' + object);
-    var row = subform.find('.sub:first').clone(true, true);
+    var row = subform.find('.sub:first').clone(true, true); /* FIXME */
 
     /* reset values of cloned row */
     row.find('input').each(function() {
@@ -2691,7 +2709,14 @@ Form.prototype.rowAdd = function(subform) {
         $(this).val($(this).find('option:first').val());
     });
 
-    subform.append(row);
+    var wrapper = subform.find('div.subformwrapper');
+    if (wrapper.length !== 0) {
+        /* subform has subformwrapper, so append in here */
+        wrapper.append(row);
+    }
+    else {
+        subform.append(row);
+    }
 }
 
 /* muliply each .multiplicand for this row, placing the result in .sum */
