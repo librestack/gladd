@@ -69,7 +69,21 @@ $(document).ready(function() {
 	});
 
 	$(document).keypress(docKeypress);
+
+    siteEvents();
 });
+
+/* attach delegated site-wide events */
+function siteEvents() {
+    console.log('siteEvents()');
+    var site = $('div#sitediv');
+
+    site.on('click', 'a.tablink', function(e) {
+        e.preventDefault();
+        clickTabLink(this);
+        return false;
+    });
+}
 
 /* to be overridden in app */
 function docKeypress() {
@@ -468,9 +482,11 @@ function clickMenu(event) {
     }
 }
 
-function clickTabLink(event) {
-	event.preventDefault();
-	showHTML($(this).attr("href"), 'Help' , false);
+function clickTabLink(ctl) {
+    var url = $(ctl).attr("href");
+    console.log('clickTabLink(' + url + ')');
+	showHTML(url, 'Help' , false);
+    return ctl;
 }
 
 /*****************************************************************************/
@@ -2373,6 +2389,9 @@ Form.prototype.events = function() {
 	console.log('Form().events()');
 	var form = this;
 	var t = this.tab.tablet;
+	t.find('a.tablink').off().click(function() {
+        clickTabLink()
+    });
 	t.find('button.add').off().click(function() {
         var subform = $(this).closest('div.form'); /* form parent */
         form.rowAdd(subform);
@@ -3099,6 +3118,13 @@ Tab.prototype.close = function() {
 	return this;
 };
 
+/* Set up Tab events */
+Tab.prototype.events = function() {
+	console.log('Tab().events()');
+	var tab = this;
+	var t = this.tablet;
+}
+
 /* perform jquery select on tab contents */
 Tab.prototype.find = function(selector) {
 	return this.tablet.find(selector);
@@ -3119,6 +3145,7 @@ Tab.prototype.setContent = function(content) {
 	var statusmsg = t.find('.statusmsg').detach();/* preserve status msg */
 	t.empty().append(content);
 	if (statusmsg) t.find('.statusmsg').replaceWith(statusmsg);
+    this.events();
 	return this;
 };
 
