@@ -3005,6 +3005,7 @@ Form.prototype.updateMap = function() {
 
 Form.prototype.validate = function() {
 	console.log('Form().validate()');
+    statusHide();
 
     /* check required fields are filled in */
     var t = this.tab.tablet;
