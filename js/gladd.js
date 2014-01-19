@@ -32,7 +32,7 @@ var g_tabid = 0;
 var g_max_tabtitle = '48'; /* max characters to allow in tab title */
 var g_session = false;
 var TABS = new Tabs();
-var g_timeout = 5000; /* timeout for ajax requests */
+var g_timeout = 10000; /* timeout for ajax requests */
 
 var STATUS_INFO = 1;
 var STATUS_WARN = 2;
