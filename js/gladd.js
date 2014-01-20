@@ -2169,11 +2169,11 @@ function showBusinessSelector(xml) {
 /*****************************************************************************/
 /* Switch to the selected business */
 function switchBusiness(business) {
-	/* hide content of active tab */
-	$('.tablet.active').addClass('hidden');
+	/* hide content of tabs */
+	$('div.tablet').addClass('hidden');
 
-	/* hide all tabheads for this business */
-	$('.tabhead.business' + g_business).each(function() {
+	/* hide all tabheads */
+	$('li.tabhead').each(function() {
 		$(this).addClass('hidden');
 	});
 
@@ -2188,10 +2188,10 @@ function switchBusiness(business) {
 	});
 
 	/* unhide tabs for new business */
-	$('.tabhead.business' + g_business).each(function() {
+	$('li.tabhead.business' + g_business).each(function() {
 		$(this).removeClass('hidden');
 	});
-	$('.tablet.business' + g_business).each(function() {
+	$('div.tablet.business' + g_business).each(function() {
 		$(this).removeClass('hidden');
 	});
 }
