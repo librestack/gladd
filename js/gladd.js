@@ -3029,10 +3029,17 @@ Form.prototype.validate = function() {
             b = false;
         }
     });
+    /* TODO: check fields with class datefield are dates */
     /* TODO: minOccurs subform items */
-    if (b) b = customFormValidation(this.object, this.action, this.id);
+    //if (b) b = customFormValidation(this.object, this.action, this.id);
+    if (b) b = this.validateCustom();
 
     return b;
+}
+
+/* override in application */
+Form.prototype.validateCustom = function() {
+    return true;
 }
 
 /* Map() */
