@@ -2634,6 +2634,7 @@ Form.prototype._populateSubforms = function() {
                     var tagValue = $(tag).text();
                     var ctl = subrows.eq(i).find('[name="'+ tagName +'"]');
                     ctl.val(tagValue);
+                    if (ctl.hasClass('formfill')) form.formFill(ctl);
                 });
             });
         });
