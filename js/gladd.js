@@ -3024,6 +3024,7 @@ Form.prototype.validate = function() {
                     statusMessage($(this).attr('name') + ' is required',
                         STATUS_WARN);
                 }
+                $(this).focus();
             }
             b = false;
         }
