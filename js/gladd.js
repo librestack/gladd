@@ -2620,7 +2620,11 @@ Form.prototype._populateSubforms = function() {
     if (subform.length === 0) {
         subform = this.workspace.find('form div.form');
         subform.each(function() {
-            var source = $(this).data('tag') + 's/' + form.id + '/';
+            var source = $(this).data('source');
+            if (source === undefined) {
+                source = $(this).data('tag') + 's';
+            }
+            source += '/' + form.id + '/';
             var data = $(form.data[source]);
             var datarows = data.find('row');
             var subrows = subform.find('div.subformwrapper div.tr');
