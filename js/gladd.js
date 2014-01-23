@@ -2381,7 +2381,9 @@ Form.prototype.dataSources = function() {
     var sources;
     if (FORMDATA !== undefined) {
         if (FORMDATA[this.object] !== undefined) {
-            sources = FORMDATA[this.object][this.action].slice();
+            if (FORMDATA[this.object][this.action] !== undefined) {
+                sources = FORMDATA[this.object][this.action].slice();
+            }
         }
     }
     return sources;
