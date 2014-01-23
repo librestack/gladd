@@ -3084,11 +3084,13 @@ function Tab(title, content, activate, collection, refresh) {
 	/* if exists, update content */
 	var tab = TABS.byTitle[title];
 	if (tab) {
-		console.log('Tab with title "' + title + '" exists.  Updating.');
-		if (content) { tab.setContent(content); }
-		if (activate) { tab.activate(); }
-		return tab;
-	}
+        if (tab.business === g_business) {
+            console.log('Tab with title "' + title + '" exists.  Updating.');
+            if (content) { tab.setContent(content); }
+            if (activate) { tab.activate(); }
+            return tab;
+        }
+    }
 
 	this.title = title;
 	TABS.add(this);
