@@ -462,15 +462,18 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         }
         free(xsl);
 
-        /* connect to database */
-        db_connect(db);
+        /* connect to database, if not already */
+        if (!db->conn) db_connect(db);
 
         syslog(LOG_DEBUG, "Executing SQL");
 
         /* execute sql */
         if (sqltoxml(db, sql, NULL, &xml, 1) < 0) {
                 free(sql);
-                syslog(LOG_ERR, "xsltpost sql execution failed");
+                syslog(LOG_ERR, "xsltpost sql execution failed. ROLLBACK");
+                /* rollback transaction and/or disconnect */
+                db_exec_sql(db, "ROLLBACK;");
+                if (config->pipelining == 0) db_disconnect(db);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(sql);
@@ -533,7 +536,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         set_headers(&r); /* set any additional headers */
         respond(sock, r);
         free(r);
-        db_disconnect(db);
+        if (config->pipelining != 0) db_disconnect(db);
 
         syslog(LOG_DEBUG, "xsltpost complete");
 
