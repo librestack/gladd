@@ -458,7 +458,9 @@ function clickMenu(event) {
 
     console.log('clickMenu()');
 
-	if ($(this).attr("href") == '#') {
+	if ($(this).hasClass('disabled')) {
+    }
+	else if ($(this).attr("href") == '#' || $(this).hasClass('disabled')) {
 		console.log('Doing nothing, successfully');
 		ok = true;
 	}
@@ -478,7 +480,7 @@ function clickMenu(event) {
 		}
 	}
     if (!ok) {
-        addTab("null", "<h2>Feature Not Available Yet</h2>", true);
+        addTab("Not Available", "<h2>Feature Not Available Yet</h2>", true);
     }
 }
 
