@@ -528,8 +528,14 @@ size_t http_read_body(int sock, char **body, long lclen)
         if (config->debug == 1) {
                 FILE *fd;
                 fd = fopen("/tmp/lastpost", "w");
-                fprintf(fd, "%s", *body);
-                fclose(fd);
+                if (fd != NULL) {
+                        fprintf(fd, "%s", *body);
+                        fclose(fd);
+                }
+                else {
+                        syslog(LOG_DEBUG, 
+                                "unable to open /tmp/lastpost for writing");
+                }
         }
 
         return size;
