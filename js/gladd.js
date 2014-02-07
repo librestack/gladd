@@ -2433,9 +2433,12 @@ Form.prototype.fetchData = function() {
 	console.log('Form().fetchData()');
 	var d = new Array(); /* array of deferreds */
 	d.push(getHTML(form_url(this)));
-	if (this.action !== 'create' && this['FORMDATA'] === undefined) {
+	if (this.action !== 'create' && this['FORMDATA'] === undefined 
+    && this.id !== undefined)
+    {
 		d.push(getXML(collection_url(this.collection) + this.id));
 	}
+    var l = 0;
     if (this.sources !== undefined) {
         for (var i=0, l=this.sources.length; i < l; i++) {
             var collection = this.sources[i].replace('{id}', this.id);
