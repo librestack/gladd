@@ -2579,12 +2579,12 @@ Form.prototype.populate = function() {
 
 	var w = this.workspace.filter('div.' + this.object + '.' + this.action)
 		.first();
+    /* populate combos */
+    w.find('select.populate:not(.sub)').each(function() {
+        var xml = form.data[$(this).attr('data-source')];
+        $(this).populate(xml);
+    });
     if (!nodata) {
-        /* populate combos */
-        w.find('select.populate:not(.sub)').each(function() {
-            var xml = form.data[$(this).attr('data-source')];
-            $(this).populate(xml);
-        });
         /* populate form fields using first xml doc */
         if (this.data["FORMDATA"]) {
             this.data["FORMDATA"].find('resources row').first().children()
