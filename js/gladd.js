@@ -2562,9 +2562,8 @@ Form.prototype.onChange = function(ctl) {
 /* Fill html form with data */
 Form.prototype.populate = function() {
 	console.log('Form().populate()');
-	if (this.data.length == 0) {
-		console.log('No data to populate form.');
-	}
+	var nodata = (this.data.length === 0 || this.data.length === undefined);
+	if (nodata) console.log('No data to populate form.');
 	var id = undefined;
 	var form = this;
 	this.workspace = $(this.html); /* start with base html */
@@ -2572,48 +2571,54 @@ Form.prototype.populate = function() {
 	if (this.workspace.filter('div.map-canvas').length !== 0) {
         this.map = new Map();
     }
-	this.collection = this.workspace.find('form:not(.subform)').first()
+
+    /* override Form collection with action attribute, if it exists */
+    var collection = this.workspace.find('form:not(.subform)').first()
 		.attr('action');
+   if (collection !== undefined) this.collection = collection;
+
 	var w = this.workspace.filter('div.' + this.object + '.' + this.action)
 		.first();
-	/* populate combos */
-	w.find('select.populate:not(.sub)').each(function() {
-		var xml = form.data[$(this).attr('data-source')];
-		$(this).populate(xml);
-	});
-	/* populate form fields using first xml doc */
-	if (this.data["FORMDATA"]) {
-		this.data["FORMDATA"].find('resources row').first().children()
-		.each(function()
-		{
-			var tagName = this.tagName;
-			var tagValue = $(this).text();
-			console.log(tagName + '=' + tagValue);
-			if (tagName == 'id' || tagName == this.object) {
-				form.id = tagValue; /* grab id */
-			}
-			var fld = w.find('[name="' + tagName + '"]');
-			if (fld.length > 0) {
-				fld.val(tagValue); /* set field value */
-				fld.data('old', tagValue);/* note the unmodifed value */
-				if (form.hasMap()) { /* store map geo data */
-					if (MAPFIELDS[form.object].indexOf(tagName) != -1
-					&& tagValue.length > 0)
-					{
-						form.map.addGeo(tagValue);
-					}
-				}
-			}
-			else {
-				console.log('field "' + tagName + '" not found on form');
-			}
-		});
-	}
+    if (!nodata) {
+        /* populate combos */
+        w.find('select.populate:not(.sub)').each(function() {
+            var xml = form.data[$(this).attr('data-source')];
+            $(this).populate(xml);
+        });
+        /* populate form fields using first xml doc */
+        if (this.data["FORMDATA"]) {
+            this.data["FORMDATA"].find('resources row').first().children()
+            .each(function()
+            {
+                var tagName = this.tagName;
+                var tagValue = $(this).text();
+                console.log(tagName + '=' + tagValue);
+                if (tagName == 'id' || tagName == this.object) {
+                    form.id = tagValue; /* grab id */
+                }
+                var fld = w.find('[name="' + tagName + '"]');
+                if (fld.length > 0) {
+                    fld.val(tagValue); /* set field value */
+                    fld.data('old', tagValue);/* note the unmodifed value */
+                    if (form.hasMap()) { /* store map geo data */
+                        if (MAPFIELDS[form.object].indexOf(tagName) != -1
+                        && tagValue.length > 0)
+                        {
+                            form.map.addGeo(tagValue);
+                        }
+                    }
+                }
+                else {
+                    console.log('field "' + tagName + '" not found on form');
+                }
+            });
+        }
+    }
 	this._populateSubforms();
 
 	/* where do we POST this form? */
 	this.url = collection_url(this.collection);
-	if (this.id) this.url += this.id;
+	if (this.id !== undefined) this.url += this.id;
 	console.log('Form().url=' + this.url);
 }
 
