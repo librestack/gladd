@@ -1136,9 +1136,14 @@ $.fn.populate = function(xml) {
 	});
 }
 $.fn._populate = function(xml) {
-	console.log('$.populate()');
+	console.log('$.populate(): ' + $(this).attr('name'));
 	var combo = $(this);
 	var selections = [];
+
+    if (xml === undefined) {
+        console.log('No data for combo.  Skipping.');
+        return false;
+    }
 
 	/* first, preserve selections */
 	for (var x=0; x < combo[0].options.length; x++) {
@@ -2575,7 +2580,7 @@ Form.prototype.populate = function() {
     /* override Form collection with action attribute, if it exists */
     var collection = this.workspace.find('form:not(.subform)').first()
 		.attr('action');
-   if (collection !== undefined) this.collection = collection;
+    if (collection !== undefined) this.collection = collection;
 
 	var w = this.workspace.filter('div.' + this.object + '.' + this.action)
 		.first();
