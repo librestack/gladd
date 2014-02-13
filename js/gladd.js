@@ -3102,7 +3102,8 @@ function Tab(title, content, activate, collection, refresh) {
 
 	/* if exists, update content */
 	var tab = TABS.byTitle[title];
-	if (tab) {
+    console.log(TABS.byTitle);
+	if (tab !== undefined) {
         if (tab.business === g_business) {
             console.log('Tab with title "' + title + '" exists.  Updating.');
             if (content) { tab.setContent(content); }
@@ -3254,6 +3255,9 @@ Tab.prototype.setContent = function(content) {
 };
 
 Tab.prototype.setTitle = function(title) {
+    console.log('Tab.setTitle(' + title + ')');
+    if (this.title !== undefined && this.title !== title)
+        TABS.rename(this.title, title);
 	this.title = title;
 	this.tabtitlelink.empty().append(title);
 	return this;
@@ -3338,6 +3342,12 @@ Tabs.prototype.refresh = function(collection) {
 			}
 		}
 	}
+}
+
+Tabs.prototype.rename = function(oldtitle, newtitle) {
+    console.log('Tabs.rename(' + oldtitle + ',' + newtitle + ')');
+    this.byTitle[newtitle] = this.byTitle[oldtitle];
+    delete this.byTitle[oldtitle];
 }
 
 /* strip any fields listed in array from xml and result the result */
