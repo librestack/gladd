@@ -2430,7 +2430,7 @@ Form.prototype.events = function() {
         form.onChange($(this));
         return false;
     });
-    customBlurEvents(this.tab.id);
+    customFormEvents(this.tab, this.object, this.action, this.id);
 }
 
 /* load some data */
@@ -2567,7 +2567,7 @@ Form.prototype.onChange = function(ctl) {
 /* Fill html form with data */
 Form.prototype.populate = function() {
 	console.log('Form().populate()');
-	var nodata = (this.data.length === 0 || this.data.length === undefined);
+	var nodata = (this.data === {} || this.data === undefined);
 	if (nodata) console.log('No data to populate form.');
 	var id = undefined;
 	var form = this;
@@ -2583,7 +2583,7 @@ Form.prototype.populate = function() {
     if (collection !== undefined) this.collection = collection;
 
 	var w = this.workspace.filter('div.' + this.object + '.' + this.action)
-		.first();
+        .first();
     /* populate combos */
     w.find('select.populate:not(.sub)').each(function() {
         var xml = form.data[$(this).attr('data-source')];
@@ -2601,7 +2601,8 @@ Form.prototype.populate = function() {
                 if (tagName == 'id' || tagName == this.object) {
                     form.id = tagValue; /* grab id */
                 }
-                var fld = w.find('[name="' + tagName + '"]');
+                var fld = w.find('form.' + form.object 
+                    + ' [name="' + tagName + '"]');
                 if (fld.length > 0) {
                     fld.val(tagValue); /* set field value */
                     fld.data('old', tagValue);/* note the unmodifed value */
