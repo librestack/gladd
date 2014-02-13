@@ -3102,7 +3102,6 @@ function Tab(title, content, activate, collection, refresh) {
 
 	/* if exists, update content */
 	var tab = TABS.byTitle[title];
-    console.log(TABS.byTitle);
 	if (tab !== undefined) {
         if (tab.business === g_business) {
             console.log('Tab with title "' + title + '" exists.  Updating.');
