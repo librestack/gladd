@@ -3187,7 +3187,7 @@ function Tab(title, content, activate, collection, refresh) {
 
 Tab.prototype.activate = function() {
 	console.log('Tab().activate()');
-	if (this.active) { this.reload(); return false; }
+	if (this.active === true) { this.reload(); return false; }
 	console.log('activating Tab ' + this.id);
 
 	/* remove "active" styling from all tabs for this business */
