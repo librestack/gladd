@@ -701,16 +701,21 @@ function isTabId(o) {
 }
 
 function addOrUpdateTab(container, content, activate, title) {
+    var tab = undefined;
     if (typeof container == 'undefined') {
-		console.log('no container => new tab');
-		var tab = new Tab(title, content, activate);
-	}
-	else {
-		console.log('container => update tab');
-		var id = updateTab(container, content, activate, title);
-		var tab = TABS.byId[id];
-	}
-	return tab;
+        console.log('no container => new tab');
+        tab = new Tab(title, content, activate);
+    }
+    else {
+        console.log('container => update tab');
+        var o = updateTab(container, content, activate, title);
+        if (typeof container === 'object') {
+            tab = o;
+        } else {
+            tab = TABS.byId[o];
+        }
+    }
+    return tab;
 }
 
 /*****************************************************************************/
@@ -725,7 +730,7 @@ function displayForm(object, action, title, html, xml, container) {
 	tab.object = object;
 	tab.action = action;
 
-	var mytab = tab.tablet;
+    var mytab = (tab instanceof Tab) ? tab.tablet : tab;
 
 	/* populate combos with xml data */
 	/* NB: on update, skip first xml as this contains the record itself */
