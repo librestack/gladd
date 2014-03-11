@@ -2466,6 +2466,7 @@ Form.prototype.finalize = function() {
 	console.log('Form().finalize()');
     this.formatDatePickers();                   /* date pickers */ 
     this.formatRadioButtons();                  /* tune the radio */
+    this.formatSelects();
 	this.events();
     this.updateMap();
     this.updateAllTotals();
@@ -2479,6 +2480,9 @@ Form.prototype.formatDatePickers = function() {
 Form.prototype.formatRadioButtons = function() {
     console.log('Form().formatRadioButtons()');
     formatRadioButtons(this.tab.id, this.object);
+}
+Form.prototype.formatSelects = function() {
+    this.workspace.find('select.chozify').chosen();
 }
 
 /* fill form row based on data source */
@@ -2906,9 +2910,20 @@ Form.prototype.submit = function() {
                     console.log(name + ' has changed from "'
                         + $(this).data('old') + '" to "' + $(this).val()
                         + '"');
-                    xml += '<' + name + '>';
-                    xml += escapeHTML($(this).val());
-                    xml += '</' + name + '>';
+                    var myval = $(this).val();
+                    if (Array.isArray(myval) === false) {
+                        myval = [ myval ];
+                    }
+                    for (var i=0; i < myval.length; i++) {
+                        var o = new Object();
+                        if (customFormFieldHandler($(this), o) === true) {
+                            xml += o.xml;
+                        } else {
+                            xml += '<' + name + '>';
+                            xml += escapeHTML(myval[i]);
+                            xml += '</' + name + '>';
+                        }
+                    }
                 }
             }
 
@@ -2960,6 +2975,8 @@ Form.prototype.submitSuccess = function(xml) {
 	hideSpinner();
 
 	TABS.refresh(this.collection); /* refresh any tabs for this collection */
+
+    this.submitSuccessCustom(xml);
 
 	/* We received some data back. Display it. */
 	this.id = $(xml).find('id').text();
