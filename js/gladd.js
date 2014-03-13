@@ -1205,7 +1205,7 @@ function populateCombo(xml, combo, tab) {
 
 	/* now, repopulate and reselect options */
 	$(xml).find('row').each(function() {
-   		var id = $(this).find('id').text();
+		var id = $(this).find('id').text();
 		var name = $(this).find('name').text();
 		combo.append($("<option />").val(id).text(name));
 		if (selections[id]) {
@@ -1213,7 +1213,7 @@ function populateCombo(xml, combo, tab) {
 		}
 	});
 
-	combo.chosen();
+	if (combo.hasClass('chosify')) { combo.chosen(); }
 
 	if (combo.attr('name') == 'type') {
 		/* add change() event to nominal code input box */
