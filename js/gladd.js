@@ -1901,7 +1901,7 @@ function displayResultsGeneric(xml, collection, title, sorted, tab, headers) {
 			getForm('organisation', 'create', 'Add New Organisation');
 		}
 		else if (collection == 'products') {
-			getForm('product', 'create', 'Add New Product');
+			showForm('product', 'create', 'Add New Product');
 		}
 		else {
 			$t = '<div class="results empty">Nothing found</div>';
@@ -2134,6 +2134,7 @@ function createRequestXml() {
 /*****************************************************************************/
 /* create business selector combo */
 function prepBusinessSelector() {
+    console.log('prepBusinessSelector()');
 	$.ajax({
 		url: collection_url('businesses'),
 		beforeSend: function (xhr) { setAuthHeader(xhr); },
@@ -2155,7 +2156,7 @@ function customBusinessNotFound(xml) {
 function showBusinessSelector(xml) {
 	if ($(xml).find('row').length == 0) {
 		/* No businesses found */
-		getForm('business', 'create', 'Add New Business');
+        customBusinessNotFound(xml);
 		return;
 	}
 
