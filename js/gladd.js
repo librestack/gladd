@@ -120,8 +120,8 @@ function auth_check()
 		timeout: g_timeout,
 		beforeSend: function (xhr) { setAuthHeader(xhr); },
 		success: function(data) { loginok(data); },
-		error: function(data, s, e) {
-			if (t == 'timeout') {
+		error: function(data, strError, e) {
+			if (strError === 'timeout') {
 				console.log('auth_check() timeout.  Retrying.');
 				auth_check();
 			}
