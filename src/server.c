@@ -43,17 +43,46 @@
 
 int hits = 0;
 
-int get_socket(struct addrinfo **servinfo)
+int get_socket(struct addrinfo *p)
+{
+        int sock;
+        int yes=1;
+
+        /* get a socket */
+        if ((sock = socket(p->ai_family, p->ai_socktype,
+                                        p->ai_protocol)) == -1) {
+                perror("socket() error");
+                return -1;
+        }
+
+        if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)
+                                ) == -1) {
+                perror("setsockopt() error");
+                close(sock);
+                return -1;
+        }
+
+        if (bind(sock, p->ai_addr, p->ai_addrlen) == -1) {
+                perror("bind() error");
+                close(sock);
+                freeaddrinfo(p);
+                return -1;
+        }
+
+        return sock;
+}
+
+/* getaddrinfo() returns 0.0.0.0 before :: which is not the order we want
+   So, first we try AF_INET6, falling back to AF_INET only if that fails. */
+void get_addresses(struct addrinfo **servinfo)
 {
         struct addrinfo hints;
-        int sock;
-        int status;
-        int yes=1;
         char tcpport[5];
+        int status;
 
         /* set up hints */
         memset(&hints, 0, sizeof hints);           /* zero memory */
-        hints.ai_family = AF_UNSPEC;               /* ipv4/ipv6 agnostic */
+        hints.ai_family = AF_INET6;                /* try ipv6 first */
         hints.ai_socktype = SOCK_STREAM;           /* TCP stream sockets */
         hints.ai_flags = AI_PASSIVE;               /* ips we can bind to */
 
@@ -61,62 +90,61 @@ int get_socket(struct addrinfo **servinfo)
         snprintf(tcpport, 5, "%li", config->port);
         status = getaddrinfo(NULL, tcpport, &hints, servinfo);
         if (status != 0) {
+                hints.ai_family = AF_INET;         /* try ipv4 as a last resort */
+                status = getaddrinfo(NULL, tcpport, &hints, servinfo);
+        }
+        if (status != 0) {
                 fprintf(stderr, "getaddrinfo error: %s\n",
                         gai_strerror(status));
                 _exit(EXIT_FAILURE);
         }
-
-        /* get a socket */
-        sock = socket((*servinfo)->ai_family, (*servinfo)->ai_socktype,
-                (*servinfo)->ai_protocol);
-        if (sock == -1) {
-                perror("socket");
-                freeaddrinfo(*servinfo);
-                _exit(EXIT_FAILURE);
-        }
-
-        /* reuse socket if already in use */
-        if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int))==-1){
-                perror("setsockopt SO_REUSEADDR");
-                freeaddrinfo(*servinfo);
-                _exit(EXIT_FAILURE);
-        }
-        return sock;
 }
 
 int server_start(int lockfd)
 {
-        int getaddrinfo(const char *node,
-                        const char *service,
-                        const struct addrinfo *hints,
-                        struct addrinfo **res);
-
         int errsv;
         int new_fd;
+        int sock;
         pid_t pid;
         socklen_t addr_size;
-        struct addrinfo *servinfo;
+        struct addrinfo *p = NULL;
         struct sockaddr_storage their_addr;
+        char address[NI_MAXHOST];
         char buf[sizeof(long)];
 
         if (config->ssl == 1) ssl_setup();
 
-        /* get a socket and bind */
-        sockme = get_socket(&servinfo);
-        bind(sockme, servinfo->ai_addr, servinfo->ai_addrlen);
-        freeaddrinfo(servinfo);
+        /* get addresses */
+        get_addresses(&p);
+
+        /* attempt bind to each address */
+        do {
+                getnameinfo(p->ai_addr, p->ai_addrlen, address, NI_MAXHOST,
+                        NULL, 0, NI_NUMERICSERV);
+                syslog(LOG_DEBUG, "Binding to %s", address);
+                sock = get_socket(p); /* get a socket and bind */
+                if (sock != -1) break;
+                p = p->ai_next;
+        } while (p != NULL);
+
+        freeaddrinfo(p);
+
+        if (sock == -1) {
+                syslog(LOG_ERR, "Failed to bind.  Exiting");
+                _exit(EXIT_FAILURE);
+        }
 
         /* listening */
-        if (listen(sockme, BACKLOG) == 0) {
-                syslog(LOG_INFO, "Listening on port %li", config->port);
+        if (listen(sock, BACKLOG) == 0) {
+                syslog(LOG_INFO, "Listening on [%s]:%li", address,config->port);
         }
         else {
                 errsv = errno;
                 fprintf(stderr, "ERROR: %s\n", strerror(errsv));
-                syslog(LOG_ERR, "Failed to listen on port %li. Exiting.", 
-                                                                config->port);
+                syslog(LOG_ERR, "Failed to listen on [%s]:%li  Exiting.",
+                                address, config->port);
                 free_config();
-                exit(EXIT_FAILURE);
+                _exit(EXIT_FAILURE);
         }
 
         /* drop privileges */
@@ -162,7 +190,7 @@ int server_start(int lockfd)
         for (;;) {
                 /* incoming! */
                 ++hits;
-                new_fd = accept(sockme, (struct sockaddr *)&their_addr,
+                new_fd = accept(sock, (struct sockaddr *)&their_addr,
                                 &addr_size);
                 pid = fork(); /* fork new process to handle connection */
                 if (pid == -1) {
@@ -171,7 +199,7 @@ int server_start(int lockfd)
                 }
                 else if (pid == 0) {
                         /* let the children play */
-                        close(sockme); /* children never listen */
+                        close(sock); /* children never listen */
                         handle_connection(new_fd, their_addr);
                 }
                 else {
