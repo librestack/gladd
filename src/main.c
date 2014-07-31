@@ -112,7 +112,7 @@ int obtain_lockfile(int *lockfd)
                 printf("Failed to open lockfile %s\n", lockfile);
                 retval = EXIT_FAILURE;
         }
-        if (flock(*lockfd, LOCK_EX|LOCK_NB) != 0) {
+        else if (flock(*lockfd, LOCK_EX|LOCK_NB) != 0) {
                 if (g_signal != 0) {
                         /* signal (SIGHUP, SIGTERM etc.) requested */
                         retval = signal_gladd(*lockfd);
