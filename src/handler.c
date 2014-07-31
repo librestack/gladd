@@ -844,6 +844,7 @@ http_status_code_t response_upload(int sock, url_t *u)
                 syslog(LOG_ERR, "Failed to rename uploaded file: %s",
                         strerror(errno));
                 free(filename);
+                free(mimetype);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
 
