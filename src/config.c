@@ -301,6 +301,7 @@ int add_group(char *value)
 
         users = malloc(LINE_MAX);
         if (sscanf(value, "%s %[^\n]", name, users) != 2) {
+                free(users);
                 return -1;
         }
 
