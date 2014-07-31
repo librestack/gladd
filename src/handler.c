@@ -941,7 +941,8 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
 
         /* read from stdout of plugin */
         fd = fdopen(pipes[2], "r");
-        fread(plugout, sizeof plugout, 1, fd);
+        memset(plugout, 0, sizeof plugout);
+        fread(plugout, sizeof plugout - 1, 1, fd);
         fclose(fd);
 
         /* obtain plugin exit code */
