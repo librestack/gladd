@@ -729,6 +729,10 @@ http_status_code_t response_upload(int sock, url_t *u)
 
         /* open file for writing */
         fd = mkstemp(template);
+        if (fd == -1) {
+                syslog(LOG_ERR, "Could not create temporary file for upload");
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
 
         /* start building SHA1 */
         OpenSSL_add_all_digests();
@@ -764,7 +768,6 @@ http_status_code_t response_upload(int sock, url_t *u)
                         syslog(LOG_ERR,"Error reading from socket: %s",
                                 strerror(errno));
                         break;
-                                
                 }
                 size += bytes;
 
