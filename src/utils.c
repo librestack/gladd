@@ -34,7 +34,7 @@ int rmkdir(char *dir, mode_t mode)
 {
         char *parent;
         int i;
-        int r;
+        int r = 0;
 
         if (mkdir(dir, mode) != 0) {
                 if (errno == ENOENT) {
