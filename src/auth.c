@@ -520,8 +520,8 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
 	}
 
         /* check cookie is valid */
-        char *username = malloc(strlen(cookie));
-        char *nonce = malloc(strlen(cookie));
+        char *username = malloc(strlen(cookie)+1);
+        char *nonce = malloc(strlen(cookie)+1);
         long timestamp;
         if (sscanf(clearcookie, "%s %li %s",
         username, &timestamp, nonce) != 3)
