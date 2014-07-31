@@ -195,6 +195,7 @@ int server_start(int lockfd)
                 pid = fork(); /* fork new process to handle connection */
                 if (pid == -1) {
                         /* fork failed */
+                        close(new_fd);
                         return -1;
                 }
                 else if (pid == 0) {
