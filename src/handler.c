@@ -1165,6 +1165,7 @@ field_t * get_element(int *err) {
                 }
                 if (i == 0) {
                         *err = HTTP_INTERNAL_SERVER_ERROR;
+                        free(filter);
                         return NULL;
                 }
                 filter->fvalue = strdup(request->res + i + 1);
