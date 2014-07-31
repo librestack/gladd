@@ -123,14 +123,14 @@ void sigusr2_handler (int signo, siginfo_t *si, void *ucontext)
 int signal_gladd (int lockfd)
 {
         char buf[sizeof(long)];
-        long lpid;
+        int pid;
 
         if (read(lockfd, &buf, sizeof(buf)) == -1) {
                 fprintf(stderr, "Failed to read pid\n");
                 return EXIT_FAILURE;
         }
-        if (sscanf(buf, "%li", &lpid) == 1) {
-                return kill(lpid, g_signal);
+        if (sscanf(buf, "%i", &pid) == 1) {
+                return kill(pid, g_signal);
         }
         else {
                 fprintf(stderr, "Invalid pid\n");
