@@ -988,6 +988,7 @@ http_status_code_t response_plugin(int sock, url_t *u)
         fd = popen(cmd, "r");
         if (fd == NULL) {
                 syslog(LOG_ERR, "popen(): %s", strerror(errno));
+                free(cmd);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         free(cmd);
