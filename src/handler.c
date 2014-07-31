@@ -729,6 +729,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         pbuf += 4; /* skip CRLF */
 
         /* open file for writing */
+        umask(022);
         fd = mkstemp(template);
         if (fd == -1) {
                 syslog(LOG_ERR, "Could not create temporary file for upload");
