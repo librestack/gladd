@@ -345,7 +345,7 @@ int http_insert_header(char **r, char *header, ...)
         char *pos;
         char *body = NULL;
         char *headers = NULL;
-        char nl[2];
+        char nl[3];
         char *tmp = strdup(*r);
         char b[LINE_MAX];
         va_list argp;
