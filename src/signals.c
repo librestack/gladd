@@ -45,18 +45,23 @@ int sighandlers()
 {
         int ret;
         struct sigaction act1, act2, oldact;
+        sigset_t block_mask;
 
         signal(SIGCHLD, sigchld_handler);
         signal(SIGINT, sigint_handler);
         signal(SIGTERM, sigterm_handler);
         signal(SIGHUP, sighup_handler);
 
+        sigemptyset(&block_mask);
+
         act1.sa_flags = SA_SIGINFO;
         act1.sa_sigaction = sigusr1_handler;
+        act1.sa_mask = block_mask;
         ret = sigaction(SIGUSR1, &act1, &oldact);
 
         act2.sa_flags = SA_SIGINFO;
         act2.sa_sigaction = sigusr2_handler;
+        act2.sa_mask = block_mask;
         ret = sigaction(SIGUSR2, &act2, &oldact);
 
         return ret;
