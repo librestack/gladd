@@ -470,6 +470,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
         /* execute sql */
         if (sqltoxml(db, sql, NULL, &xml, 1) < 0) {
                 free(sql);
+                free(xml);
                 syslog(LOG_ERR, "xsltpost sql execution failed. ROLLBACK");
                 /* rollback transaction and/or disconnect */
                 db_exec_sql(db, "ROLLBACK;");
