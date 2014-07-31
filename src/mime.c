@@ -35,7 +35,7 @@ char *get_mime_type(char *filename)
 {
         char *fileext;
         char *mimefile;
-        char *mimetype;
+        char *mimetype = NULL;
         int fd;
         struct stat stat_buf;
 
