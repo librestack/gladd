@@ -261,8 +261,11 @@ function closeTab(tabid) {
 /*****************************************************************************/
 /* Remove all tabs from working area */
 function removeAllTabs() {
+    console.log('removeAllTabs()');
 	$('ul.tablist').children().remove(); /* tab headers */
 	$('div.tablet').fadeOut(300);		 /* content */
+    delete TABS;
+    TABS = new Tabs();
 }
 
 /*****************************************************************************/
@@ -319,6 +322,7 @@ function loginfailed() {
 /* logout() - Clear password and mark user logged out.  */
 function logout()
 {
+    console.log('logout()');
 	/* remove user menus */
 	dropMenu();
 
