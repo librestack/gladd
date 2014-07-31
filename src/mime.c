@@ -54,6 +54,7 @@ char *get_mime_type(char *filename)
                                 mimetype);
                         return mimetype;
                 }
+                close(fd);
         }
         free(mimefile);
 
