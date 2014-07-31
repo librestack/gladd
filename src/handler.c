@@ -586,6 +586,7 @@ http_status_code_t response_xslt(int sock, url_t *u)
         /* fetch data as xml */
         if (sqltoxml(db, sql, filter, &xml, 1) != 0) {
                 free(sql);
+                free(xml);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
 
