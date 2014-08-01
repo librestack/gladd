@@ -31,62 +31,77 @@
 #include <unistd.h>
 #include "mime.h"
 
-char *get_mime_type(char *filename)
+int read_mimefile(char *filename, char *mimetype)
 {
-        char *fileext;
         char *mimefile;
-        char *mimetype = NULL;
         int fd;
         struct stat stat_buf;
 
-        /* first, check if filename.mime exists */
+        /* check if filename.mime exists */
         asprintf(&mimefile, "%s.mime", filename);
         fd = open(mimefile, O_RDONLY);
-        if (fd != -1) {
+        if (fd == -1) {
+                free(mimefile);
+                return 0;
+        }
+        else {
                 if (fstat(fd, &stat_buf) == 0) {
                         if (S_ISREG(stat_buf.st_mode)) {
                                 mimetype = malloc(stat_buf.st_size + 1);
-                                read(fd, mimetype, stat_buf.st_size);
-                                close(fd);
-                                free(mimefile);
+                                if (read(fd, mimetype, stat_buf.st_size)
+                                                != stat_buf.st_size)
+                                {
+                                        syslog(LOG_ERR, "failed to read %s",
+                                                        mimefile);
+                                        free(mimefile);
+                                        free(mimetype);
+                                        return 0;
+                                }
                                 mimetype[stat_buf.st_size] = '\0';
                                 syslog(LOG_DEBUG, "mime type set from file: %s",
                                         mimetype);
-                                return mimetype;
                         }
                 }
                 close(fd);
         }
         free(mimefile);
+        return 1;
+}
 
-        /* TODO: use apache's mime.types file */
+char *get_mime_type(char *filename)
+{
+        char *fileext;
+        char *mimetype = NULL;
+
+        if (read_mimefile(filename, mimetype)) return mimetype;
+
         if (strrchr(filename, '.')) {
                 fileext = strdup(strrchr(filename, '.')+1);
-                if (strncmp(fileext, "html", 4) == 0) {
+                if (strcmp(fileext, "html") == 0) {
                         asprintf(&mimetype, "text/html");
                 }
-                else if (strncmp(fileext, "gif", 3) == 0) {
+                else if (strcmp(fileext, "gif") == 0) {
                         asprintf(&mimetype, "image/gif");
                 }
-                else if (strncmp(fileext, "png", 3) == 0) {
+                else if (strcmp(fileext, "png") == 0) {
                         asprintf(&mimetype, "image/png");
                 }
-                else if (strncmp(fileext, "xml", 3) == 0) {
+                else if (strcmp(fileext, "xml") == 0) {
                         asprintf(&mimetype, "application/xml");
                 }
-                else if (strncmp(fileext, "xsl", 3) == 0) {
+                else if (strcmp(fileext, "xsl") == 0) {
                         asprintf(&mimetype, "application/xml");
                 }
-                else if (strncmp(fileext, "css", 3) == 0) {
+                else if (strcmp(fileext, "css") == 0) {
                         asprintf(&mimetype, "text/css");
                 }
-                else if (strncmp(fileext, "js", 2) == 0) {
+                else if (strcmp(fileext, "js") == 0) {
                         asprintf(&mimetype, "text/javascript");
                 }
-                else if (strncmp(fileext, "pdf", 3) == 0) {
+                else if (strcmp(fileext, "pdf") == 0) {
                         asprintf(&mimetype, "application/pdf");
                 }
-                else if (strncmp(fileext, "ogv", 3) == 0) {
+                else if (strcmp(fileext, "ogv") == 0) {
                         asprintf(&mimetype, "video/ogg");
                 }
                 else {
