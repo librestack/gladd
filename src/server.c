@@ -196,6 +196,7 @@ int server_start(int lockfd)
                 if (pid == -1) {
                         /* fork failed */
                         close(new_fd);
+                        close(sock);
                         return -1;
                 }
                 else if (pid == 0) {
