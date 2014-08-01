@@ -692,7 +692,7 @@ http_status_code_t response_upload(int sock, url_t *u)
 			syslog(LOG_DEBUG, "failed to fill buffer");
 			return HTTP_BAD_REQUEST;
 		}
-        	size += bytes;
+                size += bytes;
 	}
 
         /* find boundary */
@@ -736,6 +736,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         fd = mkstemp(template);
         if (fd == -1) {
                 syslog(LOG_ERR, "Could not create temporary file for upload");
+                free(mimetype);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
 
@@ -744,6 +745,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         md = EVP_get_digestbyname("SHA1");
         if(!md) {
                 syslog(LOG_ERR, "SHA1 digest unavailable");
+                free(mimetype);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
         mdctx = EVP_MD_CTX_create();
