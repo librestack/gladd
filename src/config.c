@@ -190,6 +190,7 @@ int add_auth (char *value)
                 newauth->next = NULL;
         }
         else {
+                free(newauth);
                 fprintf(stderr, "Invalid auth type\n");
                 return -1;
         }
