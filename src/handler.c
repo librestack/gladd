@@ -1199,14 +1199,16 @@ size_t rcv(int sock, void *data, size_t len, int flags)
 ssize_t snd(int sock, void *data, size_t len, int flags)
 {
         ssize_t bytes = 0;
-        if (config->ssl)
+        if (config->ssl) {
                 bytes = ssl_send(data, len);
-        else
+        }
+        else {
                 bytes = send(sock, data, len, flags);
                 if (bytes == -1) {
                         syslog(LOG_ERR, "send error: %s", strerror(errno));
                         bytes = 0;
                 }
+        }
         return bytes;
 }
 
