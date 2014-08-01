@@ -307,9 +307,7 @@ handler_result_t handle_request(int sock, char *s)
 
 void respond (int fd, char *response)
 {
-        if (snd(fd, response, strlen(response), 0) == -1) {
-                syslog(LOG_ERR, "Failed to send response");
-        }
+        snd(fd, response, strlen(response), 0);
 }
 
 /* handle sqlview */
