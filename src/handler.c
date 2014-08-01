@@ -801,6 +801,7 @@ http_status_code_t response_upload(int sock, url_t *u)
                         (long) size, lclen);
                 syslog(LOG_ERR, "ERROR: Expected another %li bytes",
                         lclen - (long)size);
+                free(mimetype);
                 return HTTP_BAD_REQUEST;
         }
         syslog(LOG_DEBUG, "Read %li bytes total", (long)size);
