@@ -523,8 +523,12 @@ size_t http_read_body(int sock, char **body, long lclen)
         if (bytes < lclen) {
                 tv.tv_sec = 1;
                 tv.tv_usec = 0;
-                setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
-                        (char *)&tv, sizeof(struct timeval));
+                if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                        (char *)&tv, sizeof(struct timeval)) == -1)
+                {
+                        syslog(LOG_ERR, "setsockopt error: %s",
+                                        strerror(errno));
+                }
                 bytes = rcv(sock, *body + size, lclen - size, MSG_WAITALL);
                 size += bytes;
         }
