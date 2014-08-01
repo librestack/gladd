@@ -406,8 +406,13 @@ ssize_t http_fill_buffer(int sock)
 
         /* set socket timeout */
         tv.tv_sec = 0; tv.tv_usec = 1;
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
-                (char *)&tv, sizeof(struct timeval));
+        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                (char *)&tv, sizeof(struct timeval)) == -1)
+        {
+                syslog(LOG_ERR, "Error setting socket options: %s", 
+                        strerror(errno));
+                return -1;
+        }
 
         fillbytes = BUFSIZE-bytes; /* bytes req'd to top up buffer */
 
