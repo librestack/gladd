@@ -43,16 +43,17 @@ char *get_mime_type(char *filename)
         asprintf(&mimefile, "%s.mime", filename);
         fd = open(mimefile, O_RDONLY);
         if (fd != -1) {
-                fstat(fd, &stat_buf);
-                if (S_ISREG(stat_buf.st_mode)) {
-                        mimetype = malloc(stat_buf.st_size + 1);
-                        read(fd, mimetype, stat_buf.st_size);
-                        close(fd);
-                        free(mimefile);
-                        mimetype[stat_buf.st_size] = '\0';
-                        syslog(LOG_DEBUG, "mime type set from file: %s", 
-                                mimetype);
-                        return mimetype;
+                if (fstat(fd, &stat_buf) == 0) {
+                        if (S_ISREG(stat_buf.st_mode)) {
+                                mimetype = malloc(stat_buf.st_size + 1);
+                                read(fd, mimetype, stat_buf.st_size);
+                                close(fd);
+                                free(mimefile);
+                                mimetype[stat_buf.st_size] = '\0';
+                                syslog(LOG_DEBUG, "mime type set from file: %s",
+                                        mimetype);
+                                return mimetype;
+                        }
                 }
                 close(fd);
         }
