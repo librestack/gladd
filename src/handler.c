@@ -1205,10 +1205,17 @@ ssize_t snd(int sock, void *data, size_t len, int flags)
 
 void setcork(int sock, int state)
 {
-        if (config->ssl)
+        if (config->ssl) {
                 setcork_ssl(state);
-        else
-                setsockopt(sock, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
+        }
+        else {
+                if (setsockopt(sock, IPPROTO_TCP, TCP_CORK,
+                                &state, sizeof(state)) == -1)
+                {
+                        syslog(LOG_ERR, "Failed to set TCP_CORK: %s",
+                                strerror(errno));
+                }
+        }
 }
 
 /* set any additional headers */
