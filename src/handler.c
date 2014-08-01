@@ -80,8 +80,11 @@ int waitfordata(int sock, int bytes, char s[INET6_ADDRSTRLEN])
         struct timeval tv;
         if (bytes > 0) return 1; /* we already have data */
         tv.tv_sec = config->keepalive; tv.tv_usec = 0;
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
-                (char *)&tv, sizeof(struct timeval));
+        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                (char *)&tv, sizeof(struct timeval)) == -1)
+        {
+                syslog(LOG_ERR, "setsockopt error: %s", strerror(errno));
+        }
         peek = rcv(sock, peekbuf, 1, MSG_PEEK | MSG_WAITALL);
         if (peek == -1) {
                 if (errno == EAGAIN || errno == EWOULDBLOCK) {
