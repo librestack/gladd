@@ -828,6 +828,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         umask(022);
         if (!rmkdir(dir, 0755)) {
                 free(dir);
+                free(mimetype);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
 
