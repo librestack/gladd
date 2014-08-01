@@ -55,6 +55,7 @@ int read_mimefile(char *filename, char *mimetype)
                                                         mimefile);
                                         free(mimefile);
                                         free(mimetype);
+                                        close(fd);
                                         return 0;
                                 }
                                 mimetype[stat_buf.st_size] = '\0';
