@@ -767,11 +767,6 @@ http_status_code_t response_upload(int sock, url_t *u)
                 required = ((lclen-size)>BUFSIZE) ? BUFSIZE : lclen - size;
                 syslog(LOG_DEBUG, "Reading %i bytes", (int) required);
                 bytes = rcv(sock, buf, required, MSG_WAITALL);
-                if (bytes < 0) {
-                        syslog(LOG_ERR,"Error reading from socket: %s",
-                                strerror(errno));
-                        break;
-                }
                 size += bytes;
 
                 if (complete) continue; /* read to end of request */
