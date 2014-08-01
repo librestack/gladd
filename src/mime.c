@@ -65,7 +65,6 @@ int read_mimefile(char *filename, char *mimetype)
                 }
                 close(fd);
         }
-        free(mimetype);
         free(mimefile);
         return 1;
 }
