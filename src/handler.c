@@ -816,6 +816,7 @@ http_status_code_t response_upload(int sock, url_t *u)
         /* set permissions */
         if (fchmod(fd, 0644) == -1) {
                 syslog(LOG_ERR, "Failed to set file permissions on upload");
+                free(mimetype);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
 
