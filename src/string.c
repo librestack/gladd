@@ -201,14 +201,12 @@ char **tokenize(int *segments, char **stringp, char *delim)
         tokens[0] = *stringp; /* we always return at least one segment */
 
         lenstring = strlen(*stringp);
-        for (i=*stringp;i < *stringp + lenstring; i++) {
+        for (i=*stringp;i < *stringp + lenstring && segs < max_segs; i++) {
                 if (strncmp(i, delim, strlen(delim)) == 0) {
                         i[0] = '\0'; /* replace delimiter with null */
                         i = i + strlen(delim) - 1;
                         tokens[segs] = i + 1;
                         segs++;
-                        if (segs > max_segs)
-                                break;
                 }
         }
 
