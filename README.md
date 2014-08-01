@@ -34,9 +34,11 @@ recommended.
 
 ## Operation
 
-gladd start	Start gladd
-gladd stop	Stop gladd
-gladd reload	Reload configuration
+```
+gladd start	# Start gladd
+gladd stop	# Stop gladd
+gladd reload	# Reload configuration
+```
 
 NB: if persistent http connections are enabled, configuration will *not* be
 reloaded for any live connections.  Any new connections will use the new
