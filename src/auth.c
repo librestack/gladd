@@ -195,12 +195,6 @@ int check_auth(http_request_t *r)
                 }
                 a = a->next;
         }
-        if (a != NULL) {
-                if (strcmp(a->type, "sufficient") == 0) {
-                        free(acls);
-                        return 0;
-                }
-        }
         free(acls);
         if (pass > 0) return 0;
         syslog(LOG_DEBUG, "no acl matched");
