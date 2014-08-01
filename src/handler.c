@@ -496,7 +496,6 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                         return HTTP_INTERNAL_SERVER_ERROR;
                 }
                 if (sqltoxml(db, sql, filter, &xml, 1) != 0) {
-                        free(xml);
                         free(xsl);
                         free(sql);
                         return HTTP_INTERNAL_SERVER_ERROR;
