@@ -1160,6 +1160,7 @@ field_t * get_element(int *err) {
                 filter = malloc(sizeof(field_t));
                 if (asprintf(&filter->fname, "id") == -1) {
                         *err = HTTP_INTERNAL_SERVER_ERROR;
+                        free(filter);
                         return NULL;
                 }
                 /* grab the key (the last segment of the url) */
