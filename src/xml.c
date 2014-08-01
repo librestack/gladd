@@ -93,7 +93,9 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 
         if (db_fetch_all(db, newsql, filter, &rows, &rowc) < 0) {
                 syslog(LOG_ERR, "Error in db_fetch_all()");
+                free(newsql);
                 err = -1;
+                goto close_conn;
         }
         free(newsql);
 
@@ -135,6 +137,7 @@ int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
         xmlFreeDoc(doc);
         xmlCleanupParser();
 
+close_conn:
         /* leave the connection how we found it */
         if (isconn == 1)
                 db_disconnect(db);
