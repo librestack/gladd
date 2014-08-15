@@ -31,7 +31,7 @@ gladd_test.  It is also essential that gladd_fake does *not* exist or the unit
 tests will fail.
 
 
-== Ubuntu 12.04 LTS ==
+== Ubuntu 12.04/14/04 LTS ==
 
 # install required runtime libraries
 apt-get install libxslt1.1
@@ -39,6 +39,11 @@ apt-get install libpq5
 apt-get install libmysqlclient18
 apt-get install libcurl3
 apt-get install freetds-common libsybdb5
+apt-get install libb64-dev libcurl4-openssl-dev
+apt-get install libxml2-dev libxslt1-dev
+apt-get install libpam0g-dev
+apt-get install uuid-dev
+
 
 # copy gladd to /usr/local/bin/gladd
 
