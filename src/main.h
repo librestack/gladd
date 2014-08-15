@@ -28,6 +28,8 @@
 #define LOCKFILE_ROOT "/var/run/gladd.pid"
 #define PROGRAM "gladd"
 
+#define _unused(x) ((void)x)
+
 int sockme;
 
 int main (int argc, char **argv);

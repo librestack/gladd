@@ -36,6 +36,7 @@
 #include <syslog.h>
 #include "handler.h"
 #include "http.h"
+#include "main.h"
 #include "tls.h"
 #include "string.h"
 #include "xml.h"
@@ -314,7 +315,7 @@ void http_set_request_method(http_request_t *r, char *method)
         }
         i = asprintf(&r->method, "%s", method);
         assert(i != -1);
-                
+	_unused(i);
 }
 
 /* set http_request_t->res to new value, reallocating memory if needed */
@@ -337,7 +338,7 @@ void http_set_request_resource(http_request_t *r, char *res)
                 i = asprintf(&r->res, "%s", res);
         }
         assert(i != -1);
-                
+	_unused(i);
 }
 
 int http_insert_header(char **r, char *header, ...)
