@@ -3,7 +3,7 @@ INSTALL
 Installation instructions for gladd.
 
 The usual:
- ./configure
+ ./configure --with-openssl # --with-openssl is currently the only viable option
  make
  make install
 
