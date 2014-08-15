@@ -96,6 +96,11 @@ int check_auth(http_request_t *r)
         int pass = 0;
         http_status_code_t res = HTTP_FORBIDDEN;
 
+	if (config->acls == NULL) {
+		syslog(LOG_DEBUG, "No acls set.  Allow by default");
+		return 0; /* allow if no acls set */
+	}
+
         a = memcpy(acls, config->acls, sizeof (acl_t));
         while (a != NULL) {
                 syslog(LOG_DEBUG, 

@@ -52,18 +52,21 @@ int get_socket(struct addrinfo *p)
         if ((sock = socket(p->ai_family, p->ai_socktype,
                                         p->ai_protocol)) == -1) {
                 perror("socket() error");
+		syslog(LOG_ERR, "socket() error");
                 return -1;
         }
 
         if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)
                                 ) == -1) {
                 perror("setsockopt() error");
+		syslog(LOG_ERR, "setsockopt() error");
                 close(sock);
                 return -1;
         }
 
         if (bind(sock, p->ai_addr, p->ai_addrlen) == -1) {
                 perror("bind() error");
+		syslog(LOG_ERR, "bind() error");
                 close(sock);
                 freeaddrinfo(p);
                 return -1;

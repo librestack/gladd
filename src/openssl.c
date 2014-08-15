@@ -117,7 +117,7 @@ void setcork_ssl(int state)
 {
         int sock = SSL_get_fd(ssl);
         if (setsockopt(sock, IPPROTO_TCP,TCP_CORK, &state,sizeof(state)) == -1)
-                syslog(LOG_ERR, "Failed to set TCP_CORK: %s", strerror(errno));
+                syslog(LOG_ERR, "Failed to set TCP_CORK(ssl): %s", strerror(errno));
 }
 
 void ssl_cleanup(int fd)

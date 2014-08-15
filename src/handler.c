@@ -54,8 +54,6 @@
 #include <unistd.h>
 #include <uuid/uuid.h>
 
-int sockme;
-
 http_status_code_t response_xslpost(int sock, url_t *u);
 field_t *get_element(int *err);
 
@@ -198,7 +196,7 @@ handler_result_t handle_request(int sock, char *s)
         /* Return HTTP response */
 
         /* put a cork in it */
-        setcork(sockme, 1);
+        setcork(sock, 1);
 
         /* if / requested, substitute default */
         if (strcmp(request->res, "/") == 0) {
