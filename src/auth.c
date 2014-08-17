@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012, 2013, 2014 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,9 @@
 #include "auth.h"
 #include "config.h"
 #include "gladdb/db.h"
+#ifndef _NLDAP
+#include "gladdb/ldap.h"
+#endif
 #include "string.h"
 #include "xml.h"
 #include <errno.h>
