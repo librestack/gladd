@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012, 2013, 2014 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -117,7 +117,10 @@ void setcork_ssl(int state)
 {
         int sock = SSL_get_fd(ssl);
         if (setsockopt(sock, IPPROTO_TCP,TCP_CORK, &state,sizeof(state)) == -1)
-                syslog(LOG_ERR, "Failed to set TCP_CORK(ssl): %s", strerror(errno));
+        {
+                syslog(LOG_ERR, "Failed to set TCP_CORK(ssl): %s",
+                                strerror(errno));
+        }
 }
 
 void ssl_cleanup(int fd)
@@ -156,16 +159,12 @@ size_t ssl_recv(char *b, int len)
                         nread += ret;
                         break;
                 case SSL_ERROR_ZERO_RETURN:
-                        //syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
                         break;
                 case SSL_ERROR_WANT_WRITE:
-                        //syslog(LOG_DEBUG, "ssl_recv() SSL_ERROR_WANT_WRITE");
                         break;
                 case SSL_ERROR_WANT_READ:
-                        //syslog(LOG_DEBUG, "ssl_recv() SSL_ERROR_WANT_READ");
                         break;
                 default:
-                        //syslog(LOG_DEBUG, "ssl_recv() other error");
                         break;
                 }
         } while(ret > 0);
@@ -183,20 +182,16 @@ size_t ssl_send(char *msg, size_t len)
                         nwrite += ret;
                         break;
                 case SSL_ERROR_ZERO_RETURN:
-                        //syslog(LOG_DEBUG,"connection closed: %s",ssl_err(ret));
                         break;
                 case SSL_ERROR_WANT_WRITE:
-                        //syslog(LOG_DEBUG, "ssl_send() SSL_ERROR_WANT_WRITE");
                         break;
                 case SSL_ERROR_WANT_READ:
-                        //syslog(LOG_DEBUG, "ssl_send() SSL_ERROR_WANT_READ");
                         break;
                 default:
-                        //syslog(LOG_DEBUG, "ssl_send() other error");
                         break;
                 }
         } while(ret > 0);
-        return nwrite; 
+        return nwrite;
 }
 
 void ssl_setup()
