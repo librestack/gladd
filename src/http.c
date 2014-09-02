@@ -41,7 +41,6 @@
 #include "string.h"
 #include "xml.h"
 
-/* TEMP */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -272,7 +271,7 @@ void http_add_request_data(http_request_t *r, char *key, char *value)
 {
         keyval_t *h;
         static keyval_t *hlast;
-        
+
         h = http_set_keyval(key, value);
 
         if (r->data == NULL)
