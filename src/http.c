@@ -542,12 +542,52 @@ size_t http_read_body(int sock, char **body, long lclen)
                         fclose(fd);
                 }
                 else {
-                        syslog(LOG_DEBUG, 
+                        syslog(LOG_DEBUG,
                                 "unable to open /tmp/lastpost for writing");
                 }
         }
 
         return size;
+}
+
+int read_request_body(int sock, char *ctype, long lclen,
+                http_status_code_t *err, http_request_t *r)
+{
+        size_t size = 0;
+        char *body = calloc(1, lclen + 1);
+        if (body == NULL) {
+                syslog(LOG_ERR, "failed to allocate buffer for request body");
+                *err = HTTP_INTERNAL_SERVER_ERROR;
+                return 0;
+        }
+        r->data = calloc(1, sizeof(keyval_t));
+        if (r->data == NULL) {
+                syslog(LOG_ERR, "failed to allocate request keyval");
+                *err = HTTP_INTERNAL_SERVER_ERROR;
+                return 0;
+        }
+        size = http_read_body(sock, &body, lclen);
+        r->bytes += size;
+        if (size != lclen) {
+                /* we have the wrong number of bytes */
+                syslog(LOG_ERR, "request body has unexpected length.");
+                syslog(LOG_DEBUG, "expected: %li, got %li", lclen, size);
+                *err = HTTP_BAD_REQUEST;
+                return 0;
+        }
+
+        /* NB: only match first part of mime type, ignoring charset etc. */
+        if (strlcmp(ctype, "text/xml") == 0) {
+                asprintf(&r->data->key, "text/xml");
+                r->data->value = body;
+        }
+        else if (strlcmp(ctype, "application/x-www-form-urlencoded") == 0) {
+                /* TODO: */
+                syslog(LOG_DEBUG, "TODO: handle x-www-form-urlencoded");
+                *err = HTTP_INTERNAL_SERVER_ERROR;
+                return 0;
+        }
+        return 1;
 }
 
 /* check & store http headers from client */
@@ -556,7 +596,6 @@ http_request_t *http_read_request(int sock, int *hcount,
 {
         char *clen;
         char *ctype;
-        char *body;
         char httpv[LINE_MAX] = "";
         char key[LINE_MAX] = "";
         char *line;
@@ -567,7 +606,6 @@ http_request_t *http_read_request(int sock, int *hcount,
         keyval_t *h = NULL;
         keyval_t *hlast = NULL;
         long lclen;
-        size_t size;
 
         *err = 0;
 
@@ -634,34 +672,9 @@ http_request_t *http_read_request(int sock, int *hcount,
                 lclen = strtol(clen, NULL, 10);
                 if (errno != 0)
                         return r;
-                /* only match first part of mime type, ignoring charset etc. */
-                if (strncmp(ctype, "text/xml", 8) == 0) {
-                        /* read request body */
-                        r->data = malloc(sizeof(keyval_t));
-                        asprintf(&r->data->key, "text/xml");
-                        r->data->next = NULL;
-                        body = calloc(1, lclen + 1);
-                        if (body == NULL) {
-                                syslog(LOG_ERR,
-                                "failed to allocate buffer for request body");
-                                *err = HTTP_INTERNAL_SERVER_ERROR;
-                                return r;
-                        }
-                        size = http_read_body(sock, &body, lclen);
-                        r->bytes += size;
-                        if (size != lclen) {
-                                /* we have the wrong number of bytes */
-                                syslog(LOG_ERR,
-                                    "request body has unexpected length.");
-                                syslog(LOG_DEBUG,
-                                    "expected: %li, got %li", lclen, size);
-                                *err = HTTP_BAD_REQUEST;
-                                return r;
-                        }
-                        r->data->value = body;
-                }
+
                 /* multipart form data */
-                else if (strncmp(ctype, "multipart/form-data",
+                if (strncmp(ctype, "multipart/form-data",
                         strlen("multipart/form-data")) == 0)
                 {
                         /* get boundary */
@@ -671,11 +684,7 @@ http_request_t *http_read_request(int sock, int *hcount,
                                 r->boundary);
                 }
                 else {
-                        /* read body, after skipping the blank line */
-                        while ((line = http_readline(sock))) {
-                                bodyline(r, line);
-                                free(line);
-                        }
+                        read_request_body(sock, ctype, lclen, err, r);
                 }
         }
 

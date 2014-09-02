@@ -34,6 +34,7 @@ char *randstring(int len);
 char *replace(char *str, char *find, char *repl);
 char *replaceall(char *str, char *find, char *repl);
 char *rstrip(char *str);
+int strlcmp(const char *str, const char *match);
 char *strip(char *str);
 char *strstrip(char *s);
 

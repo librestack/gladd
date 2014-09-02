@@ -41,7 +41,7 @@ char *basefile(char *path)
                 else {
                         memmove(base, p+1, strlen(p+1));
                         base[strlen(p+1)] = '\0';
-                }       
+                }
         }
         return base;
 }
@@ -186,6 +186,12 @@ char *rstrip(char *str)
 char *strip(char *str)
 {
         return lstrip(rstrip(str));
+}
+
+/* compare leftmost characters in string with nul terminated match */
+int strlcmp(const char *str, const char *match)
+{
+        return strncmp(str, match, strlen(match));
 }
 
 /* tokenize string into array */
