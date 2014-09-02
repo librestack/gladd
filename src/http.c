@@ -90,14 +90,13 @@ struct http_status httpcode[] = {
 http_request_t *request;
 char buf[BUFSIZE];
 size_t bytes = 0;
-//int bmore = 1;
 
 /* 
  * bodyline() - Also known as Fast Leg Theory.
  * handles each line of the body of the request.
  * Remember to duck.
  */
-void bodyline(http_request_t *r, char *line)
+http_status_code_t bodyline(http_request_t *r, char *line)
 {
         CURL *handle;
         char *clear;
@@ -108,9 +107,13 @@ void bodyline(http_request_t *r, char *line)
         int l = 0;
         FILE *fd;
 
-        handle = curl_easy_init();
-
         fd = fmemopen(line, strlen(line), "r");
+        if (fd == NULL) {
+               syslog(LOG_ERR, "fmemopen failed");
+               return HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        handle = curl_easy_init();
 
         while (fscanf(fd, "%[^&]&", dtok) == 1) {
                 /* curl_easy_unescape() has a bug and doesn't unescape 
@@ -129,6 +132,8 @@ void bodyline(http_request_t *r, char *line)
 
         curl_easy_cleanup(handle);
         curl_global_cleanup();
+
+        return 0;
 }
 
 /* Check we received a valid Content-Length header
@@ -581,12 +586,6 @@ int read_request_body(int sock, char *ctype, long lclen,
                 asprintf(&r->data->key, "text/xml");
                 r->data->value = body;
         }
-        else if (strlcmp(ctype, "application/x-www-form-urlencoded") == 0) {
-                /* TODO: */
-                syslog(LOG_DEBUG, "TODO: handle x-www-form-urlencoded");
-                *err = HTTP_INTERNAL_SERVER_ERROR;
-                return 0;
-        }
         return 1;
 }
 
@@ -674,14 +673,21 @@ http_request_t *http_read_request(int sock, int *hcount,
                         return r;
 
                 /* multipart form data */
-                if (strncmp(ctype, "multipart/form-data",
-                        strlen("multipart/form-data")) == 0)
+                if (strlcmp(ctype, "multipart/form-data") == 0)
                 {
                         /* get boundary */
                         r->boundary = strdup(ctype +
                                 strlen("multipart/form-data; boundary="));
                         syslog(LOG_DEBUG, "multipart boundary: %s",
                                 r->boundary);
+                }
+                else if (strlcmp(ctype,"application/x-www-form-urlencoded")==0){
+                        /* read body, after skipping the blank line */
+                        while ((line = http_readline(sock))) {
+                                *err = bodyline(r, line);
+                                if ((*err) != 0) return r;
+                                free(line);
+                        }
                 }
                 else {
                         read_request_body(sock, ctype, lclen, err, r);

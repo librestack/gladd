@@ -33,7 +33,7 @@
 #include "string_test.h"
 #include "xml_test.h"
 #include "test.h"
- 
+
 int tests_run = 0;
 
 static void printline(char *c, int len)
@@ -77,7 +77,7 @@ static char * all_tests()
         mu_run_test(test_string_trimstr);
         mu_run_test(test_http_read_request_get);
         mu_run_test(test_http_readline);
-        //mu_run_test(test_http_read_request_post);
+        mu_run_test(test_http_read_request_post);
         mu_run_test(test_http_read_request_data);
         mu_run_test(test_http_postdata_invalid);
         mu_run_test(test_http_postdata_checks);
@@ -102,7 +102,7 @@ static char * all_tests()
         printline("*", 80);
         return 0;
 }
- 
+
 int main(int argc, char **argv)
 {
         char *result = all_tests();
@@ -115,6 +115,6 @@ int main(int argc, char **argv)
                 printf("ALL TESTS PASSED\n");
         }
         printf("Tests run: %d\n", tests_run);
- 
+
         return result != 0;
 }

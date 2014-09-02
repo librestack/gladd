@@ -205,6 +205,17 @@ char *test_http_read_request_post()
         mu_assert("http_validate_headers()",
                 http_validate_headers(r, &err) == 0);
 
+        /* test formdata_to_keyval() */
+        keyval_t *kv = r->data;
+        mu_assert("formdata_to_keyval() != NULL", kv != NULL);
+        while (kv != NULL) {
+                printf("%s: %s\n", kv->key, kv->value);
+                mu_assert("name=boris", strcmp(kv->key, "name") == 0);
+                mu_assert("name=boris", strcmp(kv->value, "boris") == 0);
+                kv = kv->next;
+        }
+        mu_assert("STOP STOP STOP", 1 == 0); /* FIXME: TEMP */
+
         free_request(&r);
 
         return 0;
