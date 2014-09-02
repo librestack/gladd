@@ -326,7 +326,7 @@ http_status_code_t response_sqlview(int sock, url_t *u)
                 syslog(LOG_ERR, "db '%s' not in config", u->db);
                 return HTTP_INTERNAL_SERVER_ERROR;
         }
-        
+
         /* fetch element id as filter, if applicable */
         filter = get_element(&err);
         if (err != 0) {
@@ -344,6 +344,8 @@ http_status_code_t response_sqlview(int sock, url_t *u)
                 else {
                         /* POST to element => update */
                         /* TODO */
+                        syslog(LOG_ERR, "POST to element not implemented");
+                        return HTTP_INTERNAL_SERVER_ERROR;
                 }
         }
 
@@ -419,7 +421,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                 syslog(LOG_ERR, "xslpost method not POST");
                 return HTTP_METHOD_NOT_ALLOWED;
         }
-        
+
         if (!(db = getdb(u->db))) {
                 syslog(LOG_ERR, "db '%s' not in config", u->db);
                 return HTTP_INTERNAL_SERVER_ERROR;
@@ -565,7 +567,7 @@ http_status_code_t response_xslt(int sock, url_t *u)
                 syslog(LOG_ERR, "xslt method not GET");
                 return HTTP_METHOD_NOT_ALLOWED;
         }
-       
+
         /* ensure we have a valid database */
         if (!(db = getdb(u->db))) {
                 syslog(LOG_ERR, "db '%s' not in config", u->db);
