@@ -115,6 +115,7 @@ http_status_code_t bodyline(http_request_t *r, char *line)
 
         handle = curl_easy_init();
 
+	r->data = NULL;
         while (fscanf(fd, "%[^&]&", dtok) == 1) {
                 /* curl_easy_unescape() has a bug and doesn't unescape 
                  * '+' to space.
