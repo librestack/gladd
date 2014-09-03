@@ -281,7 +281,7 @@ void http_add_request_data(http_request_t *r, char *key, char *value)
 
         if (r->data == NULL)
                 r->data = h;
-        else
+        else if (hlast != NULL)
                 hlast->next = h;
         hlast = h;
 }
@@ -402,8 +402,9 @@ void http_flush_buffer()
         bytes = 0;
 }
 
-/* top up http buffer, returning number of bytes read or -1 on error */
-ssize_t http_fill_buffer(int sock)
+/* top up http buffer, returning number of bytes read or -1 on error 
+ * lclen = value of Content-Length header, or -1 */
+ssize_t http_fill_buffer(int sock, ssize_t lclen)
 {
         size_t fillbytes;
         size_t newbytes;
@@ -419,7 +420,13 @@ ssize_t http_fill_buffer(int sock)
                 return -1;
         }
 
-        fillbytes = BUFSIZE-bytes; /* bytes req'd to top up buffer */
+        /* bytes req'd to top up buffer */
+        if (lclen > 0 && lclen < BUFSIZE) {
+                fillbytes = (size_t)lclen - bytes;
+        }
+        else {
+                fillbytes = BUFSIZE - bytes;
+        }
 
         newbytes = rcv(sock, buf + bytes, fillbytes, MSG_WAITALL);
         if (newbytes == -1) {
@@ -436,8 +443,9 @@ ssize_t http_fill_buffer(int sock)
  * returns either the line or NULL if no lines found
  * NB: lines cannot be longer than LINE_MAX
  * we strip off CRLF or LF from the end of the line before returning it
+ * lclen = value of Content-length header, or -1
  */
-char *http_readline(int sock)
+char *http_readline(int sock, ssize_t lclen)
 {
         char *line = NULL;
         char *nl = NULL;
@@ -450,11 +458,11 @@ char *http_readline(int sock)
                 /* fill the buffer if empty */
                 /* loop until we have some data, or ~5s have passed */
                 for (t=0; bytes == 0; t++) {
-                        if (http_fill_buffer(sock) == -1) {
+                        if (http_fill_buffer(sock, lclen) == -1) {
                                 syslog(LOG_DEBUG, "failed to fill buffer");
                                 return line;
                         }
-                        if (t == 5000) {
+                        if (t == 5000) { /* FIXME: this is an awful hack */
                                 syslog(LOG_DEBUG, "timeout filling buffer");
                                 return line;
                         }
@@ -586,6 +594,9 @@ int read_request_body(int sock, char *ctype, long lclen,
                 asprintf(&r->data->key, "text/xml");
                 r->data->value = body;
         }
+        else if (strlcmp(ctype, "application/x-www-form-urlencoded") == 0) {
+                bodyline(r, body); /* process keyvals */
+        }
         return 1;
 }
 
@@ -612,7 +623,7 @@ http_request_t *http_read_request(int sock, int *hcount,
         r->headlen = 0;
 
         /* first line has http request */
-        line = http_readline(sock);
+        line = http_readline(sock, -1);
         if (line == NULL) {
                 syslog(LOG_ERR, "HTTP request is NULL");
                 *err = HTTP_BAD_REQUEST;
@@ -641,7 +652,7 @@ http_request_t *http_read_request(int sock, int *hcount,
 
         /* read headers */
         for (;;) {
-                line = http_readline(sock);
+                line = http_readline(sock, -1);
                 if (line == NULL) break;
                 if (strlen(line) == 0) break;
                 r->headlen += strlen(line);
@@ -680,14 +691,6 @@ http_request_t *http_read_request(int sock, int *hcount,
                                 strlen("multipart/form-data; boundary="));
                         syslog(LOG_DEBUG, "multipart boundary: %s",
                                 r->boundary);
-                }
-                else if (strlcmp(ctype,"application/x-www-form-urlencoded")==0){
-                        /* read body, after skipping the blank line */
-                        while ((line = http_readline(sock))) {
-                                *err = bodyline(r, line);
-                                if ((*err) != 0) return r;
-                                free(line);
-                        }
                 }
                 else {
                         read_request_body(sock, ctype, lclen, err, r);
