@@ -928,13 +928,22 @@ http_status_code_t response_xml_plugin(int sock, url_t *u)
                 dup2(pipes[3], STDOUT_FILENO);
 
                 /* execute plugin */
+		int i = 0;
                 char *cmd = strdup(u->path);
-                char *args[2] = { cmd, NULL };
                 sqlvars(&cmd, request->res);
+		char **args = calloc(strlen(cmd), sizeof(char *));
+		args[i++] = cmd;
+		char *word = strtok(cmd, " ");
+		while (word != NULL) {
+			word = strtok(NULL, " ");
+			args[i++] = word;
+		}
                 syslog(LOG_DEBUG, "executing plugin: %s", cmd);
                 if (execv(cmd, args) == -1) {
-                        syslog(LOG_ERR, "error executing plugin");
+                        syslog(LOG_ERR, "error executing plugin: %s",
+					strerror(errno));
                 }
+		free(args);
                 free(cmd);
                 _exit(EXIT_FAILURE);
         }
