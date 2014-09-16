@@ -54,6 +54,12 @@
 #include <unistd.h>
 #include <uuid/uuid.h>
 
+#ifndef _NLDIF
+#include <ldap.h>
+#include <ldif.h>
+#include "gladdb/ldif.h"
+#endif
+
 http_status_code_t response_xslpost(int sock, url_t *u);
 field_t *get_element(int *err);
 
@@ -233,7 +239,6 @@ handler_result_t handle_request(int sock, char *s)
                 else {
                         syslog(LOG_DEBUG, "Content-Length: %li", len);
                 }
-
                 mtype = check_content_type(request, &err, u->type);
                 if (err != 0) {
                         syslog(LOG_ERR,
@@ -249,6 +254,13 @@ handler_result_t handle_request(int sock, char *s)
                 if (err != 0)
                         http_response(sock, err);
         }
+#ifndef _NLDIF
+        else if (strcmp(u->type, "ldif") == 0) {
+                err = response_ldif(sock, u);
+                if (err != 0)
+                        http_response(sock, err);
+        }
+#endif
         else if (strcmp(u->type, "sqlview") == 0) {
                 /* handle sqlview */
                 err = response_sqlview(sock, u);
@@ -310,6 +322,49 @@ void respond (int fd, char *response)
 {
         snd(fd, response, strlen(response), 0);
 }
+
+#ifndef _NLDIF
+http_status_code_t response_ldif(int sock, url_t *u)
+{
+        db_t *db = NULL;
+        struct berval cred;
+        struct berval *servcred;
+        int rc;
+
+        syslog(LOG_DEBUG, "response_ldif()");
+        if (strcmp(u->method, "POST") != 0) {
+                syslog(LOG_ERR, "ldif method not POST");
+                return HTTP_METHOD_NOT_ALLOWED;
+        }
+        if (!(db = getdb(u->db))) {
+                syslog(LOG_ERR, "db '%s' not in config", u->db);
+                return HTTP_INTERNAL_SERVER_ERROR;
+        }
+        db_connect(db);
+
+        /* bind if we have any credentials */
+        if (db->user || request->authuser) {
+                char *user = (request->authuser) ? request->authuser:db->user;
+                char *pass = (request->authpass) ? request->authpass:db->pass;
+                cred.bv_val = pass;
+                cred.bv_len = strlen(pass);
+                rc = ldap_sasl_bind_s(db->conn, user, LDAP_SASL_SIMPLE,
+                        &cred, NULL, NULL, &servcred);
+                if (rc != LDAP_SUCCESS) {
+                        syslog(LOG_ERR, "bind failed: %s", ldap_err2string(rc));
+                        db_disconnect(db);
+                        return HTTP_UNAUTHORIZED;
+                }
+        }
+
+        LDIFFP *fp = ldif_open_mem(request->data->value, bytes, "r");
+        process_ldif(db, fp);
+        ldif_close(fp);
+        db_disconnect(db);
+        http_response(sock, HTTP_OK);
+        return 0;
+}
+#endif
 
 /* handle sqlview */
 http_status_code_t response_sqlview(int sock, url_t *u)

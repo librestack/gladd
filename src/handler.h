@@ -45,6 +45,9 @@ void respond (int fd, char *response);
 int send_file(int sock, char *path, http_status_code_t *err);
 void setcork(int sock, int state);
 void set_headers(char **r);
+#ifndef _NLDIF
+http_status_code_t response_ldif(int sock, url_t *u);
+#endif
 http_status_code_t response_plugin(int sock, url_t *u);
 http_status_code_t response_sqlview(int sock, url_t *u);
 http_status_code_t response_sqlexec(int sock, url_t *u);

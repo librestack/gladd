@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012, 2013, 2014 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -376,6 +376,9 @@ int add_url_handler(char *value)
         if (sscanf(value, "%s %[^\n]", type, params) == 2) {
                 if (strcmp(type, "static") == 0) {
                         handle_url_static("static", params);
+                }
+                else if (strcmp(type, "ldif") == 0) {
+                        handle_url_dynamic("ldif", params);
                 }
                 else if (strcmp(type, "sqlview") == 0) {
                         handle_url_dynamic("sqlview", params);

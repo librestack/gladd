@@ -176,10 +176,15 @@ int check_content_length(http_request_t *r, http_status_code_t *err)
 char *check_content_type(http_request_t *r, http_status_code_t *err, char *type)
 {
         char *mtype;
-
         mtype = http_get_header(request, "Content-Type");
+        if (mtype == NULL) {
+                syslog(LOG_ERR, "Content-Type header missing");
+                *err = HTTP_BAD_REQUEST;
+                return NULL;
+        }
         if ((strcmp(mtype, "application/x-www-form-urlencoded") == 0)
-        || (strncmp(mtype, "text/xml", 8) == 0))
+        || (strlcmp(mtype, "text/xml") == 0)
+        || (strlcmp(mtype, "text/ldif") == 0))
         {
                 return mtype;
         }
@@ -593,6 +598,10 @@ int read_request_body(int sock, char *ctype, long lclen,
         /* NB: only match first part of mime type, ignoring charset etc. */
         if (strlcmp(ctype, "text/xml") == 0) {
                 asprintf(&r->data->key, "text/xml");
+                r->data->value = body;
+        }
+        else if (strlcmp(ctype, "text/ldif") == 0) {
+                asprintf(&r->data->key, "text/ldif");
                 r->data->value = body;
         }
         else if (strlcmp(ctype, "application/x-www-form-urlencoded") == 0) {

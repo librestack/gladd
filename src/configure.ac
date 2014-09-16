@@ -21,7 +21,7 @@
 # To build configure script:
 #   autoconf configure.ac > configure
 
-AC_INIT([gladd], [0.1.1], [brett@gladserv.com])
+AC_INIT([gladd], [0.1.2], [brett@gladserv.com])
 AC_CONFIG_SRCDIR([xml.c])
 AC_PROG_CC
 AC_LANG(C)
@@ -31,6 +31,7 @@ AC_PROG_MAKE_SET
 
 # with arguments
 AC_ARG_WITH(gnutls, [ --with-gnutls enable gnutls])
+AC_ARG_WITH(ldif, [ --with-ldif enable ldif])
 AC_ARG_WITH(openssl, [ --with-openssl enable openssl])
 AC_ARG_WITH(postgres, [ --without-postgres disable postgres])
 AC_ARG_WITH(mysql, [ --without-mysql disable mysql])
@@ -83,6 +84,18 @@ then
 else
 	AC_SUBST(libmysql, ["`mysql_config --libs`"])
 	AC_SUBST(cflagmysql, ["`mysql_config --cflags`"])
+fi
+if test "$with_ldif" == "no"
+then
+	AC_MSG_NOTICE([disabling ldif support])
+	AC_SUBST(ldif, -D_NLDIF)
+else
+	AC_CHECK_LIB([ldif],
+	,
+		AC_MSG_WARN([ldif not found - disabling])
+		AC_SUBST(ldif, -D_NLDAP)
+	)
+	AC_SUBST(libldif, ["-lldap -llber"])
 fi
 if test "$with_openldap" == "no"
 then
