@@ -358,10 +358,10 @@ http_status_code_t response_ldif(int sock, url_t *u)
         }
 
         LDIFFP *fp = ldif_open_mem(request->data->value, bytes, "r");
-        process_ldif(db, fp);
+        rc = process_ldif(db, fp);
         ldif_close(fp);
         db_disconnect(db);
-        http_response(sock, HTTP_OK);
+        http_response(sock, (rc == 1) ? HTTP_OK : HTTP_BAD_REQUEST);
         return 0;
 }
 #endif
