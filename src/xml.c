@@ -59,7 +59,7 @@ int buildxml(char **xml)
         return 0;
 }
 
-int buildxmlresponse(char **xml, int code, char *status, int respcode,
+int buildxmlresponse(char **xml, int code, char *status, char *respcode,
                      char *resptext)
 {
         xmlNodePtr n;
@@ -78,22 +78,31 @@ int buildxmlresponse(char **xml, int code, char *status, int respcode,
         nval = xmlNewText(BAD_CAST strcode);
         xmlAddChild(nfld, nval);
         xmlAddChild(n, nfld);
-        free(strcode);
 
         nfld = xmlNewNode(NULL, BAD_CAST "status");
         nval = xmlNewText(BAD_CAST status);
         xmlAddChild(nfld, nval);
         xmlAddChild(n, nfld);
 
-        asprintf(&strcode, "%i", respcode);
         nfld = xmlNewNode(NULL, BAD_CAST "responsecode");
-        nval = xmlNewText(BAD_CAST strcode);
+        if (respcode == NULL) {
+                nval = xmlNewText(BAD_CAST strcode);
+        }
+        else {
+                nval = xmlNewText(BAD_CAST respcode);
+        }
         xmlAddChild(nfld, nval);
         xmlAddChild(n, nfld);
+
         free(strcode);
 
         nfld = xmlNewNode(NULL, BAD_CAST "responsetext");
-        nval = xmlNewText(BAD_CAST resptext);
+        if (resptext == NULL) {
+                nval = xmlNewText(BAD_CAST status);
+        }
+        else {
+                nval = xmlNewText(BAD_CAST resptext);
+        }
         xmlAddChild(nfld, nval);
         xmlAddChild(n, nfld);
 

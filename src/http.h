@@ -92,7 +92,7 @@ http_request_t *http_init_request();
 url_t  *http_match_url(http_request_t *r);
 keyval_t *http_set_keyval (char *key, char *value);
 void http_response(int sock, int code);
-void http_response_xml(int sock, int code, int respcode, char *resptext);
+void http_response_xml(int sock, int code, char *respcode, char *resptext);
 void http_response_headers(int sock, int code, int len, char *mime);
 void http_response_full(int sock, int code, char *mime, char *body);
 char *http_get_header(http_request_t *r, char *key);

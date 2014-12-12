@@ -530,11 +530,10 @@ http_status_code_t response_xslpost(int sock, url_t *u)
                 free(xml);
                 syslog(LOG_ERR, "xsltpost sql execution failed. ROLLBACK");
                 /* rollback transaction and/or disconnect */
+                http_response_xml(sock, HTTP_INTERNAL_SERVER_ERROR, dberrcode,
+                                  dberror);
                 db_exec_sql(db, "ROLLBACK;");
                 if (config->pipelining == 0) db_disconnect(db);
-                http_response_xml(sock, HTTP_INTERNAL_SERVER_ERROR,
-                                  HTTP_INTERNAL_SERVER_ERROR,
-                                  "Computer says no");
         }
         free(sql);
 

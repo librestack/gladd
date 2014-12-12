@@ -725,7 +725,7 @@ void http_response(int sock, int code)
 }
 
 /* Output http status code and message to the socket in xml format */
-void http_response_xml(int sock, int code, int respcode, char *resptext)
+void http_response_xml(int sock, int code, char *respcode, char *resptext)
 {
         char *response = NULL;
         char *status;
@@ -735,7 +735,7 @@ void http_response_xml(int sock, int code, int respcode, char *resptext)
         buildxmlresponse(&response, code, status, respcode, resptext);
         http_response_full(sock, code, mime, response);
         free(response);
-        syslog(LOG_INFO, "%i - %s: %s (%i)", code, status, resptext, respcode);
+        syslog(LOG_INFO, "%i - %s: %s (%s)", code, status, resptext, respcode);
 }
 
 /* output HTTP/1.1 response and basic headers only */
