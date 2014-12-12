@@ -26,6 +26,8 @@
 #include "gladdb/db.h"
 
 int buildxml(char **xmldoc);
+int buildxmlresponse(char **xml, int code, char *status, int respcode,
+                     char *resptext);
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty);
 void sqlvars(char **sql, char *url);
 int xmltransform(const char *xslt_filename, const char *xml, char **output,

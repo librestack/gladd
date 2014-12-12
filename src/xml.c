@@ -59,6 +59,51 @@ int buildxml(char **xml)
         return 0;
 }
 
+int buildxmlresponse(char **xml, int code, char *status, int respcode,
+                     char *resptext)
+{
+        xmlNodePtr n;
+        xmlDocPtr doc;
+        xmlNodePtr nfld = NULL;
+        xmlNodePtr nval = NULL;
+        char *strcode;
+
+
+        doc = xmlNewDoc(BAD_CAST "1.0");
+        n = xmlNewNode(NULL, BAD_CAST "resources");
+        xmlDocSetRootElement(doc, n);
+
+        asprintf(&strcode, "%i", code);
+        nfld = xmlNewNode(NULL, BAD_CAST "code");
+        nval = xmlNewText(BAD_CAST strcode);
+        xmlAddChild(nfld, nval);
+        xmlAddChild(n, nfld);
+        free(strcode);
+
+        nfld = xmlNewNode(NULL, BAD_CAST "status");
+        nval = xmlNewText(BAD_CAST status);
+        xmlAddChild(nfld, nval);
+        xmlAddChild(n, nfld);
+
+        asprintf(&strcode, "%i", respcode);
+        nfld = xmlNewNode(NULL, BAD_CAST "responsecode");
+        nval = xmlNewText(BAD_CAST strcode);
+        xmlAddChild(nfld, nval);
+        xmlAddChild(n, nfld);
+        free(strcode);
+
+        nfld = xmlNewNode(NULL, BAD_CAST "responsetext");
+        nval = xmlNewText(BAD_CAST resptext);
+        xmlAddChild(nfld, nval);
+        xmlAddChild(n, nfld);
+
+        flattenxml(doc, xml, 1);
+        xmlFreeDoc(doc);
+        xmlCleanupParser();
+
+        return 0;
+}
+
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 {
         int isconn = 0;
