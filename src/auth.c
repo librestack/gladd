@@ -493,7 +493,8 @@ int check_auth_cookie(http_request_t *r, auth_t *a)
         syslog(LOG_DEBUG, "cookie: %s", cookie);
 
         /* find the first cookie called SID, ignore any others */
-        char *tmp = malloc(strlen(cookie));
+        char *tmp = malloc(strlen(cookie)+1);
+        tmp[strlen(cookie)] = ';';
 	errno = 0;
         int ret = sscanf(cookie, "SID=%[^;]", tmp);
 	if (errno != 0) {
