@@ -105,6 +105,7 @@ int sendfile_ssl(int sock, int fd, size_t size)
                 else {
                         syslog(LOG_ERR, "Error in ssl_send(): %s",
                                 ssl_err(ret));
+                        break;
                 }
 
         } while (sent < size);
