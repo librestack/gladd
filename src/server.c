@@ -115,7 +115,7 @@ int server_start(int lockfd)
         char address[NI_MAXHOST];
         char buf[sizeof(long)];
 
-        if (config->ssl == 1) ssl_setup();
+        if (config->ssl != 0) ssl_setup();
 
         /* get addresses */
         get_addresses(&p);

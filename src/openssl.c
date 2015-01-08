@@ -200,7 +200,15 @@ void ssl_setup()
         SSL_load_error_strings();
         SSL_library_init();
         OpenSSL_add_all_algorithms();
-        ctx = SSL_CTX_new(SSLv3_server_method());
+        ctx = SSL_CTX_new(SSLv23_server_method());
+        if (config->ssl > 1) {
+                SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2);
+                syslog(LOG_DEBUG, "Disabling SSLv2 ciphers");
+        }
+        if (config->ssl > 2) {
+                SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3);
+                syslog(LOG_DEBUG, "Disabling SSLv3 ciphers");
+        }
         generate_dh_params();
         ret = SSL_CTX_use_certificate_chain_file(ctx, config->sslcert);
         if (ret != 1) {
