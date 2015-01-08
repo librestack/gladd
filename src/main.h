@@ -27,7 +27,7 @@
 #define LOCKFILE_USER ".gladd.pid"
 #define LOCKFILE_ROOT "/var/run/gladd.pid"
 #define PROGRAM "gladd"
-#define VERSION "0.2.3"
+#define VERSION "0.2.4"
 
 #define _unused(x) ((void)x)
 
