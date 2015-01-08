@@ -22,6 +22,7 @@
 
 #include "config.h"
 #include "help.h"
+#include "main.h"
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -47,6 +48,11 @@ int argue(int argc, char *arg)
                 else if (strcmp(arg, "status") == 0) {
                         g_signal = SIGUSR1;
                         return 0;
+                }
+                else if ((strcmp(arg, "--version") == 0) ||
+                         (strcmp(arg, "-V") == 0))
+                {
+                        printf("%s\n", VERSION);
                 }
                 else {
                         help();

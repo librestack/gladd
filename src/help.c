@@ -26,5 +26,5 @@
 #include "main.h"
 
 void help() {
-        printf("Usage: %s [start|stop|reload|status]\n", PROGRAM);
+        printf("Usage: %s [-V|start|stop|reload|status]\n", PROGRAM);
 }
