@@ -745,7 +745,7 @@ void http_response_headers(int sock, int code, int len, char *mime)
         char *status;
         status = get_status(code).status;
         asprintf(&r, "HTTP/1.1 %i %s\r\n", code, status);
-        http_insert_header(&r, "Server: gladd");
+        http_insert_header(&r, "Server: %s", config->serverstring);
         if (!config->pipelining)
                 http_insert_header(&r, "Connection: close");
         if (mime) {
@@ -773,7 +773,7 @@ void http_response_full(int sock, int code, char *mime, char *body)
         char *status;
         status = get_status(code).status;
         asprintf(&r, "HTTP/1.1 %i %s\r\n\r\n%s", code, status, body);
-        http_insert_header(&r, "Server: gladd");
+        http_insert_header(&r, "Server: %s", config->serverstring);
         if (!config->pipelining)
                 http_insert_header(&r, "Connection: close");
         if (mime) {

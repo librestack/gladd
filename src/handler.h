@@ -23,10 +23,7 @@
 #ifndef __GLADD_HANDLER_H__
 #define __GLADD_HANDLER_H__ 1
 
-
-/* TEMP */
-//#define RESPONSE_200 "HTTP/1.1 200 OK\nServer: gladd\nConnection: close\nContent-Type: %s\n\n%s"
-#define RESPONSE_200 "HTTP/1.1 200 OK\nServer: gladd\nContent-Type: %s\n\n%s"
+#define RESPONSE_200 "HTTP/1.1 200 OK\nServer: %s\nContent-Type: %s\n\n%s"
 
 #include <sys/socket.h>
 #include "http.h"

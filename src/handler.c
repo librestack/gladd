@@ -413,7 +413,7 @@ http_status_code_t response_sqlview(int sock, url_t *u)
         }
         free(sql);
         asprintf(&headers,"%s\nContent-Length: %i",MIME_XML,(int)strlen(xml));
-        if (asprintf(&r, RESPONSE_200, headers, xml) == -1)
+        if (asprintf(&r, RESPONSE_200, config->serverstring, headers, xml) == -1)
         {
                 free(xml);
                 return HTTP_INTERNAL_SERVER_ERROR;
@@ -585,7 +585,7 @@ http_status_code_t response_xslpost(int sock, url_t *u)
 
         asprintf(&headers, "%s\nContent-Length: %i", mime,
                 (int)strlen(xml));
-        if (asprintf(&r, RESPONSE_200, headers, xml) == -1)
+        if (asprintf(&r, RESPONSE_200, config->serverstring, headers, xml) == -1)
         {
                 free(xml);
                 return HTTP_INTERNAL_SERVER_ERROR;
@@ -662,7 +662,7 @@ http_status_code_t response_xslt(int sock, url_t *u)
 
         /* build response */
         asprintf(&headers,"%s\nContent-Length: %i",MIME_HTML,(int)strlen(html));
-        if (asprintf(&r, RESPONSE_200, headers, html) == -1)
+        if (asprintf(&r, RESPONSE_200, config->serverstring, headers, html) == -1)
         {
                 free(html);
                 return HTTP_INTERNAL_SERVER_ERROR;
@@ -1163,7 +1163,7 @@ int send_file(int sock, char *file, http_status_code_t *err)
         asprintf(&headers, "%s\nContent-Length: %i", mimetype,
                 (int)stat_buf.st_size);
         free(mimetype);
-        if (asprintf(&r, RESPONSE_200, headers, "") == -1) {
+        if (asprintf(&r, RESPONSE_200, config->serverstring, headers, "") == -1) {
                 syslog(LOG_ERR, "send_file(): malloc failed");
                 *err = HTTP_INTERNAL_SERVER_ERROR;
                 free(path);

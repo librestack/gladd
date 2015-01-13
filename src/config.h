@@ -59,6 +59,7 @@ typedef struct config_t {
         long pipelining;     /* 1 = allow http pipelining(default), 0=disable*/
         long keepalive;      /* inactivity timeout on tcp connections (s) */
         long sessiontimeout; /* session timeout (s) */
+        char *serverstring;
         long ssl;            /* 0 = disable ssl (default), 1 = enable ssl */
         char *sslca;
         char *sslkey;

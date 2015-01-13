@@ -20,7 +20,10 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
+
 #include "config_test.h"
+#include "main.h"
 #include "minunit.h"
 #include <stdio.h>
 #include <string.h>
@@ -79,6 +82,11 @@ char *test_config_defaults()
         mu_assert("Ensure default daemon=0", config->daemon == 0);
         mu_assert("Ensure default pipelining=1", config->pipelining == 1);
         mu_assert("Ensure default keepalive=115", config->keepalive == 115);
+        char *tmp;
+        asprintf(&tmp, "%s v%s", PROGRAM, VERSION);
+        mu_assert("Ensure default serverstring=PROGRAM vVERSION",
+                strcmp(config->serverstring, tmp) == 0);
+        free(tmp);
         mu_assert("Ensure default sessiontimeout=300",
                 config->sessiontimeout == 300);
         mu_assert("Ensure default ssl=0", config->ssl == 0);
@@ -104,6 +112,8 @@ char *test_config_set()
                 config->pipelining == 0);
         mu_assert("Ensure keepalive is set from config",
                 config->keepalive == 180);
+        mu_assert("Ensure serverstring is set from config",
+                strcmp(config->serverstring, "A server!") == 0);
         mu_assert("Ensure sessiontimeout is set from config",
                 config->sessiontimeout == 600);
         mu_assert("Ensure ssl is set from config", config->ssl == 1);

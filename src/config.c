@@ -28,6 +28,7 @@
 #include <syslog.h>
 #include <unistd.h>
 
+#include "main.h"
 #include "config.h"
 #include "string.h"
 
@@ -82,7 +83,7 @@ int add_acl (char *value)
                 /* config line didn't match expected patterns */
                 return -1;
         }
-        
+
         /* check for [{success,fail}=2] in type */
         char tmp[LINE_MAX] = "";
         char skipon[LINE_MAX] = "";
@@ -507,6 +508,8 @@ void free_config()
         config->sslcrl = NULL;
         free(config->secretkey);
         config->secretkey = NULL;
+        free(config->serverstring);
+        config->serverstring = NULL;
         free_acls();
         free_auth();
         free_dbs();
@@ -889,6 +892,10 @@ int process_config_line(char *line)
                 else if (strcmp(key, "db") == 0) {
                         return add_db(value);
                 }
+                else if (strcmp(key, "serverstring") == 0) {
+                        free(config->serverstring);
+                        return asprintf(&config->serverstring, "%s", value);
+                }
                 else if (strcmp(key, "sql") == 0) {
                         return add_sql(value);
                 }
@@ -1001,6 +1008,8 @@ int read_config(char *configfile)
 int set_config_defaults()
 {
         config = &config_default;
+
+        asprintf(&config->serverstring, "%s v%s", PROGRAM, VERSION);
 
         config->acls = NULL;
         config->auth = NULL;
