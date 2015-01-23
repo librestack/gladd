@@ -134,6 +134,10 @@ int check_auth(http_request_t *r)
                                         syslog(LOG_DEBUG, "nocache");
                                         r->nocache = 1;
                                 }
+                                else if (strcmp(a->auth, "nofilter") == 0) {
+                                        syslog(LOG_DEBUG, "nofilter");
+                                        r->nofilter = 1;
+                                }
                                 else if (strcmp(a->auth, "htmlout") == 0) {
                                         syslog(LOG_DEBUG, "htmlout");
                                         r->htmlout = 1;

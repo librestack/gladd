@@ -383,9 +383,11 @@ http_status_code_t response_sqlview(int sock, url_t *u)
         }
 
         /* fetch element id as filter, if applicable */
-        filter = get_element(&err);
-        if (err != 0) {
-                return err;
+        if (!request->nofilter) { 
+                filter = get_element(&err);
+                if (err != 0) {
+                        return err;
+                }
         }
 
         if (strcmp(request->method, "POST") == 0) {

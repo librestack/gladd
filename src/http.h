@@ -71,6 +71,7 @@ typedef struct http_request_t {
         int headlen;            /* length of request headers (bytes)     */
         int htmlout;            /* 0 (default), 1 = convert output to html */
         int nocache;            /* 0 (default), 1 = do not cache         */
+        int nofilter;           /* 0 (default), 1 = no SQL WHERE filter  */
         int uuid;               /* 0 (default), 1 = use uuid for uploads */
         keyval_t *headers;      /* client request headers                */
         keyval_t *data;         /* client request data                   */
