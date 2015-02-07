@@ -99,6 +99,7 @@ char *test_http_read_request_get()
 
         mu_assert("http_validate_headers()",
                 http_validate_headers(r, &err) == 0);
+#ifndef _NAUTH
         mu_assert("http_validate_headers() - r->authuser != NULL", 
                 r->authuser != NULL);
         mu_assert("http_validate_headers() - r->authuser (check value)",
@@ -107,6 +108,7 @@ char *test_http_read_request_get()
                 r->authpass != NULL);
         mu_assert("http_validate_headers() - r->authpass (check value)",
                 strcmp(r->authpass, "nobby") == 0);
+#endif
 
         free_request(&r);
 
