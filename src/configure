@@ -3181,7 +3181,7 @@ if test "${with_xml+set}" = set; then :
 fi
 
 
-# Checks for libraries.
+auth=0
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for base64_decode_block in -lb64" >&5
 $as_echo_n "checking for base64_decode_block in -lb64... " >&6; }
@@ -3220,14 +3220,17 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_b64_base64_decode_block" >&5
 $as_echo "$ac_cv_lib_b64_base64_decode_block" >&6; }
 if test "x$ac_cv_lib_b64_base64_decode_block" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBB64 1
-_ACEOF
-
-  LIBS="-lb64 $LIBS"
-
+  auth=1
 else
-  as_fn_error $? "b64 required" "$LINENO" 5
+  auth=0
+fi
+
+if test "$auth" == "0"
+then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: b64 missing, disabling auth" >&5
+$as_echo "$as_me: b64 missing, disabling auth" >&6;}
+        $as_echo "#define _NAUTH 1" >>confdefs.h
+
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for curl_easy_init in -lcurl" >&5

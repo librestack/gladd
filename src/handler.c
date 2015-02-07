@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,10 @@
 
 #define _GNU_SOURCE
 
+#ifndef _NAUTH
 #include "auth.h"
+#endif /* _NAUTH */
+
 #include "config.h"
 #include "gladdb/db.h"
 #include "tls.h"
@@ -220,11 +223,13 @@ handler_result_t handle_request(int sock, char *s)
         }
 
         /* check auth & auth */
+#ifndef _NAUTH
         auth = check_auth(request);
         if (auth != 0) {
                 http_response(sock, auth);
                 return HANDLER_OK;
         }
+#endif /* _NAUTH */
 
         if (strcmp(request->method, "POST") == 0) {
                 /* POST requires Content-Length header */
@@ -1303,6 +1308,7 @@ void setcork(int sock, int state)
 void set_headers(char **r)
 {
         syslog(LOG_DEBUG, "set_headers()");
+#ifndef _NAUTH
         if (http_get_header(request, "Logout")) {
                 /* Logout header detected, unset session cookie */
                 auth_unset_cookie(r);
@@ -1311,6 +1317,7 @@ void set_headers(char **r)
                 syslog(LOG_DEBUG, "param requires cookie to be set");
                 auth_set_cookie(r, HTTP_COOKIE_SESSION);
         }
+#endif /* _NAUTH */
         if (request->nocache) {
                 /* Tell all browsers not to cache this */
                 http_insert_header(r,

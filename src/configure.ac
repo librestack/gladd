@@ -2,7 +2,7 @@
 # 
 # this file is part of GLADD
 # 
-# Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+# Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,8 +39,14 @@ AC_ARG_WITH(tds, [ --without-tds disable tds support])
 AC_ARG_WITH(openldap, [ --without-openldap disable openldap])
 AC_ARG_WITH(xml, [ --without-xml disable xml support])
 
-# Checks for libraries.
-AC_CHECK_LIB([b64], [base64_decode_block], , AC_MSG_ERROR([b64 required]))
+auth=0
+AC_CHECK_LIB([b64], [base64_decode_block], [auth=1] , [auth=0])
+if test "$auth" == "0"
+then
+        AC_MSG_NOTICE([b64 missing, disabling auth])
+        AC_DEFINE(_NAUTH, 1)
+fi
+
 AC_CHECK_LIB([curl], [curl_easy_init], , AC_MSG_ERROR([libcurl required]))
 #AC_CHECK_LIB([gladdb], [db_exec_sql]) # FIXME
 AC_CHECK_LIB([pam], [pam_start])
