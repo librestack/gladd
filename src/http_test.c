@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,9 @@
 char *test_http_read_request_get()
 {
         int hcount = 0;
+#ifndef _NAUTH
         char *clear;
+#endif
         char *headers;
         http_status_code_t err;
 
@@ -80,10 +82,12 @@ char *test_http_read_request_get()
                 strcmp(http_get_header(r, "Authorization"),
                 "Basic YmV0dHk6bm9iYnk=") == 0);
 
+#ifndef _NAUTH
         clear = decode64("YmV0dHk6bm9iYnk=");
         mu_assert("Decode base64", strncmp(clear, "betty:nobby",
                 strlen("betty:nobby")) == 0);
         free(clear);
+#endif
 
         mu_assert("Fetch next header", h = h->next);
         mu_assert("Test 2nd header key", strcmp(h->key, "User-Agent") == 0);

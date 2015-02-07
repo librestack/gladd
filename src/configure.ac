@@ -21,7 +21,7 @@
 # To build configure script:
 #   autoconf configure.ac > configure
 
-AC_INIT([gladd], [0.1.2], [brett@gladserv.com])
+AC_INIT([gladd], [0.2.7], [brett@gladserv.com])
 AC_CONFIG_SRCDIR([xml.c])
 AC_PROG_CC
 AC_LANG(C)
@@ -44,7 +44,22 @@ AC_CHECK_LIB([b64], [base64_decode_block], [auth=1] , [auth=0])
 if test "$auth" == "0"
 then
         AC_MSG_NOTICE([b64 missing, disabling auth])
-        AC_DEFINE(_NAUTH, 1)
+        AC_SUBST(auth, -D_NAUTH)
+else
+        AC_SUBST(autho, auth.o)
+        AC_SUBST(authtesto, auth_test.o)
+        AC_SUBST(lb64, -lb64)
+fi
+
+gladdb=0
+AC_CHECK_LIB([gladdb], [db_connect], [gladdb=1] , [gladdb=0])
+if test "$gladdb" == "0"
+then
+        AC_MSG_NOTICE([libgladdb missing, disabling])
+        AC_SUBST(libgladdb, -D_NGLADDB)
+else
+        AC_SUBST(dbtesto, db_test.o)
+        AC_SUBST(lgladdb, -lgladdb)
 fi
 
 AC_CHECK_LIB([curl], [curl_easy_init], , AC_MSG_ERROR([libcurl required]))

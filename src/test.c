@@ -31,7 +31,11 @@
 #endif
 
 #include "config_test.h"
+
+#ifndef _NGLADDB
 #include "db_test.h"
+#endif
+
 #include "handler_test.h"
 #include "http_test.h"
 #include "string_test.h"
@@ -65,9 +69,9 @@ static char * all_tests()
         mu_run_test(test_config_set);
         mu_run_test(test_config_read_url);
         mu_run_test(test_config_read_sql);
-        mu_run_test(test_config_read_auth);
         mu_run_test(test_args);
 #ifndef _NAUTH
+        mu_run_test(test_config_read_auth);
         mu_run_test(test_auth_default);
         mu_run_test(test_auth_deny);
         mu_run_test(test_auth_require);
@@ -76,7 +80,9 @@ static char * all_tests()
         mu_run_test(test_config_add_acl_invalid);
         mu_run_test(test_config_acl_allow_all);
         mu_run_test(test_config_db);
+#ifndef _NGLADDB
         mu_run_test(test_dbs);
+#endif /* _NGLADDB */
 #ifndef _NXML /* skip xml tests */
         mu_run_test(test_xml_doc);
 #endif /* _NXML */

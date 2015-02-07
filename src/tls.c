@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2013, 2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ int generate_dh_params(void) { return 0; }
 int sendfile_ssl(int sock, int fd, size_t size) { return 0; }
 void setcork_ssl(int state) {}
 void ssl_cleanup(int fd) {}
+size_t ssl_peek(char *b, int len) { return 0; }
 size_t ssl_recv(char *b, int len) { return 0; }
 size_t ssl_send(char *msg, size_t len) { return 0; }
 void ssl_setup() {}

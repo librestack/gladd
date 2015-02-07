@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
-#include "config.h"
 #include "http.h"
 #include "string.h"
 #include "xml.h"
@@ -113,6 +112,7 @@ int buildxmlresponse(char **xml, int code, char *status, char *respcode,
         return 0;
 }
 
+#ifndef _NGLADDB
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty)
 {
         int isconn = 0;
@@ -198,6 +198,7 @@ close_conn:
 
         return err;
 }
+#endif /* _NGLADDB */
 
 /* subsitute variables in sql for their values */
 void sqlvars(char **sql, char *url)

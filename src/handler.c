@@ -27,7 +27,9 @@
 #endif /* _NAUTH */
 
 #include "config.h"
+#ifndef _NGLADDB
 #include "gladdb/db.h"
+#endif
 #include "tls.h"
 #include "handler.h"
 #include "main.h"
@@ -57,11 +59,13 @@
 #include <unistd.h>
 #include <uuid/uuid.h>
 
+#ifndef _NGLADDB
 #ifndef _NLDIF
 #include <ldap.h>
 #include <ldif.h>
 #include "gladdb/ldif.h"
-#endif
+#endif /* _NLDIF */
+#endif /* _NGLADDB */
 
 http_status_code_t response_xslpost(int sock, url_t *u);
 field_t *get_element(int *err);
@@ -156,7 +160,9 @@ handler_result_t handle_request(int sock, char *s)
 {
         char *mtype = NULL;
         http_status_code_t err = 0;
+#ifndef _NAUTH
         int auth = -1;
+#endif
         int hcount = 0;
         url_t *u = NULL;
         long len = 0;
@@ -259,13 +265,14 @@ handler_result_t handle_request(int sock, char *s)
                 if (err != 0)
                         http_response(sock, err);
         }
+#ifndef _NGLADDB
 #ifndef _NLDIF
         else if (strcmp(u->type, "ldif") == 0) {
                 err = response_ldif(sock, u);
                 if (err != 0)
                         http_response(sock, err);
         }
-#endif
+#endif /* _NLDIF */
         else if (strcmp(u->type, "sqlview") == 0) {
                 /* handle sqlview */
                 err = response_sqlview(sock, u);
@@ -287,6 +294,7 @@ handler_result_t handle_request(int sock, char *s)
                 if (err != 0)
                         http_response(sock, err);
         }
+#endif /* _NGLADDB */
         else if (strcmp(u->type, "upload") == 0) {
                 err = response_upload(sock, u);
                 if (err != 0)
@@ -328,6 +336,7 @@ void respond (int fd, char *response)
         snd(fd, response, strlen(response), 0);
 }
 
+#ifndef _NGLADDB
 #ifndef _NLDIF
 http_status_code_t response_ldif(int sock, url_t *u)
 {
@@ -686,6 +695,7 @@ http_status_code_t response_xslt(int sock, url_t *u)
 
         return 0;
 }
+#endif /* _NGLADDB */
 
 /* receive uploaded files */
 http_status_code_t response_upload(int sock, url_t *u)
