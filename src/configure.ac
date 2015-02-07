@@ -63,7 +63,6 @@ else
 fi
 
 AC_CHECK_LIB([curl], [curl_easy_init], , AC_MSG_ERROR([libcurl required]))
-#AC_CHECK_LIB([gladdb], [db_exec_sql]) # FIXME
 AC_CHECK_LIB([pam], [pam_start])
 AC_CHECK_LIB([pam_misc], [pam_misc_setenv])
 # FIXME: Replace `main' with a function in `-lrt':
