@@ -3350,7 +3350,6 @@ else
   as_fn_error $? "libcurl required" "$LINENO" 5
 fi
 
-#AC_CHECK_LIB([gladdb], [db_exec_sql]) # FIXME
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pam_start in -lpam" >&5
 $as_echo_n "checking for pam_start in -lpam... " >&6; }
 if ${ac_cv_lib_pam_pam_start+:} false; then :
@@ -3672,9 +3671,9 @@ $as_echo "$as_me: disabling ldif support" >&6;}
 	ldif=-D_NLDIF
 
 else
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for  in -lldif" >&5
-$as_echo_n "checking for  in -lldif... " >&6; }
-if ${ac_cv_lib_ldif_+:} false; then :
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for ldap_parse_ldif_record in -lldif" >&5
+$as_echo_n "checking for ldap_parse_ldif_record in -lldif... " >&6; }
+if ${ac_cv_lib_ldif_ldap_parse_ldif_record+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -3688,27 +3687,34 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char  ();
+char ldap_parse_ldif_record ();
 int
 main ()
 {
-return  ();
+return ldap_parse_ldif_record ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ldif_=yes
+  ac_cv_lib_ldif_ldap_parse_ldif_record=yes
 else
-  ac_cv_lib_ldif_=no
+  ac_cv_lib_ldif_ldap_parse_ldif_record=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ldif_" >&5
-$as_echo "$ac_cv_lib_ldif_" >&6; }
-if test "x$ac_cv_lib_ldif_" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ldif_ldap_parse_ldif_record" >&5
+$as_echo "$ac_cv_lib_ldif_ldap_parse_ldif_record" >&6; }
+if test "x$ac_cv_lib_ldif_ldap_parse_ldif_record" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBLDIF 1
+_ACEOF
+
+  LIBS="-lldif $LIBS"
+
+else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ldif not found - disabling" >&5
 $as_echo "$as_me: WARNING: ldif not found - disabling" >&2;}
 		ldif=-D_NLDAP
