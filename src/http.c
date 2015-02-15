@@ -594,7 +594,7 @@ int read_request_body(int sock, char *ctype, long lclen,
         if (size != lclen) {
                 /* we have the wrong number of bytes */
                 syslog(LOG_ERR, "request body has unexpected length.");
-                syslog(LOG_DEBUG, "expected: %li, got %li", lclen, size);
+                syslog(LOG_DEBUG, "expected: %li, got %li", lclen, (long) size);
                 *err = HTTP_BAD_REQUEST;
                 return 0;
         }
