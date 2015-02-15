@@ -35,6 +35,16 @@ tests will fail.
 # Minimal install
 apt-get install libcurl4-openssl-dev libxml2-dev libxslt1-dev uuid-dev
 
+# enable the modern Internet
+modprobe ipv6
+echo ipv6 >> /etc/modules
+
+# build and install
+cd src
+./configure
+make
+make install
+
 == Ubuntu 12.04/14/04 LTS ==
 
 # install required runtime libraries
