@@ -48,6 +48,7 @@ then
 else
         AC_SUBST(autho, auth.o)
         AC_SUBST(authtesto, auth_test.o)
+        AC_SUBST(libpam, -lpam -lpam_misc)
         AC_SUBST(lb64, -lb64)
 fi
 
@@ -113,7 +114,7 @@ else
 	AC_CHECK_LIB([ldif],[ldap_parse_ldif_record],
 	,
 		AC_MSG_WARN([ldif not found - disabling])
-		AC_SUBST(ldif, -D_NLDAP)
+		AC_SUBST(ldif, -D_NLDIF)
 	)
 	AC_SUBST(libldif, ["-lldap -llber"])
 fi

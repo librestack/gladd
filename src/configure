@@ -650,6 +650,7 @@ lgladdb
 dbtesto
 libgladdb
 lb64
+libpam
 authtesto
 autho
 auth
@@ -3243,6 +3244,8 @@ else
 
         authtesto=auth_test.o
 
+        libpam=-lpam -lpam_misc
+
         lb64=-lb64
 
 fi
@@ -3717,7 +3720,7 @@ _ACEOF
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ldif not found - disabling" >&5
 $as_echo "$as_me: WARNING: ldif not found - disabling" >&2;}
-		ldif=-D_NLDAP
+		ldif=-D_NLDIF
 
 
 fi
