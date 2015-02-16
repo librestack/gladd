@@ -68,6 +68,7 @@ AC_CHECK_LIB([pam], [pam_start])
 AC_CHECK_LIB([pam_misc], [pam_misc_setenv])
 # FIXME: Replace `main' with a function in `-lrt':
 #AC_CHECK_LIB([rt], [main])
+AC_CHECK_LIB([uuid], [uuid_generate],,AC_MSG_ERROR([uuid-dev required]))
 AC_CHECK_LIB([xml2], [xmlDocSetRootElement],,AC_MSG_ERROR([xml2 required]))
 AC_CHECK_LIB([xslt], [xsltApplyStylesheet],,AC_MSG_ERROR([xslt required]))
 
