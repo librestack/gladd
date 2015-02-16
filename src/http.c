@@ -824,6 +824,7 @@ http_status_code_t http_response_proxy(int sock, url_t *u)
         f = fdopen(sock, "w");
         curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curlerr);
         curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_HEADERDATA, f);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_curl_write);
         r = curl_easy_perform(curl);
