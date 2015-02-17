@@ -40,15 +40,29 @@ AC_ARG_WITH(openldap, [ --without-openldap disable openldap])
 AC_ARG_WITH(xml, [ --without-xml disable xml support])
 
 withauth=0
+withpam=0
 AC_CHECK_LIB([b64], [base64_decode_block], [withauth=1] , [withauth=0])
+AC_CHECK_LIB([pam], [pam_authenticate], [withpam=1] , [withpam=0])
 if test "$withauth" == "0"
 then
-        AC_MSG_NOTICE([b64 missing, disabling auth])
+        AC_MSG_NOTICE([b64 missing])
+fi
+
+if test "$withpam" == "0"
+then
+        AC_MSG_NOTICE([pam missing])
+        withauth=0
+fi
+
+if test "$withauth" == "0"
+then
+        AC_MSG_NOTICE([****** disabling auth])
         AC_SUBST(auth, -D_NAUTH)
 else
+        AC_MSG_NOTICE([****** enabling auth])
         AC_SUBST(autho, auth.o)
         AC_SUBST(authtesto, auth_test.o)
-        AC_SUBST(libpam, -lpam -lpam_misc)
+        AC_SUBST(libpam, "-lpam -lpam_misc")
         AC_SUBST(lb64, -lb64)
 fi
 

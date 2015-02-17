@@ -3190,6 +3190,7 @@ fi
 
 
 withauth=0
+withpam=0
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for base64_decode_block in -lb64" >&5
 $as_echo_n "checking for base64_decode_block in -lb64... " >&6; }
@@ -3233,18 +3234,75 @@ else
   withauth=0
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pam_authenticate in -lpam" >&5
+$as_echo_n "checking for pam_authenticate in -lpam... " >&6; }
+if ${ac_cv_lib_pam_pam_authenticate+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpam  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pam_authenticate ();
+int
+main ()
+{
+return pam_authenticate ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_pam_pam_authenticate=yes
+else
+  ac_cv_lib_pam_pam_authenticate=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pam_pam_authenticate" >&5
+$as_echo "$ac_cv_lib_pam_pam_authenticate" >&6; }
+if test "x$ac_cv_lib_pam_pam_authenticate" = xyes; then :
+  withpam=1
+else
+  withpam=0
+fi
+
 if test "$withauth" == "0"
 then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: b64 missing, disabling auth" >&5
-$as_echo "$as_me: b64 missing, disabling auth" >&6;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: b64 missing" >&5
+$as_echo "$as_me: b64 missing" >&6;}
+fi
+
+if test "$withpam" == "0"
+then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: pam missing" >&5
+$as_echo "$as_me: pam missing" >&6;}
+        withauth=0
+fi
+
+if test "$withauth" == "0"
+then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: ****** disabling auth" >&5
+$as_echo "$as_me: ****** disabling auth" >&6;}
         auth=-D_NAUTH
 
 else
+        { $as_echo "$as_me:${as_lineno-$LINENO}: ****** enabling auth" >&5
+$as_echo "$as_me: ****** enabling auth" >&6;}
         autho=auth.o
 
         authtesto=auth_test.o
 
-        libpam=-lpam -lpam_misc
+        libpam="-lpam -lpam_misc"
 
         lb64=-lb64
 
