@@ -72,6 +72,12 @@ if test "$gladdb" == "0"
 then
         AC_MSG_NOTICE([libgladdb missing, disabling])
         AC_SUBST(libgladdb, -D_NGLADDB)
+        # disable backends
+        with_mysql=0
+        with_postgres=0
+        with_ldap=0
+        with_ldif=0
+        with_tds=0
 else
         AC_SUBST(dbtesto, db_test.o)
         AC_SUBST(lgladdb, -lgladdb)

@@ -3357,6 +3357,12 @@ then
 $as_echo "$as_me: libgladdb missing, disabling" >&6;}
         libgladdb=-D_NGLADDB
 
+        # disable backends
+        with_mysql=0
+        with_postgres=0
+        with_ldap=0
+        with_ldif=0
+        with_tds=0
 else
         dbtesto=db_test.o
 
