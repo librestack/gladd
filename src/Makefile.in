@@ -43,6 +43,10 @@ ${PROGRAM}: ${PROGRAM}_test main.o
 ${PROGRAM}_test: ${OBJECTFILES} ${TESTFILES}
 	${CC} ${CFLAGS}  ${INCLUDES} -o ${PROGRAM}_test ${TESTFILES} ${OBJECTFILES} ${LIBS}
 
+libb64.a: 
+	cd ../libs/libb64-1.2/src && $(MAKE) clean && $(MAKE) && cp libb64.a /usr/local/lib/
+	cp -r ../libs/libb64-1.2/include/b64/ /usr/local/include
+
 args.o: args.c args.h
 	${CC} ${CFLAGS} -c args.c
 
