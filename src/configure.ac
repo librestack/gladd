@@ -21,7 +21,7 @@
 # To build configure script:
 #   autoconf configure.ac > configure
 
-AC_INIT([gladd], [0.2.8], [brett@gladserv.com])
+AC_INIT([gladd], [0.2.9], [brett@gladserv.com])
 AC_CONFIG_SRCDIR([xml.c])
 AC_PROG_CC
 AC_LANG(C)
