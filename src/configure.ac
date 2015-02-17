@@ -39,9 +39,9 @@ AC_ARG_WITH(tds, [ --without-tds disable tds support])
 AC_ARG_WITH(openldap, [ --without-openldap disable openldap])
 AC_ARG_WITH(xml, [ --without-xml disable xml support])
 
-auth=0
-AC_CHECK_LIB([b64], [base64_decode_block], [auth=1] , [auth=0])
-if test "$auth" == "0"
+withauth=0
+AC_CHECK_LIB([b64], [base64_decode_block], [withauth=1] , [withauth=0])
+if test "$withauth" == "0"
 then
         AC_MSG_NOTICE([b64 missing, disabling auth])
         AC_SUBST(auth, -D_NAUTH)

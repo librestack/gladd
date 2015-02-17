@@ -3189,7 +3189,7 @@ if test "${with_xml+set}" = set; then :
 fi
 
 
-auth=0
+withauth=0
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for base64_decode_block in -lb64" >&5
 $as_echo_n "checking for base64_decode_block in -lb64... " >&6; }
@@ -3228,12 +3228,12 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_b64_base64_decode_block" >&5
 $as_echo "$ac_cv_lib_b64_base64_decode_block" >&6; }
 if test "x$ac_cv_lib_b64_base64_decode_block" = xyes; then :
-  auth=1
+  withauth=1
 else
-  auth=0
+  withauth=0
 fi
 
-if test "$auth" == "0"
+if test "$withauth" == "0"
 then
         { $as_echo "$as_me:${as_lineno-$LINENO}: b64 missing, disabling auth" >&5
 $as_echo "$as_me: b64 missing, disabling auth" >&6;}
