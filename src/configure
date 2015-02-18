@@ -3766,7 +3766,54 @@ $as_echo "$as_me: No SSL library selected.  Disabling SSL." >&6;}
 fi
 
 # backend support
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for db_connect_my in -llibgladdb" >&5
+$as_echo_n "checking for db_connect_my in -llibgladdb... " >&6; }
+if ${ac_cv_lib_libgladdb_db_connect_my+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-llibgladdb  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char db_connect_my ();
+int
+main ()
+{
+return db_connect_my ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_libgladdb_db_connect_my=yes
+else
+  ac_cv_lib_libgladdb_db_connect_my=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_libgladdb_db_connect_my" >&5
+$as_echo "$ac_cv_lib_libgladdb_db_connect_my" >&6; }
+if test "x$ac_cv_lib_libgladdb_db_connect_my" = xyes; then :
+  gladdb_my=1
+else
+  gladdb_my=0
+fi
+
 if test "$with_mysql" == "no"
+then
+        gladdb_my=0
+fi
+
+if test "$gladdb_my" == "0"
 then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: disabling mysql support" >&5
 $as_echo "$as_me: disabling mysql support" >&6;}
@@ -3778,7 +3825,55 @@ else
 	cflagmysql="`mysql_config --cflags`"
 
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for process_ldif in -llibgladdb" >&5
+$as_echo_n "checking for process_ldif in -llibgladdb... " >&6; }
+if ${ac_cv_lib_libgladdb_process_ldif+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-llibgladdb  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char process_ldif ();
+int
+main ()
+{
+return process_ldif ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_libgladdb_process_ldif=yes
+else
+  ac_cv_lib_libgladdb_process_ldif=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_libgladdb_process_ldif" >&5
+$as_echo "$ac_cv_lib_libgladdb_process_ldif" >&6; }
+if test "x$ac_cv_lib_libgladdb_process_ldif" = xyes; then :
+  gladdb_ldif=1
+else
+  gladdb_ldif=0
+fi
+
 if test "$with_ldif" == "no"
+then
+        gladdb_ldif=0
+fi
+
+if test "$gladdb_ldif" == "0"
 then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: disabling ldif support" >&5
 $as_echo "$as_me: disabling ldif support" >&6;}
@@ -3839,7 +3934,55 @@ fi
 	libldif="-lldap -llber"
 
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for db_connect_ldap in -llibgladdb" >&5
+$as_echo_n "checking for db_connect_ldap in -llibgladdb... " >&6; }
+if ${ac_cv_lib_libgladdb_db_connect_ldap+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-llibgladdb  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char db_connect_ldap ();
+int
+main ()
+{
+return db_connect_ldap ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_libgladdb_db_connect_ldap=yes
+else
+  ac_cv_lib_libgladdb_db_connect_ldap=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_libgladdb_db_connect_ldap" >&5
+$as_echo "$ac_cv_lib_libgladdb_db_connect_ldap" >&6; }
+if test "x$ac_cv_lib_libgladdb_db_connect_ldap" = xyes; then :
+  gladdb_ldap=1
+else
+  gladdb_ldap=0
+fi
+
 if test "$with_openldap" == "no"
+then
+        gladdb_ldap=0
+fi
+
+if test "$gladdb_ldap" == "0"
 then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: disabling openldap support" >&5
 $as_echo "$as_me: disabling openldap support" >&6;}
@@ -3900,7 +4043,55 @@ $as_echo "$as_me: WARNING: openldap not found - disabling" >&2;}
 fi
 
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for db_connect_pg in -llibgladdb" >&5
+$as_echo_n "checking for db_connect_pg in -llibgladdb... " >&6; }
+if ${ac_cv_lib_libgladdb_db_connect_pg+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-llibgladdb  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char db_connect_pg ();
+int
+main ()
+{
+return db_connect_pg ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_libgladdb_db_connect_pg=yes
+else
+  ac_cv_lib_libgladdb_db_connect_pg=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_libgladdb_db_connect_pg" >&5
+$as_echo "$ac_cv_lib_libgladdb_db_connect_pg" >&6; }
+if test "x$ac_cv_lib_libgladdb_db_connect_pg" = xyes; then :
+  gladdb_pg=1
+else
+  gladdb_pg=0
+fi
+
 if test "$with_postgres" == "no"
+then
+        gladdb_pg=0
+fi
+
+if test "$gladdb_pg" == "0"
 then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: disabling postgres support" >&5
 $as_echo "$as_me: disabling postgres support" >&6;}
@@ -3958,7 +4149,55 @@ $as_echo "$as_me: WARNING: postgres not found - disabling" >&2;}
 fi
 
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for db_connect_tds in -llibgladdb" >&5
+$as_echo_n "checking for db_connect_tds in -llibgladdb... " >&6; }
+if ${ac_cv_lib_libgladdb_db_connect_tds+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-llibgladdb  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char db_connect_tds ();
+int
+main ()
+{
+return db_connect_tds ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_libgladdb_db_connect_tds=yes
+else
+  ac_cv_lib_libgladdb_db_connect_tds=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_libgladdb_db_connect_tds" >&5
+$as_echo "$ac_cv_lib_libgladdb_db_connect_tds" >&6; }
+if test "x$ac_cv_lib_libgladdb_db_connect_tds" = xyes; then :
+  gladdb_tds=1
+else
+  gladdb_tds=0
+fi
+
 if test "$with_tds" == "no"
+then
+        gladdb_tds=0
+fi
+
+if test "$gladdb_tds" == "0"
 then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: disabling tds support" >&5
 $as_echo "$as_me: disabling tds support" >&6;}

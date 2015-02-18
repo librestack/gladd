@@ -119,7 +119,13 @@ else
 fi
 
 # backend support
+AC_CHECK_LIB(libgladdb,[db_connect_my],gladdb_my=1,gladdb_my=0)
 if test "$with_mysql" == "no"
+then
+        gladdb_my=0
+fi
+
+if test "$gladdb_my" == "0"
 then
 	AC_MSG_NOTICE([disabling mysql support])
 	AC_SUBST(mysql, -D_NMY)
@@ -127,7 +133,14 @@ else
 	AC_SUBST(libmysql, ["`mysql_config --libs`"])
 	AC_SUBST(cflagmysql, ["`mysql_config --cflags`"])
 fi
+
+AC_CHECK_LIB(libgladdb,[process_ldif],gladdb_ldif=1,gladdb_ldif=0)
 if test "$with_ldif" == "no"
+then
+        gladdb_ldif=0
+fi
+
+if test "$gladdb_ldif" == "0"
 then
 	AC_MSG_NOTICE([disabling ldif support])
 	AC_SUBST(ldif, -D_NLDIF)
@@ -139,7 +152,14 @@ else
 	)
 	AC_SUBST(libldif, ["-lldap -llber"])
 fi
+
+AC_CHECK_LIB(libgladdb,[db_connect_ldap],gladdb_ldap=1,gladdb_ldap=0)
 if test "$with_openldap" == "no"
+then
+        gladdb_ldap=0
+fi
+
+if test "$gladdb_ldap" == "0"
 then
 	AC_MSG_NOTICE([disabling openldap support])
 	AC_SUBST(openldap, -D_NLDAP)
@@ -151,7 +171,14 @@ else
 		AC_SUBST(openldap, -D_NLDAP)
 	)
 fi
+
+AC_CHECK_LIB(libgladdb,[db_connect_pg],gladdb_pg=1,gladdb_pg=0)
 if test "$with_postgres" == "no"
+then
+        gladdb_pg=0
+fi
+
+if test "$gladdb_pg" == "0"
 then
 	AC_MSG_NOTICE([disabling postgres support])
 	AC_SUBST(postgres, -D_NPG)
@@ -164,7 +191,14 @@ else
 		AC_SUBST(postgres, -D_NPG)
 	)
 fi
+
+AC_CHECK_LIB(libgladdb,[db_connect_tds],gladdb_tds=1,gladdb_tds=0)
 if test "$with_tds" == "no"
+then
+        gladdb_tds=0
+fi
+
+if test "$gladdb_tds" == "0"
 then
 	AC_MSG_NOTICE([disabling tds support])
 	AC_SUBST(tds, -D_NTDS)
