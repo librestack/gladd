@@ -119,7 +119,7 @@ else
 fi
 
 # backend support
-AC_CHECK_LIB(libgladdb,[db_connect_my],gladdb_my=1,gladdb_my=0)
+AC_CHECK_LIB(gladdb,[db_connect_my],gladdb_my=1,gladdb_my=0)
 if test "$with_mysql" == "no"
 then
         gladdb_my=0
@@ -134,7 +134,7 @@ else
 	AC_SUBST(cflagmysql, ["`mysql_config --cflags`"])
 fi
 
-AC_CHECK_LIB(libgladdb,[process_ldif],gladdb_ldif=1,gladdb_ldif=0)
+AC_CHECK_LIB(gladdb,[process_ldif],gladdb_ldif=1,gladdb_ldif=0)
 if test "$with_ldif" == "no"
 then
         gladdb_ldif=0
@@ -153,7 +153,7 @@ else
 	AC_SUBST(libldif, ["-lldap -llber"])
 fi
 
-AC_CHECK_LIB(libgladdb,[db_connect_ldap],gladdb_ldap=1,gladdb_ldap=0)
+AC_CHECK_LIB(gladdb,[db_connect_ldap],gladdb_ldap=1,gladdb_ldap=0)
 if test "$with_openldap" == "no"
 then
         gladdb_ldap=0
@@ -172,7 +172,7 @@ else
 	)
 fi
 
-AC_CHECK_LIB(libgladdb,[db_connect_pg],gladdb_pg=1,gladdb_pg=0)
+AC_CHECK_LIB(gladdb,[db_connect_pg],gladdb_pg=1,gladdb_pg=0)
 if test "$with_postgres" == "no"
 then
         gladdb_pg=0
@@ -192,7 +192,7 @@ else
 	)
 fi
 
-AC_CHECK_LIB(libgladdb,[db_connect_tds],gladdb_tds=1,gladdb_tds=0)
+AC_CHECK_LIB(gladdb,[db_connect_tds],gladdb_tds=1,gladdb_tds=0)
 if test "$with_tds" == "no"
 then
         gladdb_tds=0
