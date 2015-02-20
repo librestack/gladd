@@ -1110,7 +1110,6 @@ http_status_code_t response_plugin(int sock, url_t *u)
         ret = pclose(fd);
         if (ret == -1) {
                 syslog(LOG_ERR, "pclose(): %s", strerror(errno));
-                //return HTTP_INTERNAL_SERVER_ERROR;
         }
 
 
