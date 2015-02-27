@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -139,6 +139,7 @@ char *test_config_set()
 }
 
 /* tests for reading auth lines in config */
+#ifndef _NAUTH
 char *test_config_read_auth()
 {
         auth_t *a;
@@ -160,6 +161,7 @@ char *test_config_read_auth()
 
         return 0;
 }
+#endif
 
 char *test_config_read_users()
 {

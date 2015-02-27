@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,17 @@
 #include <stdio.h>
 #include <string.h>
 #include "args_test.h"
+
+#ifndef _NAUTH
 #include "auth_test.h"
+#endif
+
 #include "config_test.h"
+
+#ifndef _NGLADDB
 #include "db_test.h"
+#endif
+
 #include "handler_test.h"
 #include "http_test.h"
 #include "string_test.h"
@@ -61,16 +69,20 @@ static char * all_tests()
         mu_run_test(test_config_set);
         mu_run_test(test_config_read_url);
         mu_run_test(test_config_read_sql);
-        mu_run_test(test_config_read_auth);
         mu_run_test(test_args);
+#ifndef _NAUTH
+        mu_run_test(test_config_read_auth);
         mu_run_test(test_auth_default);
         mu_run_test(test_auth_deny);
         mu_run_test(test_auth_require);
         mu_run_test(test_auth_allow);
+#endif /* _NAUTH */
         mu_run_test(test_config_add_acl_invalid);
         mu_run_test(test_config_acl_allow_all);
         mu_run_test(test_config_db);
+#ifndef _NGLADDB
         mu_run_test(test_dbs);
+#endif /* _NGLADDB */
 #ifndef _NXML /* skip xml tests */
         mu_run_test(test_xml_doc);
 #endif /* _NXML */
@@ -92,11 +104,13 @@ static char * all_tests()
         mu_run_test(test_config_read_users);
         mu_run_test(test_config_read_groups);
         free_config();
+#ifndef _NAUTH
         mu_run_test(test_auth_patterns);
         mu_run_test(test_auth_groups_00);
         mu_run_test(test_auth_groups_01);
         mu_run_test(test_auth_groups_02);
         mu_run_test(test_auth_goto);
+#endif /* _NAUTH */
         mu_run_test(test_http_read_request_post_large);
         mu_run_test(test_handler_plugin);
         printline("*", 80);

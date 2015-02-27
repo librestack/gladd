@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #define LOCKFILE_USER ".gladd.pid"
 #define LOCKFILE_ROOT "/var/run/gladd.pid"
 #define PROGRAM "gladd"
-#define VERSION "0.2.6"
+#define VERSION "0.2.10"
 
 #define _unused(x) ((void)x)
 

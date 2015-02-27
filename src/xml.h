@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,18 @@
 #ifndef __GLADD_XML_H__
 #define __GLADD_XML_H__ 1
 
+#ifndef _NGLADDB
 #include "gladdb/db.h"
+#endif
+
+#include "config.h"
 
 int buildxml(char **xmldoc);
 int buildxmlresponse(char **xml, int code, char *status, char *respcode,
                      char *resptext);
+#ifndef _NGLADDB
 int sqltoxml(db_t *db, char *sql, field_t *filter, char **xml, int pretty);
+#endif
 void sqlvars(char **sql, char *url);
 int xmltransform(const char *xslt_filename, const char *xml, char **output,
         field_t *filter);

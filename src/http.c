@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013, 2014 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,10 @@
 
 #define _GNU_SOURCE
 #include <assert.h>
+#ifndef _NAUTH
 #include <b64/cdecode.h>
 #include <b64/cencode.h>
+#endif /* _NAUTH */
 #include <curl/curl.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -203,6 +205,7 @@ char *check_content_type(http_request_t *r, http_status_code_t *err, char *type)
         }
 }
 
+#ifndef _NAUTH
 /* return decoded base64 string */
 char *decode64(char *str)
 {
@@ -241,6 +244,7 @@ char *encode64(char *str, int len)
 
         return encoded;
 }
+#endif /* _NAUTH */
 
 /* key -> value lookup for client request headers */
 char *http_get_header(http_request_t *r, char *key)
@@ -590,7 +594,7 @@ int read_request_body(int sock, char *ctype, long lclen,
         if (size != lclen) {
                 /* we have the wrong number of bytes */
                 syslog(LOG_ERR, "request body has unexpected length.");
-                syslog(LOG_DEBUG, "expected: %li, got %li", lclen, size);
+                syslog(LOG_DEBUG, "expected: %li, got %li", lclen, (long) size);
                 *err = HTTP_BAD_REQUEST;
                 return 0;
         }
@@ -820,6 +824,7 @@ http_status_code_t http_response_proxy(int sock, url_t *u)
         f = fdopen(sock, "w");
         curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curlerr);
         curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_HEADERDATA, f);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_curl_write);
         r = curl_easy_perform(curl);
@@ -851,17 +856,20 @@ struct http_status get_status(int code)
 /* process the headers from the client http request */
 int http_validate_headers(http_request_t *r, http_status_code_t *err)
 {
+#ifndef _NAUTH
         char type[LINE_MAX] = "";
         char user[LINE_MAX] = "";
         char pass[LINE_MAX] = "";
         char cryptauth[LINE_MAX] = "";
         char *clearauth;
+#endif /* _NAUTH */
         keyval_t *h;
 
         *err = 0;
 
         h = r->headers;
         while (h != NULL) {
+#ifndef _NAUTH
                 if (strcmp(h->key, "Authorization") == 0) {
                         if (sscanf(h->value, "%s %s", type, cryptauth) == 2) {
                                 clearauth = decode64(cryptauth);
@@ -889,6 +897,7 @@ int http_validate_headers(http_request_t *r, http_status_code_t *err)
                                 return -1;
                         }
                 }
+#endif /* _NAUTH */
                 h = h->next;
         }
         return 0;

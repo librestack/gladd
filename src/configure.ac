@@ -2,7 +2,7 @@
 # 
 # this file is part of GLADD
 # 
-# Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+# Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 # To build configure script:
 #   autoconf configure.ac > configure
 
-AC_INIT([gladd], [0.1.2], [brett@gladserv.com])
+AC_INIT([gladd], [0.2.10], [brett@gladserv.com])
 AC_CONFIG_SRCDIR([xml.c])
 AC_PROG_CC
 AC_LANG(C)
@@ -39,14 +39,66 @@ AC_ARG_WITH(tds, [ --without-tds disable tds support])
 AC_ARG_WITH(openldap, [ --without-openldap disable openldap])
 AC_ARG_WITH(xml, [ --without-xml disable xml support])
 
-# Checks for libraries.
-AC_CHECK_LIB([b64], [base64_decode_block], , AC_MSG_ERROR([b64 required]))
+withauth=0
+withpam=0
+AC_CHECK_LIB([b64], [base64_decode_block], [withauth=1] , [withauth=0])
+AC_CHECK_LIB([pam], [pam_authenticate], [withpam=1] , [withpam=0])
+if test "$withauth" == "0"
+then
+        AC_MSG_NOTICE([b64 missing])
+fi
+
+if test "$withpam" == "0"
+then
+        AC_MSG_NOTICE([pam missing])
+        withauth=0
+fi
+
+if test "$withauth" == "0"
+then
+        AC_MSG_NOTICE([****** disabling auth])
+        AC_SUBST(auth, -D_NAUTH)
+else
+        AC_MSG_NOTICE([****** enabling auth])
+        AC_SUBST(autho, auth.o)
+        AC_SUBST(authtesto, auth_test.o)
+        AC_SUBST(libpam, "-lpam -lpam_misc")
+        AC_SUBST(lb64, -lb64)
+fi
+
+gladdb=0
+AC_CHECK_LIB([gladdb], [db_connect], [gladdb=1] , [gladdb=0])
+if test "$gladdb" == "0"
+then
+        AC_MSG_NOTICE([libgladdb missing, disabling])
+        AC_SUBST(libgladdb, -D_NGLADDB)
+        # disable backends
+        with_mysql=no
+        with_postgres=no
+        with_ldap=no
+        with_ldif=no
+        with_tds=no
+        gladdb_my=0
+        gladdb_ldif=0
+        gladdb_ldap=0
+        gladdb_pg=0
+        gladdb_tds=0
+else
+        AC_SUBST(dbtesto, db_test.o)
+        AC_SUBST(lgladdb, -lgladdb)
+        AC_CHECK_LIB(gladdb,[db_connect_my],gladdb_my=1,gladdb_my=0)
+        AC_CHECK_LIB(gladdb,[process_ldif],gladdb_ldif=1,gladdb_ldif=0)
+        AC_CHECK_LIB(gladdb,[db_connect_ldap],gladdb_ldap=1,gladdb_ldap=0)
+        AC_CHECK_LIB(gladdb,[db_connect_pg],gladdb_pg=1,gladdb_pg=0)
+        AC_CHECK_LIB(gladdb,[db_connect_tds],gladdb_tds=1,gladdb_tds=0)
+fi
+
 AC_CHECK_LIB([curl], [curl_easy_init], , AC_MSG_ERROR([libcurl required]))
-#AC_CHECK_LIB([gladdb], [db_exec_sql]) # FIXME
 AC_CHECK_LIB([pam], [pam_start])
 AC_CHECK_LIB([pam_misc], [pam_misc_setenv])
 # FIXME: Replace `main' with a function in `-lrt':
 #AC_CHECK_LIB([rt], [main])
+AC_CHECK_LIB([uuid], [uuid_generate],,AC_MSG_ERROR([uuid-dev required]))
 AC_CHECK_LIB([xml2], [xmlDocSetRootElement],,AC_MSG_ERROR([xml2 required]))
 AC_CHECK_LIB([xslt], [xsltApplyStylesheet],,AC_MSG_ERROR([xslt required]))
 
@@ -79,25 +131,42 @@ fi
 # backend support
 if test "$with_mysql" == "no"
 then
+        gladdb_my=0
+fi
+
+if test "$gladdb_my" == "0"
+then
 	AC_MSG_NOTICE([disabling mysql support])
 	AC_SUBST(mysql, -D_NMY)
 else
 	AC_SUBST(libmysql, ["`mysql_config --libs`"])
 	AC_SUBST(cflagmysql, ["`mysql_config --cflags`"])
 fi
+
 if test "$with_ldif" == "no"
+then
+        gladdb_ldif=0
+fi
+
+if test "$gladdb_ldif" == "0"
 then
 	AC_MSG_NOTICE([disabling ldif support])
 	AC_SUBST(ldif, -D_NLDIF)
 else
-	AC_CHECK_LIB([ldif],
+	AC_CHECK_LIB([ldif],[ldap_parse_ldif_record],
 	,
 		AC_MSG_WARN([ldif not found - disabling])
-		AC_SUBST(ldif, -D_NLDAP)
+		AC_SUBST(ldif, -D_NLDIF)
 	)
 	AC_SUBST(libldif, ["-lldap -llber"])
 fi
+
 if test "$with_openldap" == "no"
+then
+        gladdb_ldap=0
+fi
+
+if test "$gladdb_ldap" == "0"
 then
 	AC_MSG_NOTICE([disabling openldap support])
 	AC_SUBST(openldap, -D_NLDAP)
@@ -109,7 +178,13 @@ else
 		AC_SUBST(openldap, -D_NLDAP)
 	)
 fi
+
 if test "$with_postgres" == "no"
+then
+        gladdb_pg=0
+fi
+
+if test "$gladdb_pg" == "0"
 then
 	AC_MSG_NOTICE([disabling postgres support])
 	AC_SUBST(postgres, -D_NPG)
@@ -122,7 +197,13 @@ else
 		AC_SUBST(postgres, -D_NPG)
 	)
 fi
+
 if test "$with_tds" == "no"
+then
+        gladdb_tds=0
+fi
+
+if test "$gladdb_tds" == "0"
 then
 	AC_MSG_NOTICE([disabling tds support])
 	AC_SUBST(tds, -D_NTDS)

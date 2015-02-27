@@ -30,6 +30,20 @@ gladd_test (called by `make test`) requires a database to exist called
 gladd_test.  It is also essential that gladd_fake does *not* exist or the unit
 tests will fail.
 
+== Raspbian ==
+
+# Minimal install
+apt-get install libcurl4-openssl-dev libxml2-dev libxslt1-dev uuid-dev
+
+# enable the modern Internet
+modprobe ipv6
+echo ipv6 >> /etc/modules
+
+# build and install
+cd src
+./configure
+make
+make install
 
 == Ubuntu 12.04/14/04 LTS ==
 

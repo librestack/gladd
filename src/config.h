@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,9 @@
 #define __GLADD_CONFIG_H__ 1
 
 #include <stdio.h>
+#ifndef _NGLADDB
 #include "gladdb/db.h"
+#endif
 #include <openssl/blowfish.h>
 
 #define DEFAULT_CONFIG "/etc/gladd.conf"
@@ -86,6 +88,31 @@ typedef struct group_t {
         struct group_t *next;
 } group_t;
 
+#ifdef _NGLADDB
+typedef struct db_t {
+        char *alias; /* a convenient handle to refer to this db by */
+        char *type;  /* type of database: pg, my, ldap, tds */
+        char *host;  /* hostname or ip for this database eg. "localhost" */
+        char *db;    /* name of the database */
+        char *user;  /* username (mysql) */
+        char *pass;  /* password (mysql) */
+        void *conn;  /* pointer to open db connection */
+        struct db_t *next; /* pointer to next db so we can loop through them */
+} db_t;
+
+typedef struct keyval_t {
+        char *key;
+        char *value;
+        struct keyval_t *next;
+} keyval_t;
+
+typedef struct field_t {
+        char *fname;
+        char *fvalue;
+        struct field_t *next;
+} field_t;
+#endif
+
 typedef struct sql_t {
         char *alias;
         char *sql;
@@ -125,11 +152,13 @@ void    free_config();
 void    free_dbs();
 void    free_groups(group_t *g);
 void    free_keyval(keyval_t *h);
+db_t   *getdb(char *alias);
 void    free_sql();
 void    free_urls(url_t *u);
 void    free_users(user_t *u);
+#ifndef _NAUTH
 auth_t *getauth(char *alias);
-db_t   *getdb(char *alias);
+#endif
 char   *getsql(char *alias);
 user_t *getuser(char *username);
 group_t *getgroup(char *name);

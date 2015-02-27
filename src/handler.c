@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,14 @@
 
 #define _GNU_SOURCE
 
+#ifndef _NAUTH
 #include "auth.h"
+#endif /* _NAUTH */
+
 #include "config.h"
+#ifndef _NGLADDB
 #include "gladdb/db.h"
+#endif
 #include "tls.h"
 #include "handler.h"
 #include "main.h"
@@ -54,11 +59,13 @@
 #include <unistd.h>
 #include <uuid/uuid.h>
 
+#ifndef _NGLADDB
 #ifndef _NLDIF
 #include <ldap.h>
 #include <ldif.h>
 #include "gladdb/ldif.h"
-#endif
+#endif /* _NLDIF */
+#endif /* _NGLADDB */
 
 http_status_code_t response_xslpost(int sock, url_t *u);
 field_t *get_element(int *err);
@@ -153,7 +160,9 @@ handler_result_t handle_request(int sock, char *s)
 {
         char *mtype = NULL;
         http_status_code_t err = 0;
+#ifndef _NAUTH
         int auth = -1;
+#endif
         int hcount = 0;
         url_t *u = NULL;
         long len = 0;
@@ -220,11 +229,13 @@ handler_result_t handle_request(int sock, char *s)
         }
 
         /* check auth & auth */
+#ifndef _NAUTH
         auth = check_auth(request);
         if (auth != 0) {
                 http_response(sock, auth);
                 return HANDLER_OK;
         }
+#endif /* _NAUTH */
 
         if (strcmp(request->method, "POST") == 0) {
                 /* POST requires Content-Length header */
@@ -254,13 +265,14 @@ handler_result_t handle_request(int sock, char *s)
                 if (err != 0)
                         http_response(sock, err);
         }
+#ifndef _NGLADDB
 #ifndef _NLDIF
         else if (strcmp(u->type, "ldif") == 0) {
                 err = response_ldif(sock, u);
                 if (err != 0)
                         http_response(sock, err);
         }
-#endif
+#endif /* _NLDIF */
         else if (strcmp(u->type, "sqlview") == 0) {
                 /* handle sqlview */
                 err = response_sqlview(sock, u);
@@ -282,6 +294,7 @@ handler_result_t handle_request(int sock, char *s)
                 if (err != 0)
                         http_response(sock, err);
         }
+#endif /* _NGLADDB */
         else if (strcmp(u->type, "upload") == 0) {
                 err = response_upload(sock, u);
                 if (err != 0)
@@ -323,6 +336,7 @@ void respond (int fd, char *response)
         snd(fd, response, strlen(response), 0);
 }
 
+#ifndef _NGLADDB
 #ifndef _NLDIF
 http_status_code_t response_ldif(int sock, url_t *u)
 {
@@ -681,6 +695,7 @@ http_status_code_t response_xslt(int sock, url_t *u)
 
         return 0;
 }
+#endif /* _NGLADDB */
 
 /* receive uploaded files */
 http_status_code_t response_upload(int sock, url_t *u)
@@ -1095,7 +1110,6 @@ http_status_code_t response_plugin(int sock, url_t *u)
         ret = pclose(fd);
         if (ret == -1) {
                 syslog(LOG_ERR, "pclose(): %s", strerror(errno));
-                //return HTTP_INTERNAL_SERVER_ERROR;
         }
 
 
@@ -1303,6 +1317,7 @@ void setcork(int sock, int state)
 void set_headers(char **r)
 {
         syslog(LOG_DEBUG, "set_headers()");
+#ifndef _NAUTH
         if (http_get_header(request, "Logout")) {
                 /* Logout header detected, unset session cookie */
                 auth_unset_cookie(r);
@@ -1311,6 +1326,7 @@ void set_headers(char **r)
                 syslog(LOG_DEBUG, "param requires cookie to be set");
                 auth_set_cookie(r, HTTP_COOKIE_SESSION);
         }
+#endif /* _NAUTH */
         if (request->nocache) {
                 /* Tell all browsers not to cache this */
                 http_insert_header(r,

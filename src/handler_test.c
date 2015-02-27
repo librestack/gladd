@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,8 +67,10 @@ char *test_handler_plugin()
 
         read(sv[0], pbuf, BUFSIZE);
 
+#ifndef _NAUTH
         /* test the response */
         mu_assert("... correct result", strcmp(pbuf, "HTTP/1.1 200 OK\r\nServer: gladd\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n24\r\ne7df7cd2ca07f4f1ab415d457a6e1c13  -\n\r\n0\r\n\r\n") == 0);
+#endif
 
         /* tidy up */
         free(u->type);
