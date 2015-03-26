@@ -3,7 +3,7 @@
  *
  * this file is part of GLADD
  *
- * Copyright (c) 2012, 2013, 2014 Brett Sheffield <brett@gladserv.com>
+ * Copyright (c) 2012-2015 Brett Sheffield <brett@gladserv.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -346,16 +346,22 @@ int add_sql(char *value)
 {
         sql_t *newsql;
         char alias[LINE_MAX] = "";
-        char sql[LINE_MAX] = "";
+        char *sql = calloc(1, strlen(value) + 1);
 
         if (sscanf(value, "%s %[^\n]", alias, sql) != 2) {
+                free(sql);
                 return -1;
         }
 
         newsql = malloc(sizeof(struct sql_t));
+        if (newsql == NULL) {
+                syslog(LOG_ERR, "malloc() failed");
+                free(sql);
+                return -1;
+        }
 
         newsql->alias = strndup(alias, LINE_MAX);
-        newsql->sql = strndup(sql, LINE_MAX);
+        newsql->sql = sql;
         newsql->next = NULL;
 
         if (prevsql != NULL)
@@ -782,15 +788,15 @@ FILE *open_config(char *configfile)
 /* check config line and handle appropriately */
 int process_config_line(char *line)
 {
-        long i = 0;
+        long i = -1;
         char key[LINE_MAX] = "";
-        char value[LINE_MAX] = "";
+        char *value = malloc(strlen(line) + 1);
         static char *multi = NULL;
         char *tmp = NULL;
 
         if (line[0] == '#')
-                return 1; /* skipping comment */
-        
+                i = 1; /* skipping comment */
+
         if (multi != NULL) {
                 /* we're processing a multi-line config here */
                 if (strncmp(line, "end", 3) == 0) {
@@ -799,7 +805,6 @@ int process_config_line(char *line)
                         multi = NULL;
                         i = process_config_line(tmp);
                         free(tmp);
-                        return i;
                 }
                 else {
                         /* another bit; tack it on */
@@ -808,122 +813,122 @@ int process_config_line(char *line)
                         asprintf(&multi, "%s%s", tmp, line);
                         free(tmp);
                         *(multi + strlen(multi) - 1) = '\0';
-                        return 0;
+                        i = 0;
                 }
         }
         else if (sscanf(line, "%[a-zA-Z0-9]", value) == 0) {
-                return 1; /* skipping blank line */
+                /* skipping blank line */
+                i = 1;
         }
         else if (sscanf(line, "%s %li", key, &i) == 2) {
                 /* process long integer config values */
                 if (strcmp(key, "debug") == 0) {
-                        return set_config_long(&config_new->debug,
+                        i = set_config_long(&config_new->debug,
                                                 "debug", i, 0, 1);
                 }
                 else if (strcmp(key, "port") == 0) {
-                        return set_config_long(&config_new->port, 
+                        i = set_config_long(&config_new->port,
                                                 "port", i, 1, 65535);
                 }
                 else if (strcmp(key, "dropprivs") == 0) {
-                        return set_config_long(&config_new->dropprivs, 
+                        i = set_config_long(&config_new->dropprivs,
                                                 "dropprivs", i, 0, 1);
                 }
                 else if (strcmp(key, "daemon") == 0) {
-                        return set_config_long(&config_new->daemon, 
+                        i = set_config_long(&config_new->daemon,
                                                 "daemon", i, 0, 1);
                 }
                 else if (strcmp(key, "pipelining") == 0) {
-                        return set_config_long(&config_new->pipelining, 
+                        i = set_config_long(&config_new->pipelining,
                                                 "pipelining", i, 0, 1);
                 }
                 else if (strcmp(key, "keepalive") == 0) {
-                        return set_config_long(&config_new->keepalive, 
+                        i = set_config_long(&config_new->keepalive,
                                                 "keepalive", i, 0, LONG_MAX);
                 }
                 else if (strcmp(key, "session_timeout") == 0) {
-                        return set_config_long(&config_new->sessiontimeout, 
+                        i = set_config_long(&config_new->sessiontimeout,
                                         "sessiontimeout", i, 0, LONG_MAX);
                 }
                 else if (strcmp(key, "ssl") == 0) {
-                        return set_config_long(&config_new->ssl, 
+                        i = set_config_long(&config_new->ssl,
                                                 "ssl", i, 0, 3);
                 }
                 else if (strcmp(key, "uploadmax") == 0) {
-                        return set_config_long(&config_new->uploadmax, 
+                        i = set_config_long(&config_new->uploadmax,
                                                 "uploadmax", i, 0, LONG_MAX);
                 }
                 else if (strcmp(key, "x-forward") == 0) {
-                        return set_config_long(&config_new->xforward, 
+                        i = set_config_long(&config_new->xforward,
                                                 "x-forward", i, 0, 1);
                 }
         }
         else if (sscanf(line, "%s %[^\n]", key, value) == 2) {
                 if (strcmp(key, "encoding") == 0) {
-                        return set_encoding(value);
+                        i = set_encoding(value);
                 }
                 else if (strcmp(key, "include") == 0) {
                         /* read and process another config file here */
-                        return process_config_file(value);
+                        i = process_config_file(value);
                 }
                 else if (strcmp(key, "url_default") == 0) {
-                        return asprintf(&config->urldefault, "%s", value);
+                        i = asprintf(&config->urldefault, "%s", value);
                 }
                 else if (strcmp(key, "url") == 0) {
-                        return add_url_handler(value);
+                        i = add_url_handler(value);
                 }
                 else if (strcmp(key, "user") == 0) {
-                        return add_user(value);
+                        i = add_user(value);
                 }
                 else if (strcmp(key, "group") == 0) {
-                        return add_group(value);
+                        i = add_group(value);
                 }
                 else if (strcmp(key, "acl") == 0) {
-                        return add_acl(value);
+                        i = add_acl(value);
                 }
                 else if (strcmp(key, "auth") == 0) {
-                        return add_auth(value);
+                        i = add_auth(value);
                 }
                 else if (strncmp(key, "begin", 5) == 0) {
                         /* multi-line config - cat the bits together and
                          * call this function again */
                         asprintf(&multi, "%s ", value);
-                        return 0;
+                        i = 0;
                 }
                 else if (strcmp(key, "db") == 0) {
-                        return add_db(value);
+                        i = add_db(value);
                 }
                 else if (strcmp(key, "serverstring") == 0) {
                         free(config->serverstring);
-                        return asprintf(&config->serverstring, "%s", value);
+                        i = asprintf(&config->serverstring, "%s", value);
                 }
                 else if (strcmp(key, "sql") == 0) {
-                        return add_sql(value);
+                        i = add_sql(value);
                 }
                 else if (strcmp(key, "ssl-ca") == 0) {
-                        return set_ssl(key, value);
+                        i = set_ssl(key, value);
                 }
                 else if (strcmp(key, "ssl-key") == 0) {
-                        return set_ssl(key, value);
+                        i = set_ssl(key, value);
                 }
                 else if (strcmp(key, "ssl-cert") == 0) {
-                        return set_ssl(key, value);
+                        i = set_ssl(key, value);
                 }
                 else if (strcmp(key, "ssl-crl") == 0) {
-                        return set_ssl(key, value);
+                        i = set_ssl(key, value);
                 }
                 else if (strcmp(key, "secretkey") == 0) {
-                        return asprintf(&config->secretkey, "%s", value);
+                        i = asprintf(&config->secretkey, "%s", value);
                 }
                 else if (strcmp(key, "xmlpath") == 0) {
-                        return set_xmlpath(value);
+                        i = set_xmlpath(value);
                 }
                 else {
-                        fprintf(stderr, "unknown config directive '%s'\n", 
-                                                                        key);
+                        fprintf(stderr, "unknown config directive '%s'\n", key);
                 }
         }
-
-        return -1; /* syntax error */
+        free(value);
+        return i;
 }
 
 /* read config file into memory */
