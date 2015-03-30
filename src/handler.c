@@ -1124,7 +1124,12 @@ http_status_code_t response_static(int sock, url_t *u)
         http_status_code_t err = 0;
 
         base = basefile_pattern(request->res, u->url);
-        asprintf(&filename, "%s%s", u->path, base);
+        if (strcmp(u->url, request->res) == 0) {
+                filename = strdup(u->path);
+        }
+        else {
+                asprintf(&filename, "%s%s", u->path, base);
+        }
         free(base);
         send_file(sock, filename, &err);
         free(filename);
