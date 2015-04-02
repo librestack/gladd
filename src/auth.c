@@ -265,7 +265,6 @@ int check_auth_require(char *alias, http_request_t *r)
 int check_auth_alias(char *alias, http_request_t *r)
 {
         auth_t *a;
-        int res;
 
         if (! (a = getauth(alias))) {
                 syslog(LOG_ERR, 
@@ -306,7 +305,9 @@ int check_auth_alias(char *alias, http_request_t *r)
                 syslog(LOG_DEBUG, "auth attempted with blank password");
                 return HTTP_UNAUTHORIZED;
         }
+#ifndef _NLDAP
         else if (strcmp(a->type, "ldap") == 0) {
+                int res;
                 /* test credentials against ldap */
                 syslog(LOG_DEBUG, "checking ldap users");
                 res = db_test_bind(getdb(a->db),
@@ -316,6 +317,7 @@ int check_auth_alias(char *alias, http_request_t *r)
                 if (res == -2) return HTTP_UNAUTHORIZED;
                 return res;
         }
+#endif
         else if (strcmp(a->type, "user") == 0) {
                 /* test credentials against users */
                 syslog(LOG_DEBUG, "checking static users");
